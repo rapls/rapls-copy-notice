@@ -37,8 +37,15 @@ function qcnotice_uninstall_site() {
 		$wpdb->esc_like( '_transient_' . $prefix ) . '%',
 		$wpdb->esc_like( '_transient_timeout_' . $prefix ) . '%',
 	);
+	// The Pro add-on's options share the prefix (qcnotice_pro_*) and belong to
+	// the add-on, which removes them itself; keep them, licence included.
+	$keep = array(
+		$wpdb->esc_like( $prefix . 'pro_' ) . '%',
+		$wpdb->esc_like( '_transient_' . $prefix . 'pro_' ) . '%',
+		$wpdb->esc_like( '_transient_timeout_' . $prefix . 'pro_' ) . '%',
+	);
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-off cleanup on uninstall.
-	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s", $like[0], $like[1], $like[2] ) );
+	$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE ( option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s ) AND option_name NOT LIKE %s AND option_name NOT LIKE %s AND option_name NOT LIKE %s", $like[0], $like[1], $like[2], $keep[0], $keep[1], $keep[2] ) );
 
 	// Rows-per-page screen option.
 	delete_metadata( 'user', 0, $prefix . 'per_page', '', true );
