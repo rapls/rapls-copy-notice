@@ -4,7 +4,7 @@ Tags: copy, notification, analytics, content protection, plagiarism
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -171,6 +171,11 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
+= 1.3.1 =
+* Fix: uninstalling the plugin no longer deletes the settings of the separate Pro add-on.
+* Added the plugin's home page.
+* Clarified that a multisite network needs the 5-site Pro license.
+
 = 1.3.0 =
 * New: on multisite, a deleted site's copy log is deleted with it.
 * New: `qcnotice_email_rows` filter, so an add-on can route notifications.
@@ -189,6 +194,9 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 * First release.
 
 == Upgrade Notice ==
+
+= 1.3.1 =
+Uninstalling the plugin now keeps the Pro add-on's settings.
 
 = 1.3.0 =
 Cleans up a site's log when the site is deleted from a network, and adds a filter for routing notifications.
