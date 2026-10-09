@@ -1,0 +1,370 @@
+<?php
+/**
+ * Admin menu, tabs and form handlers.
+ *
+ * @package QuietCopyNotice
+ */
+
+namespace QuietCopyNotice\Admin;
+
+use QuietCopyNotice\Logger;
+use QuietCopyNotice\Settings;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * One page under Tools, with tabs.
+ */
+class Admin {
+
+	const CAPABILITY = 'manage_options';
+
+	const ACTION_SAVE       = QCNOTICE_PREFIX . 'save_settings';
+	const ACTION_DELETE_ALL = QCNOTICE_PREFIX . 'delete_all';
+
+	/**
+	 * Page hook suffix.
+	 *
+	 * @var string
+	 */
+	private $hook = '';
+
+	/**
+	 * Registers hooks.
+	 *
+	 * @return void
+	 */
+	public function register() {
+		add_action( 'admin_menu', array( $this, 'add_menu' ) );
+		add_action( 'admin_post_' . self::ACTION_SAVE, array( $this, 'handle_save' ) );
+		add_action( 'admin_post_' . self::ACTION_DELETE_ALL, array( $this, 'handle_delete_all' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
+		// Screen options are saved before load-{page}, so this cannot wait.
+		add_filter( 'set_screen_option_' . QCNOTICE_PREFIX . 'per_page', array( $this, 'save_per_page' ), 10, 3 );
+		add_filter( 'plugin_action_links_' . plugin_basename( QCNOTICE_FILE ), array( $this, 'action_links' ) );
+	}
+
+	/**
+	 * Tab keys and labels.
+	 *
+	 * @return array
+	 */
+	public static function tabs() {
+		$tabs = array(
+			'log'           => __( 'Log', 'quiet-copy-notice' ),
+			'notifications' => __( 'Notifications', 'quiet-copy-notice' ),
+			'detection'     => __( 'Detection', 'quiet-copy-notice' ),
+			'privacy'       => __( 'Privacy', 'quiet-copy-notice' ),
+			'visitors'      => __( 'Visitors', 'quiet-copy-notice' ),
+		);
+
+		/**
+		 * Lets an add-on append tabs to this page. Built-in tabs cannot be
+		 * replaced or removed. An added tab is rendered by the
+		 * qcnotice_render_tab_{key} action.
+		 *
+		 * @param array $extra Tab key => label.
+		 */
+		$extra = apply_filters( QCNOTICE_PREFIX . 'admin_tabs', array() );
+		if ( is_array( $extra ) ) {
+			foreach ( $extra as $key => $label ) {
+				$key = sanitize_key( $key );
+				if ( '' !== $key && ! isset( $tabs[ $key ] ) && is_string( $label ) ) {
+					$tabs[ $key ] = $label;
+				}
+			}
+		}
+
+		// Description of the optional add-on; gone once the add-on is active.
+		if ( Upsell::visible() ) {
+			$tabs['pro'] = __( 'Pro features', 'quiet-copy-notice' );
+		}
+
+		return $tabs;
+	}
+
+	/**
+	 * URL of a tab.
+	 *
+	 * @param string $tab  Tab key.
+	 * @param array  $args Extra query args.
+	 * @return string
+	 */
+	public static function url( $tab = 'log', array $args = array() ) {
+		return add_query_arg( array_merge( array( 'page' => QCNOTICE_SLUG ), 'log' === $tab ? array() : array( 'tab' => $tab ), $args ), admin_url( 'tools.php' ) );
+	}
+
+	/**
+	 * Adds the Tools submenu.
+	 *
+	 * @return void
+	 */
+	public function add_menu() {
+		$this->hook = (string) add_management_page(
+			__( 'Quiet Copy Notice', 'quiet-copy-notice' ),
+			__( 'Quiet Copy Notice', 'quiet-copy-notice' ),
+			self::CAPABILITY,
+			QCNOTICE_SLUG,
+			array( $this, 'render' )
+		);
+		add_action( 'load-' . $this->hook, array( $this, 'load_page' ) );
+	}
+
+	/**
+	 * Adds a Settings link on the Plugins screen.
+	 *
+	 * @param array $links Existing links.
+	 * @return array
+	 */
+	public function action_links( $links ) {
+		array_unshift(
+			$links,
+			'<a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Log', 'quiet-copy-notice' ) . '</a>',
+			'<a href="' . esc_url( self::url( 'notifications' ) ) . '">' . esc_html__( 'Settings', 'quiet-copy-notice' ) . '</a>'
+		);
+		if ( Upsell::visible() ) {
+			// Links to the description tab on this plugin's own screen, not to a shop.
+			$links[] = '<a href="' . esc_url( self::url( 'pro' ) ) . '">' . esc_html__( 'Pro features', 'quiet-copy-notice' ) . '</a>';
+		}
+		return $links;
+	}
+
+	/**
+	 * Loads the stylesheet on this page only.
+	 *
+	 * @param string $hook Current admin page.
+	 * @return void
+	 */
+	public function enqueue( $hook ) {
+		if ( $hook !== $this->hook ) {
+			return;
+		}
+		wp_enqueue_style( QCNOTICE_SLUG . '-admin', QCNOTICE_URL . 'assets/css/admin.css', array(), QCNOTICE_VERSION );
+	}
+
+	/**
+	 * Current tab from the query string, whitelisted.
+	 *
+	 * @return string
+	 */
+	private function current_tab() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'log';
+		return array_key_exists( $tab, self::tabs() ) ? $tab : 'log';
+	}
+
+	/**
+	 * Runs before output on the log tab: handles bulk deletion and
+	 * sets up screen options.
+	 *
+	 * @return void
+	 */
+	public function load_page() {
+		$tab = $this->current_tab();
+
+		/**
+		 * Fires before output on this page, for any tab. Add-ons handle their
+		 * own form submissions and enqueue assets here.
+		 *
+		 * @param string $tab Current tab key.
+		 */
+		do_action( QCNOTICE_PREFIX . 'admin_load', $tab );
+
+		if ( 'log' !== $tab ) {
+			return;
+		}
+
+		add_screen_option(
+			'per_page',
+			array(
+				'default' => 20,
+				'option'  => QCNOTICE_PREFIX . 'per_page',
+			)
+		);
+		$table = new Log_Table();
+		$table->process_bulk_action();
+	}
+
+	/**
+	 * Accepts the rows-per-page screen option within bounds.
+	 *
+	 * @param mixed  $status Default false.
+	 * @param string $option Option name.
+	 * @param mixed  $value  Submitted value.
+	 * @return int
+	 */
+	public function save_per_page( $status, $option, $value ) {
+		return min( 200, max( 1, absint( $value ) ) );
+	}
+
+	/**
+	 * Renders the page.
+	 *
+	 * @return void
+	 */
+	public function render() {
+		if ( ! current_user_can( self::CAPABILITY ) ) {
+			return;
+		}
+
+		$tab = $this->current_tab();
+
+		echo '<div class="wrap qcnotice-wrap">';
+		echo '<h1>' . esc_html__( 'Quiet Copy Notice', 'quiet-copy-notice' ) . '</h1>';
+
+		echo '<nav class="nav-tab-wrapper">';
+		foreach ( self::tabs() as $key => $label ) {
+			$active = $key === $tab;
+			printf(
+				'<a href="%1$s" class="%2$s" aria-current="%3$s">%4$s</a>',
+				esc_url( self::url( $key ) ),
+				esc_attr( $active ? 'nav-tab nav-tab-active' : 'nav-tab' ),
+				esc_attr( $active ? 'page' : 'false' ),
+				esc_html( $label )
+			);
+		}
+		echo '</nav>';
+
+		$this->render_notices();
+		$this->render_ccc_warning();
+
+		if ( 'log' === $tab ) {
+			$this->render_log();
+		} elseif ( isset( Settings::tab_fields()[ $tab ] ) ) {
+			( new Settings_Page() )->render( $tab );
+		} elseif ( 'pro' === $tab ) {
+			Upsell::render_page();
+		} else {
+			/**
+			 * Renders a tab added through qcnotice_admin_tabs. The callback
+			 * must check capabilities for anything it changes and escape all
+			 * output.
+			 */
+			do_action( QCNOTICE_PREFIX . 'render_tab_' . $tab );
+		}
+
+		echo '</div>';
+	}
+
+	/**
+	 * Result notices after a redirect. Only fixed messages are printed.
+	 *
+	 * @return void
+	 */
+	private function render_notices() {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Display only; values are compared against fixed strings.
+		$message = isset( $_GET['qcnotice_msg'] ) ? sanitize_key( wp_unslash( $_GET['qcnotice_msg'] ) ) : '';
+		$count   = isset( $_GET['qcnotice_count'] ) ? absint( $_GET['qcnotice_count'] ) : 0;
+		// phpcs:enable
+
+		$text = '';
+		switch ( $message ) {
+			case 'saved':
+				$text = __( 'Settings saved.', 'quiet-copy-notice' );
+				break;
+			case 'deleted':
+				/* translators: %d: number of log entries deleted. */
+				$text = sprintf( _n( '%d entry deleted.', '%d entries deleted.', $count, 'quiet-copy-notice' ), $count );
+				break;
+			case 'deleted_all':
+				$text = __( 'All log entries deleted.', 'quiet-copy-notice' );
+				break;
+		}
+
+		if ( '' !== $text ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $text ) . '</p></div>';
+		}
+	}
+
+	/**
+	 * Notes, on this page only, that Check Copy Contents is still active and
+	 * no longer maintained. Kept to the facts; it goes away once that plugin
+	 * is deactivated.
+	 *
+	 * @return void
+	 */
+	private function render_ccc_warning() {
+		if ( ! class_exists( 'CheckCopyContents', false ) ) {
+			return;
+		}
+		printf(
+			'<div class="notice notice-warning"><p>%1$s <a href="%2$s">%3$s</a></p></div>',
+			esc_html__( 'Check Copy Contents is still active. It is no longer maintained. Its settings were carried over where possible, so you can deactivate it.', 'quiet-copy-notice' ),
+			esc_url( admin_url( 'plugins.php' ) ),
+			esc_html__( 'Go to Plugins', 'quiet-copy-notice' )
+		);
+	}
+
+	/**
+	 * The log tab.
+	 *
+	 * @return void
+	 */
+	private function render_log() {
+		$table = new Log_Table();
+		$table->prepare_items();
+
+		echo '<form method="get">';
+		echo '<input type="hidden" name="page" value="' . esc_attr( QCNOTICE_SLUG ) . '" />';
+		$table->display();
+		echo '</form>';
+
+		if ( Logger::count() > 0 ) {
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="qcnotice-delete-all" onsubmit="return window.confirm(' . esc_attr( wp_json_encode( __( 'Delete every log entry? This cannot be undone.', 'quiet-copy-notice' ) ) ) . ');">';
+			echo '<input type="hidden" name="action" value="' . esc_attr( self::ACTION_DELETE_ALL ) . '" />';
+			wp_nonce_field( self::ACTION_DELETE_ALL );
+			submit_button( __( 'Delete all entries', 'quiet-copy-notice' ), 'delete', 'submit', false );
+			echo '</form>';
+		}
+
+		Upsell::row(
+			__( 'Statistics and CSV export', 'quiet-copy-notice' ),
+			__( 'Quiet Copy Notice Pro adds statistics by post and by paragraph, a comparison with the previous period, and CSV export of this log.', 'quiet-copy-notice' )
+		);
+	}
+
+	/**
+	 * Saves one settings tab.
+	 *
+	 * @return void
+	 */
+	public function handle_save() {
+		if ( ! current_user_can( self::CAPABILITY ) ) {
+			wp_die( esc_html__( 'You are not allowed to change these settings.', 'quiet-copy-notice' ), 403 );
+		}
+
+		$tab = isset( $_POST['tab'] ) ? sanitize_key( wp_unslash( $_POST['tab'] ) ) : '';
+		check_admin_referer( self::ACTION_SAVE . '_' . $tab );
+
+		$input = isset( $_POST['qcnotice'] ) && is_array( $_POST['qcnotice'] )
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Each field is validated in Settings::sanitize_field().
+			? wp_unslash( $_POST['qcnotice'] )
+			: array();
+
+		if ( ! Settings::save_tab( $tab, $input ) ) {
+			wp_die( esc_html__( 'Unknown settings section.', 'quiet-copy-notice' ), 400 );
+		}
+
+		wp_safe_redirect( self::url( $tab, array( 'qcnotice_msg' => 'saved' ) ) );
+		exit;
+	}
+
+	/**
+	 * Deletes every log entry.
+	 *
+	 * @return void
+	 */
+	public function handle_delete_all() {
+		if ( ! current_user_can( self::CAPABILITY ) ) {
+			wp_die( esc_html__( 'You are not allowed to delete log entries.', 'quiet-copy-notice' ), 403 );
+		}
+		check_admin_referer( self::ACTION_DELETE_ALL );
+
+		Logger::delete_all();
+
+		wp_safe_redirect( self::url( 'log', array( 'qcnotice_msg' => 'deleted_all' ) ) );
+		exit;
+	}
+}

@@ -1,0 +1,354 @@
+<?php
+/**
+ * Settings tabs.
+ *
+ * @package QuietCopyNotice
+ */
+
+namespace QuietCopyNotice\Admin;
+
+use QuietCopyNotice\Settings;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * Renders the Notifications, Detection and Privacy forms. Each posts to
+ * admin-post.php and is validated in Settings::save_tab().
+ */
+class Settings_Page {
+
+	/**
+	 * Current settings.
+	 *
+	 * @var array
+	 */
+	private $settings;
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct() {
+		$this->settings = Settings::all();
+	}
+
+	/**
+	 * Renders one tab.
+	 *
+	 * @param string $tab Tab key.
+	 * @return void
+	 */
+	public function render( $tab ) {
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		echo '<input type="hidden" name="action" value="' . esc_attr( Admin::ACTION_SAVE ) . '" />';
+		echo '<input type="hidden" name="tab" value="' . esc_attr( $tab ) . '" />';
+		wp_nonce_field( Admin::ACTION_SAVE . '_' . $tab );
+
+		echo '<table class="form-table" role="presentation"><tbody>';
+		switch ( $tab ) {
+			case 'notifications':
+				$this->notifications();
+				break;
+			case 'detection':
+				$this->detection();
+				break;
+			case 'privacy':
+				$this->privacy();
+				break;
+			case 'visitors':
+				$this->visitors();
+				break;
+		}
+		echo '</tbody></table>';
+
+		submit_button();
+		echo '</form>';
+
+		$this->after_form( $tab );
+	}
+
+	/**
+	 * Notifications tab.
+	 *
+	 * @return void
+	 */
+	private function notifications() {
+		$this->row_start( 'notify_email', __( 'Send notifications to', 'quiet-copy-notice' ) );
+		printf(
+			'<input type="email" class="regular-text" id="qcnotice-notify_email" name="qcnotice[notify_email]" value="%1$s" placeholder="%2$s" />',
+			esc_attr( $this->settings['notify_email'] ),
+			esc_attr( (string) get_option( 'admin_email' ) )
+		);
+		$this->row_end( __( 'Leave empty to use the site administration email address. Example: you@example.com', 'quiet-copy-notice' ) );
+
+		$this->row_start( 'subject_label', __( 'Email subject', 'quiet-copy-notice' ) );
+		printf(
+			'<input type="text" class="regular-text" id="qcnotice-subject_label" name="qcnotice[subject_label]" value="%1$s" maxlength="%2$d" placeholder="%3$s" />',
+			esc_attr( $this->settings['subject_label'] ),
+			(int) Settings::SUBJECT_MAX,
+			esc_attr__( 'Copy notification', 'quiet-copy-notice' )
+		);
+		$this->row_end( __( 'The subject is always "[site name] this text (number of copies)", so you can filter these emails. Visitor data never appears in it.', 'quiet-copy-notice' ) );
+
+		$this->row_start( '', __( 'When to send', 'quiet-copy-notice' ) );
+		echo '<fieldset><legend class="screen-reader-text">' . esc_html__( 'When to send', 'quiet-copy-notice' ) . '</legend>';
+		$modes = array(
+			Settings::MODE_DIGEST  => __( 'One summary email per hour', 'quiet-copy-notice' ),
+			Settings::MODE_INSTANT => __( 'One email per copy, right away', 'quiet-copy-notice' ),
+		);
+		foreach ( $modes as $value => $label ) {
+			printf(
+				'<label><input type="radio" name="qcnotice[notify_mode]" value="%1$s"%2$s /> %3$s</label><br />',
+				esc_attr( $value ),
+				checked( $this->settings['notify_mode'], $value, false ),
+				esc_html( $label )
+			);
+		}
+		echo '</fieldset>';
+		$this->row_end( __( 'Summary emails are sent by WP-Cron, so on a quiet site they go out with the first visit after each hour.', 'quiet-copy-notice' ) );
+
+		$this->number_row( 'instant_hourly_cap', __( 'Instant email limit', 'quiet-copy-notice' ), __( 'Copies over the limit go into the next hourly summary instead.', 'quiet-copy-notice' ), __( 'emails per hour', 'quiet-copy-notice' ) );
+	}
+
+	/**
+	 * Content after a tab's form.
+	 *
+	 * @param string $tab Tab key.
+	 * @return void
+	 */
+	private function after_form( $tab ) {
+		if ( 'notifications' === $tab ) {
+			Upsell::row(
+				__( 'Slack, Chatwork, Discord and webhooks', 'quiet-copy-notice' ),
+				__( 'Quiet Copy Notice Pro sends these notifications to your team chat or your own system too, with rules that decide which copies go where.', 'quiet-copy-notice' )
+			);
+		}
+	}
+
+	/**
+	 * Detection tab.
+	 *
+	 * @return void
+	 */
+	private function detection() {
+		$this->number_row( 'min_length', __( 'Characters to detect', 'quiet-copy-notice' ), __( 'Copies are recorded when at least this many characters are copied.', 'quiet-copy-notice' ), __( 'characters or more', 'quiet-copy-notice' ) );
+
+		$this->row_start( '', __( 'Post types', 'quiet-copy-notice' ) );
+		$this->checkboxes( 'post_types', Settings::available_post_types(), __( 'Post types', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Copies are detected on single views of these post types.', 'quiet-copy-notice' ) );
+
+		$this->row_start( '', __( 'Find the post body', 'quiet-copy-notice' ) );
+		printf(
+			'<input type="hidden" name="qcnotice[mark_content]" value="0" /><label><input type="checkbox" name="qcnotice[mark_content]" value="1"%s /> %s</label>',
+			checked( $this->settings['mark_content'], true, false ),
+			esc_html__( 'Mark the end of the post body so it is found in any theme', 'quiet-copy-notice' )
+		);
+		$this->row_end( __( 'Adds one empty, hidden element after the post content on monitored pages, and uses the element around it as the content area. When this is on, the selectors below are only a fallback. Leave it off if your theme already uses one of the selectors below.', 'quiet-copy-notice' ) );
+
+		$this->row_start( 'content_selector', __( 'Content area', 'quiet-copy-notice' ) );
+		printf(
+			'<input type="text" class="large-text code" id="qcnotice-content_selector" name="qcnotice[content_selector]" value="%s" />',
+			esc_attr( $this->settings['content_selector'] )
+		);
+		$this->row_end( __( 'CSS selectors, separated by commas. The first one found on the page is used; copies from outside it are ignored.', 'quiet-copy-notice' ) );
+
+		$roles = array();
+		foreach ( wp_roles()->get_names() as $role => $name ) {
+			$roles[ $role ] = translate_user_role( $name );
+		}
+		$this->row_start( '', __( 'Ignore logged-in', 'quiet-copy-notice' ) );
+		$this->checkboxes( 'exclude_roles', $roles, __( 'Ignore logged-in', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'The detection script is not loaded for logged-in users with these roles.', 'quiet-copy-notice' ) );
+
+		$this->textarea_row( 'exclude_ips', __( 'Ignore IP addresses', 'quiet-copy-notice' ), __( 'One per line. CIDR ranges such as 192.0.2.0/24 are allowed.', 'quiet-copy-notice' ) );
+		$this->textarea_row( 'exclude_posts', __( 'Ignore posts', 'quiet-copy-notice' ), __( 'Post IDs, one per line.', 'quiet-copy-notice' ) );
+		$this->textarea_row( 'trusted_proxies', __( 'Trusted proxies', 'quiet-copy-notice' ), __( 'Leave empty unless the site is behind a reverse proxy or CDN. Only when a request arrives from one of these addresses is the X-Forwarded-For header used to find the visitor\'s IP.', 'quiet-copy-notice' ) );
+
+		$this->number_row( 'rate_ip_per_minute', __( 'Limit per IP', 'quiet-copy-notice' ), __( 'Most copy reports accepted from one IP address.', 'quiet-copy-notice' ), __( 'per minute', 'quiet-copy-notice' ) );
+		$this->number_row( 'rate_site_per_hour', __( 'Limit for the site', 'quiet-copy-notice' ), __( 'Most copy reports accepted in total. Reports over either limit are neither stored nor emailed.', 'quiet-copy-notice' ), __( 'per hour', 'quiet-copy-notice' ) );
+	}
+
+	/**
+	 * Privacy tab.
+	 *
+	 * @return void
+	 */
+	private function privacy() {
+		$this->row_start( '', __( 'IP addresses', 'quiet-copy-notice' ) );
+		printf(
+			'<input type="hidden" name="qcnotice[anonymize_ip]" value="0" /><label><input type="checkbox" name="qcnotice[anonymize_ip]" value="1"%s /> %s</label>',
+			checked( $this->settings['anonymize_ip'], true, false ),
+			esc_html__( 'Shorten IP addresses before storing them', 'quiet-copy-notice' )
+		);
+		$this->row_end( __( 'Removes the last part of IPv4 addresses and the last 80 bits of IPv6 addresses.', 'quiet-copy-notice' ) );
+
+		$this->number_row( 'retention_days', __( 'Keep records for', 'quiet-copy-notice' ), __( 'Older records are deleted once a day.', 'quiet-copy-notice' ), __( 'days', 'quiet-copy-notice' ) );
+
+		$this->row_start( '', __( 'Privacy policy', 'quiet-copy-notice' ) );
+		printf(
+			'<a href="%s">%s</a>',
+			esc_url( admin_url( 'options-privacy.php?tab=policyguide' ) ),
+			esc_html__( 'Suggested text for your privacy policy', 'quiet-copy-notice' )
+		);
+		$this->row_end( __( 'This plugin sets no cookies and sends nothing to outside services.', 'quiet-copy-notice' ) );
+	}
+
+	/**
+	 * Visitors tab: what readers see or get when they copy. Both are off by
+	 * default and apply only to copies the plugin would record.
+	 *
+	 * @return void
+	 */
+	private function visitors() {
+		$this->row_start( '', __( 'Message after copying', 'quiet-copy-notice' ) );
+		$this->checkbox( 'show_message', __( 'Show a short message to the reader after they copy', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Shown for five seconds at the bottom of the screen. It does not stop the copy.', 'quiet-copy-notice' ) );
+
+		$this->text_row( 'message_text', __( 'Message', 'quiet-copy-notice' ), Settings::MESSAGE_MAX, __( 'Thank you for reading. If you quote this article, please link to it.', 'quiet-copy-notice' ), __( 'Plain text. Leave empty to use the wording shown.', 'quiet-copy-notice' ) );
+
+		$this->row_start( '', __( 'Source link', 'quiet-copy-notice' ) );
+		$this->checkbox( 'add_attribution', __( 'Add the post title and URL to copied text', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Appended after a blank line, for example "Source: Post title" and the URL on the next line. Copies from form fields are left unchanged.', 'quiet-copy-notice' ) );
+
+		$this->text_row( 'attribution_label', __( 'Label', 'quiet-copy-notice' ), Settings::LABEL_MAX, __( 'Source:', 'quiet-copy-notice' ), __( 'Leave empty to use the wording shown.', 'quiet-copy-notice' ) );
+
+		$this->row_start( '', __( 'Applies to', 'quiet-copy-notice' ) );
+		echo '<p>' . esc_html__( 'Both options follow the Detection settings: only copies of at least the minimum length, from the post body, on monitored post types, by visitors who are not ignored.', 'quiet-copy-notice' ) . '</p>';
+		$this->row_end();
+	}
+
+	/**
+	 * A single checkbox; a hidden 0 is sent when it is unchecked.
+	 *
+	 * @param string $key   Field key.
+	 * @param string $label Checkbox label.
+	 * @return void
+	 */
+	private function checkbox( $key, $label ) {
+		printf(
+			'<input type="hidden" name="qcnotice[%1$s]" value="0" /><label><input type="checkbox" name="qcnotice[%1$s]" value="1"%2$s /> %3$s</label>',
+			esc_attr( $key ),
+			checked( $this->settings[ $key ], true, false ),
+			esc_html( $label )
+		);
+	}
+
+	/**
+	 * A one-line text input row.
+	 *
+	 * @param string $key         Field key.
+	 * @param string $label       Label.
+	 * @param int    $max         Maximum length.
+	 * @param string $placeholder Placeholder, the built-in wording.
+	 * @param string $help        Help text.
+	 * @return void
+	 */
+	private function text_row( $key, $label, $max, $placeholder, $help ) {
+		$this->row_start( $key, $label );
+		printf(
+			'<input type="text" class="large-text" id="%1$s" name="qcnotice[%2$s]" value="%3$s" maxlength="%4$d" placeholder="%5$s" />',
+			esc_attr( 'qcnotice-' . $key ),
+			esc_attr( $key ),
+			esc_attr( $this->settings[ $key ] ),
+			(int) $max,
+			esc_attr( $placeholder )
+		);
+		$this->row_end( $help );
+	}
+
+	/**
+	 * Opens a form row.
+	 *
+	 * @param string $key   Field key, or empty when the label does not point at one input.
+	 * @param string $label Row label.
+	 * @return void
+	 */
+	private function row_start( $key, $label ) {
+		echo '<tr><th scope="row">';
+		if ( '' !== $key ) {
+			echo '<label for="' . esc_attr( 'qcnotice-' . $key ) . '">' . esc_html( $label ) . '</label>';
+		} else {
+			echo esc_html( $label );
+		}
+		echo '</th><td>';
+	}
+
+	/**
+	 * Closes a form row.
+	 *
+	 * @param string $help Help text.
+	 * @return void
+	 */
+	private function row_end( $help = '' ) {
+		if ( '' !== $help ) {
+			echo '<p class="description">' . esc_html( $help ) . '</p>';
+		}
+		echo '</td></tr>';
+	}
+
+	/**
+	 * A number input row with the field's bounds.
+	 *
+	 * @param string $key   Field key.
+	 * @param string $label Label.
+	 * @param string $help  Help text.
+	 * @param string $unit  Text after the input, such as "characters or more".
+	 * @return void
+	 */
+	private function number_row( $key, $label, $help, $unit = '' ) {
+		$bounds = Settings::bounds()[ $key ];
+		$this->row_start( $key, $label );
+		printf(
+			'<input type="number" class="small-text" id="%1$s" name="qcnotice[%2$s]" value="%3$d" min="%4$d" max="%5$d" step="1" /> %6$s',
+			esc_attr( 'qcnotice-' . $key ),
+			esc_attr( $key ),
+			(int) $this->settings[ $key ],
+			(int) $bounds[0],
+			(int) $bounds[1],
+			esc_html( $unit )
+		);
+		$this->row_end( $help );
+	}
+
+	/**
+	 * A one-entry-per-line textarea row.
+	 *
+	 * @param string $key   Field key.
+	 * @param string $label Label.
+	 * @param string $help  Help text.
+	 * @return void
+	 */
+	private function textarea_row( $key, $label, $help ) {
+		$this->row_start( $key, $label );
+		printf(
+			'<textarea class="large-text code" rows="4" id="%1$s" name="qcnotice[%2$s]">%3$s</textarea>',
+			esc_attr( 'qcnotice-' . $key ),
+			esc_attr( $key ),
+			esc_textarea( implode( "\n", (array) $this->settings[ $key ] ) )
+		);
+		$this->row_end( $help );
+	}
+
+	/**
+	 * A group of checkboxes.
+	 *
+	 * @param string $key     Field key.
+	 * @param array  $choices Value => label.
+	 * @param string $legend  Group name for screen readers.
+	 * @return void
+	 */
+	private function checkboxes( $key, array $choices, $legend ) {
+		echo '<fieldset><legend class="screen-reader-text">' . esc_html( $legend ) . '</legend>';
+		foreach ( $choices as $value => $label ) {
+			printf(
+				'<label><input type="checkbox" name="qcnotice[%1$s][]" value="%2$s"%3$s /> %4$s</label><br />',
+				esc_attr( $key ),
+				esc_attr( $value ),
+				checked( in_array( (string) $value, (array) $this->settings[ $key ], true ), true, false ),
+				esc_html( $label )
+			);
+		}
+		echo '</fieldset>';
+	}
+}
