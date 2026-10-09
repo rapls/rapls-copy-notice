@@ -49,7 +49,7 @@ act on copies:
 * Rules that route each copy to the right channel, and burst alerts.
 * Daily web search for your most copied paragraphs, with your own search API key.
 * CSV export of the log.
-* One license for a multisite network, with an overview of every site.
+* Multisite: the 5-site license covers a whole network, with an overview of every site.
 
 One-time purchase, no subscription. Details: https://raplsworks.com/quiet-copy-notice-pro-en/
 

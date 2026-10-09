@@ -129,7 +129,7 @@ class Upsell {
 			array( __( 'One address for every copy', 'quiet-copy-notice' ), __( 'Rules that send each copy to the right place, and burst alerts', 'quiet-copy-notice' ) ),
 			array( __( 'Copies of the same paragraph, listed together', 'quiet-copy-notice' ), __( 'Daily web search for those paragraphs, with your own search API key', 'quiet-copy-notice' ) ),
 			array( __( 'Log on screen', 'quiet-copy-notice' ), __( 'CSV export, safe to open in a spreadsheet', 'quiet-copy-notice' ) ),
-			array( __( 'Works on each site of a network', 'quiet-copy-notice' ), __( 'One license for the network, and an overview of every site', 'quiet-copy-notice' ) ),
+			array( __( 'Works on each site of a network', 'quiet-copy-notice' ), __( 'The 5-site license covers a whole network, with an overview of every site', 'quiet-copy-notice' ) ),
 		) as $row ) {
 			echo '<tr><td>' . esc_html( $row[0] ) . '</td><td>' . esc_html( $row[1] ) . '</td></tr>';
 		}
