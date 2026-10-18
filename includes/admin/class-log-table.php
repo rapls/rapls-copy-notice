@@ -110,9 +110,10 @@ class Log_Table extends \WP_List_Table {
 		$para  = $this->filter_paragraph();
 		$total = Logger::count( $post_id, $para );
 
-		$this->_column_headers = array( $this->get_columns(), array(), $this->get_sortable_columns(), 'created_at' );
-		$this->items           = Logger::query( $per_page, ( $this->get_pagenum() - 1 ) * $per_page, $post_id, $order, $para );
+		$this->_column_headers = array( $this->get_columns(), array(), $this->get_sortable_columns(), 'copied_text' );
 
+		// Pagination first: it sends a page number past the end back to the
+		// last page, and get_pagenum() is capped by it.
 		$this->set_pagination_args(
 			array(
 				'total_items' => $total,
@@ -120,6 +121,19 @@ class Log_Table extends \WP_List_Table {
 				'total_pages' => (int) ceil( $total / $per_page ),
 			)
 		);
+		$this->items = Logger::query( $per_page, ( $this->get_pagenum() - 1 ) * $per_page, $post_id, $order, $para );
+
+		// One query for every post on the page instead of one per row.
+		_prime_post_caches( array_unique( array_map( 'intval', wp_list_pluck( $this->items, 'post_id' ) ) ), false, false );
+	}
+
+	/**
+	 * Whether a post or paragraph filter is applied.
+	 *
+	 * @return bool
+	 */
+	public function is_filtered() {
+		return $this->filter_post_id() > 0 || '' !== $this->filter_paragraph();
 	}
 
 	/**
@@ -137,13 +151,14 @@ class Log_Table extends \WP_List_Table {
 		}
 		check_admin_referer( 'bulk-' . $this->_args['plural'] );
 
-		$ids     = isset( $_REQUEST['entry'] ) ? array_map( 'absint', (array) wp_unslash( $_REQUEST['entry'] ) ) : array();
-		$deleted = Logger::delete( $ids );
-
-		$args = array(
-			'qcnotice_msg'   => 'deleted',
-			'qcnotice_count' => $deleted,
-		);
+		$ids  = isset( $_REQUEST['entry'] ) ? array_filter( array_map( 'absint', (array) wp_unslash( $_REQUEST['entry'] ) ) ) : array();
+		$args = array( 'qcnotice_msg' => 'none_selected' );
+		if ( $ids ) {
+			$args = array(
+				'qcnotice_msg'   => 'deleted',
+				'qcnotice_count' => Logger::delete( $ids ),
+			);
+		}
 		if ( $this->filter_post_id() ) {
 			$args['qcnotice_post'] = $this->filter_post_id();
 		}
@@ -160,6 +175,10 @@ class Log_Table extends \WP_List_Table {
 	 * @return void
 	 */
 	public function no_items() {
+		if ( $this->is_filtered() ) {
+			esc_html_e( 'No log entries match this filter.', 'quiet-copy-notice' );
+			return;
+		}
 		esc_html_e( 'No copies recorded yet.', 'quiet-copy-notice' );
 	}
 
@@ -179,6 +198,11 @@ class Log_Table extends \WP_List_Table {
 		if ( empty( $ids ) ) {
 			return;
 		}
+		// A post filtered on from a row link may be outside the most copied ones.
+		if ( $current && ! in_array( $current, $ids, true ) ) {
+			array_unshift( $ids, $current );
+		}
+		_prime_post_caches( $ids, false, false );
 
 		echo '<div class="alignleft actions">';
 		echo '<label class="screen-reader-text" for="qcnotice-post-filter">' . esc_html__( 'Filter by post', 'quiet-copy-notice' ) . '</label>';
@@ -251,7 +275,8 @@ class Log_Table extends \WP_List_Table {
 	}
 
 	/**
-	 * Copied text column: an excerpt, with the stored text in a tooltip.
+	 * Copied text column: an excerpt, which opens to the stored text when it
+	 * is longer.
 	 *
 	 * @param array $item Row.
 	 * @return string
@@ -263,10 +288,13 @@ class Log_Table extends \WP_List_Table {
 			$excerpt .= '…';
 		}
 
+		$shown = mb_strlen( $text ) > self::TEXT_EXCERPT
+			? sprintf( '<details class="qcnotice-text"><summary>%1$s</summary><div class="qcnotice-text-full">%2$s</div></details>', esc_html( $excerpt ), esc_html( $text ) )
+			: '<span class="qcnotice-text">' . esc_html( $excerpt ) . '</span><br />';
+
 		$out = sprintf(
-			'<span class="qcnotice-text" title="%1$s">%2$s</span><br /><span class="description">%3$s</span>',
-			esc_attr( $text ),
-			esc_html( $excerpt ),
+			'%1$s<span class="description">%2$s</span>',
+			$shown,
 			esc_html(
 				sprintf(
 					/* translators: %s: number of characters in the original selection. */

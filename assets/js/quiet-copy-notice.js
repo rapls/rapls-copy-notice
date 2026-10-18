@@ -31,7 +31,7 @@
 			return [ marker.parentElement ];
 		}
 
-		var selectors = String( config.selector || '' ).split( ',' );
+		var selectors = splitSelectors( String( config.selector || '' ) );
 		for ( var i = 0; i < selectors.length; i++ ) {
 			var selector = selectors[ i ].trim();
 			if ( ! selector ) {
@@ -48,6 +48,39 @@
 			}
 		}
 		return [];
+	}
+
+	/**
+	 * Splits a selector list on the commas between selectors, leaving commas
+	 * inside :is(), :where(), :not() or attribute values alone.
+	 *
+	 * @param {string} list Selector list.
+	 * @return {string[]}
+	 */
+	function splitSelectors( list ) {
+		var parts = [];
+		var depth = 0;
+		var quote = '';
+		var start = 0;
+		for ( var i = 0; i < list.length; i++ ) {
+			var ch = list.charAt( i );
+			if ( quote ) {
+				if ( ch === quote ) {
+					quote = '';
+				}
+			} else if ( '"' === ch || "'" === ch ) {
+				quote = ch;
+			} else if ( '(' === ch || '[' === ch ) {
+				depth++;
+			} else if ( ( ')' === ch || ']' === ch ) && depth > 0 ) {
+				depth--;
+			} else if ( ',' === ch && 0 === depth ) {
+				parts.push( list.slice( start, i ) );
+				start = i + 1;
+			}
+		}
+		parts.push( list.slice( start ) );
+		return parts;
 	}
 
 	/**

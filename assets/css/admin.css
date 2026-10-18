@@ -19,6 +19,17 @@
 	word-break: break-word;
 }
 
+.qcnotice-wrap details.qcnotice-text summary {
+	cursor: pointer;
+}
+
+.qcnotice-wrap .qcnotice-text-full {
+	margin: 0.5em 0;
+	padding: 0.5em;
+	background: #f6f7f7;
+	border-left: 3px solid #c3c4c7;
+}
+
 .qcnotice-wrap .qcnotice-delete-all {
 	margin-top: 1em;
 }

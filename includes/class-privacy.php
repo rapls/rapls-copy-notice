@@ -52,7 +52,7 @@ class Privacy {
 
 		$hops = array_reverse( explode( ',', sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) ) );
 		foreach ( $hops as $hop ) {
-			$ip = self::normalize_ip( trim( $hop ) );
+			$ip = self::normalize_ip( self::strip_port( trim( $hop ) ) );
 			if ( '' === $ip ) {
 				// A malformed entry means the chain cannot be trusted past this point.
 				return $remote;
@@ -67,6 +67,10 @@ class Privacy {
 	/**
 	 * Returns the canonical form of a valid IP, or an empty string.
 	 *
+	 * An IPv4-mapped IPv6 address (::ffff:192.0.2.1), which some dual-stack
+	 * servers report, becomes the plain IPv4 address, so it is anonymized,
+	 * rate-limited and matched against IPv4 entries like any other.
+	 *
 	 * @param string $ip Candidate address.
 	 * @return string
 	 */
@@ -75,7 +79,40 @@ class Privacy {
 			return '';
 		}
 		$packed = inet_pton( $ip );
-		return false === $packed ? '' : inet_ntop( $packed );
+		if ( false === $packed ) {
+			return '';
+		}
+		if ( self::is_mapped( $packed ) ) {
+			$packed = substr( $packed, 12 );
+		}
+		return (string) inet_ntop( $packed );
+	}
+
+	/**
+	 * Whether a packed address is IPv4-mapped IPv6.
+	 *
+	 * @param string $packed Packed address.
+	 * @return bool
+	 */
+	private static function is_mapped( $packed ) {
+		return 16 === strlen( $packed ) && str_repeat( "\0", 10 ) . "\xff\xff" === substr( $packed, 0, 12 );
+	}
+
+	/**
+	 * Removes a port from one X-Forwarded-For entry: "192.0.2.1:5678" or
+	 * "[2001:db8::1]:5678". Some load balancers add it.
+	 *
+	 * @param string $hop Entry.
+	 * @return string
+	 */
+	private static function strip_port( $hop ) {
+		if ( preg_match( '/^\[([0-9a-fA-F:.]+)\](?::\d{1,5})?$/', $hop, $m ) ) {
+			return $m[1];
+		}
+		if ( preg_match( '/^(\d{1,3}(?:\.\d{1,3}){3}):\d{1,5}$/', $hop, $m ) ) {
+			return $m[1];
+		}
+		return $hop;
 	}
 
 	/**
@@ -149,18 +186,27 @@ class Privacy {
 			return null;
 		}
 		$parts = explode( '/', trim( $range ), 2 );
-		if ( '' === self::normalize_ip( $parts[0] ) ) {
+		$ip    = self::normalize_ip( $parts[0] );
+		if ( '' === $ip ) {
 			return null;
 		}
-		$packed = inet_pton( $parts[0] );
+		$packed = inet_pton( $ip );
 		$max    = strlen( $packed ) * 8;
 		if ( ! isset( $parts[1] ) ) {
 			return array( $packed, $max );
 		}
-		if ( ! ctype_digit( $parts[1] ) || (int) $parts[1] > $max ) {
+		if ( ! ctype_digit( $parts[1] ) ) {
 			return null;
 		}
-		return array( $packed, (int) $parts[1] );
+		$bits = (int) $parts[1];
+		// A mapped range such as ::ffff:192.0.2.0/120 counts its prefix over 128 bits.
+		if ( 4 === strlen( $packed ) && self::is_mapped( (string) inet_pton( $parts[0] ) ) ) {
+			$bits -= 96;
+		}
+		if ( $bits < 0 || $bits > $max ) {
+			return null;
+		}
+		return array( $packed, $bits );
 	}
 
 	/**
@@ -195,7 +241,7 @@ class Privacy {
 		}
 
 		$paragraphs = array(
-			__( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, and your IP address. By default the IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed) so it no longer identifies a single device.', 'quiet-copy-notice' ),
+			__( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address. By default the IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed) so it no longer identifies a single device.', 'quiet-copy-notice' ),
 			__( 'This information is used to tell the site administrator, by email, which content is being copied. It is not shared with anyone else and is not sent to any outside service. No cookies are set and no identifier is created for you.', 'quiet-copy-notice' ),
 			/* translators: %d: number of days copy records are kept. */
 			sprintf( __( 'Copy records are deleted automatically after %d days.', 'quiet-copy-notice' ), (int) Settings::get( 'retention_days' ) ),

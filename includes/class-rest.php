@@ -93,9 +93,8 @@ class Rest {
 		}
 
 		// 3. Copied text: cap, normalize, enforce the minimum length again.
-		$raw  = wp_check_invalid_utf8( self::scalar_param( $request, 'text' ), true );
-		$text = sanitize_textarea_field( mb_substr( $raw, 0, self::TEXT_MAX ) );
-		if ( mb_strlen( trim( $text ) ) < (int) Settings::get( 'min_length' ) ) {
+		$text = self::copied_text( self::scalar_param( $request, 'text' ) );
+		if ( mb_strlen( $text ) < (int) Settings::get( 'min_length' ) ) {
 			return self::empty_response( 400 );
 		}
 
@@ -167,6 +166,25 @@ class Rest {
 	private static function scalar_param( WP_REST_Request $request, $name ) {
 		$value = $request->get_param( $name );
 		return is_scalar( $value ) ? (string) $value : '';
+	}
+
+	/**
+	 * Copied text as stored: valid UTF-8, capped, without control or bidi
+	 * override characters, line breaks kept.
+	 *
+	 * It is not HTML-sanitized on purpose. Stripping tags or encoding "<"
+	 * here would change what the visitor copied (code samples, for one) and
+	 * leave "&lt;" in plain-text email. Every place that prints it escapes it
+	 * for its own context.
+	 *
+	 * @param string $value Submitted value.
+	 * @return string
+	 */
+	private static function copied_text( $value ) {
+		$text = wp_check_invalid_utf8( $value, true );
+		$text = str_replace( array( "\r\n", "\r" ), "\n", $text );
+		$text = (string) preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', $text );
+		return trim( mb_substr( $text, 0, self::TEXT_MAX ) );
 	}
 
 	/**

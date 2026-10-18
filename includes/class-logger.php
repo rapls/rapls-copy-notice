@@ -210,29 +210,55 @@ class Logger {
 	/**
 	 * Rows not yet included in a notification, oldest first.
 	 *
-	 * @param int $limit Maximum rows.
+	 * @param int $limit  Maximum rows.
+	 * @param int $max_id Highest row ID to include.
 	 * @return array
 	 */
-	public static function unnotified( $limit ) {
+	public static function unnotified( $limit, $max_id ) {
 		global $wpdb;
 
 		$table = Installer::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
-		return $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE notified = 0 ORDER BY id ASC LIMIT %d', $table, $limit ), ARRAY_A );
+		return $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i WHERE notified = 0 AND id <= %d ORDER BY id ASC LIMIT %d', $table, $max_id, $limit ), ARRAY_A );
 	}
 
 	/**
-	 * Number of rows not yet notified, up to and including an ID.
+	 * The highest ID of the rows stored before a UTC time, 0 when none.
 	 *
-	 * @param int $max_id Highest row ID to count.
+	 * @param string $before UTC datetime, Y-m-d H:i:s.
 	 * @return int
 	 */
-	public static function count_unnotified( $max_id ) {
+	public static function max_id_before( $before ) {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
+		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT MAX(id) FROM %i WHERE created_at < %s', Installer::table(), $before ) );
+	}
+
+	/**
+	 * Number of rows not yet notified that were stored before a UTC time.
+	 *
+	 * @param string $before UTC datetime, Y-m-d H:i:s.
+	 * @return int
+	 */
+	public static function count_unnotified_before( $before ) {
 		global $wpdb;
 
 		$table = Installer::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
-		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE notified = 0 AND id <= %d', $table, $max_id ) );
+		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i WHERE notified = 0 AND created_at < %s', $table, $before ) );
+	}
+
+	/**
+	 * Whether the log has any row.
+	 *
+	 * @return bool
+	 */
+	public static function has_rows() {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
+		return null !== $wpdb->get_var( $wpdb->prepare( 'SELECT id FROM %i LIMIT 1', Installer::table() ) );
 	}
 
 	/**

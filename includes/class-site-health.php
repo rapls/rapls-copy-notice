@@ -55,6 +55,14 @@ class Site_Health {
 			'label' => __( 'Quiet Copy Notice visitor IP addresses', 'quiet-copy-notice' ),
 			'test'  => array( $this, 'test_proxy' ),
 		);
+		$tests['direct'][ QCNOTICE_PREFIX . 'pending' ]      = array(
+			'label' => __( 'Quiet Copy Notice notification delivery', 'quiet-copy-notice' ),
+			'test'  => array( $this, 'test_pending' ),
+		);
+		$tests['direct'][ QCNOTICE_PREFIX . 'post_types' ]   = array(
+			'label' => __( 'Quiet Copy Notice monitored post types', 'quiet-copy-notice' ),
+			'test'  => array( $this, 'test_post_types' ),
+		);
 		return $tests;
 	}
 
@@ -94,19 +102,23 @@ class Site_Health {
 	 */
 	public function test_cron() {
 		$problems = array();
-		$hooks    = array(
-			Cron::DIGEST_HOOK => __( 'hourly summary email', 'quiet-copy-notice' ),
-			Cron::PURGE_HOOK  => __( 'daily removal of old records', 'quiet-copy-notice' ),
+		$messages = array(
+			Cron::DIGEST_HOOK => array(
+				__( 'The hourly summary email is not scheduled.', 'quiet-copy-notice' ),
+				__( 'The hourly summary email is more than an hour late.', 'quiet-copy-notice' ),
+			),
+			Cron::PURGE_HOOK  => array(
+				__( 'The daily removal of old log entries is not scheduled.', 'quiet-copy-notice' ),
+				__( 'The daily removal of old log entries is more than an hour late.', 'quiet-copy-notice' ),
+			),
 		);
 
-		foreach ( $hooks as $hook => $label ) {
+		foreach ( $messages as $hook => $texts ) {
 			$next = wp_next_scheduled( $hook );
 			if ( ! $next ) {
-				/* translators: %s: name of a scheduled task. */
-				$problems[] = sprintf( __( 'The %s is not scheduled.', 'quiet-copy-notice' ), $label );
+				$problems[] = $texts[0];
 			} elseif ( $next < time() - self::OVERDUE_GRACE ) {
-				/* translators: %s: name of a scheduled task. */
-				$problems[] = sprintf( __( 'The %s is more than an hour late.', 'quiet-copy-notice' ), $label );
+				$problems[] = $texts[1];
 			}
 		}
 
@@ -115,7 +127,7 @@ class Site_Health {
 				'cron',
 				'good',
 				__( 'Copy summaries and log cleanup are scheduled', 'quiet-copy-notice' ),
-				__( 'The hourly summary email and the daily removal of old records are scheduled with WP-Cron.', 'quiet-copy-notice' )
+				__( 'The hourly summary email and the daily removal of old log entries are scheduled with WP-Cron.', 'quiet-copy-notice' )
 			);
 		}
 
@@ -148,6 +160,60 @@ class Site_Health {
 			__( 'Copy notifications have no valid address', 'quiet-copy-notice' ),
 			__( 'Copies are still recorded in the log, but no email can be sent. Enter an address under Tools → Quiet Copy Notice → Notifications, or fix the site administration email address.', 'quiet-copy-notice' ),
 			'notifications'
+		);
+	}
+
+	/**
+	 * Copies older than two summary runs that are still not notified mean
+	 * delivery keeps failing. Only the count is used.
+	 *
+	 * @return array
+	 */
+	public function test_pending() {
+		$pending = Logger::count_unnotified_before( gmdate( 'Y-m-d H:i:s', time() - 2 * HOUR_IN_SECONDS ) );
+		if ( 0 === $pending ) {
+			return $this->result(
+				'pending',
+				'good',
+				__( 'Copy notifications are being delivered', 'quiet-copy-notice' ),
+				__( 'No copy recorded more than two hours ago is still waiting to be notified.', 'quiet-copy-notice' )
+			);
+		}
+
+		return $this->result(
+			'pending',
+			'recommended',
+			sprintf(
+				/* translators: %s: number of log entries. */
+				_n( '%s copy is waiting to be notified', '%s copies are waiting to be notified', $pending, 'quiet-copy-notice' ),
+				number_format_i18n( $pending )
+			),
+			__( 'Copies recorded more than two hours ago have not been notified, so the notification keeps failing. Check that this site can send email (an SMTP plugin may be needed) and that the address under Notifications is right. They stay in the log and go out with the next summary once sending works.', 'quiet-copy-notice' ),
+			'notifications'
+		);
+	}
+
+	/**
+	 * At least one post type is monitored.
+	 *
+	 * @return array
+	 */
+	public function test_post_types() {
+		if ( ! empty( Settings::get( 'post_types' ) ) ) {
+			return $this->result(
+				'post_types',
+				'good',
+				__( 'Copies are detected on at least one post type', 'quiet-copy-notice' ),
+				__( 'At least one post type is selected under Detection.', 'quiet-copy-notice' )
+			);
+		}
+
+		return $this->result(
+			'post_types',
+			'recommended',
+			__( 'No post type is monitored for copies', 'quiet-copy-notice' ),
+			__( 'No post type is selected under Detection, so no copies are detected anywhere on the site.', 'quiet-copy-notice' ),
+			'detection'
 		);
 	}
 
@@ -219,16 +285,17 @@ class Site_Health {
 					'value' => (string) get_option( Installer::DB_VERSION_OPTION, '' ),
 				),
 				'records'      => array(
-					'label' => __( 'Records stored', 'quiet-copy-notice' ),
+					'label' => __( 'Log entries stored', 'quiet-copy-notice' ),
 					'value' => Logger::count(),
 				),
 				'records_7d'   => array(
-					'label' => __( 'Records in the last 7 days', 'quiet-copy-notice' ),
+					'label' => __( 'Log entries in the last 7 days', 'quiet-copy-notice' ),
 					'value' => Logger::count_since( gmdate( 'Y-m-d H:i:s', time() - 7 * DAY_IN_SECONDS ) ),
 				),
 				'notify_mode'  => array(
 					'label' => __( 'Notification mode', 'quiet-copy-notice' ),
-					'value' => Settings::get( 'notify_mode' ),
+					'value' => Settings::MODE_INSTANT === Settings::get( 'notify_mode' ) ? __( 'One email per copy, right away', 'quiet-copy-notice' ) : __( 'One summary email per hour', 'quiet-copy-notice' ),
+					'debug' => Settings::get( 'notify_mode' ),
 				),
 				'next_digest'  => array(
 					'label' => __( 'Next summary check', 'quiet-copy-notice' ),
@@ -240,7 +307,14 @@ class Site_Health {
 				),
 				'rate_limits'  => array(
 					'label' => __( 'Rate limits', 'quiet-copy-notice' ),
-					'value' => sprintf( '%d/min per IP, %d/h site', Settings::get( 'rate_ip_per_minute' ), Settings::get( 'rate_site_per_hour' ) ),
+					'value' => sprintf(
+						/* translators: 1: copies per minute per IP address, 2: copies per hour per IP address, 3: copies per hour for the whole site. */
+						__( '%1$d a minute and %2$d an hour per IP address, %3$d an hour for the site', 'quiet-copy-notice' ),
+						Settings::get( 'rate_ip_per_minute' ),
+						Rate_Limit::ip_hourly_limit( Settings::get( 'rate_ip_per_minute' ), Settings::get( 'rate_site_per_hour' ) ),
+						Settings::get( 'rate_site_per_hour' )
+					),
+					'debug' => sprintf( '%d/min per IP, %d/h per IP, %d/h site', Settings::get( 'rate_ip_per_minute' ), Rate_Limit::ip_hourly_limit( Settings::get( 'rate_ip_per_minute' ), Settings::get( 'rate_site_per_hour' ) ), Settings::get( 'rate_site_per_hour' ) ),
 				),
 				'proxies'      => array(
 					'label' => __( 'Trusted proxies', 'quiet-copy-notice' ),

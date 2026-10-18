@@ -124,9 +124,33 @@ class Settings {
 			if ( ! is_array( $stored ) ) {
 				$stored = array();
 			}
-			self::$cache = array_merge( self::defaults(), array_intersect_key( $stored, self::defaults() ) );
+			self::$cache = self::coerce( array_merge( self::defaults(), array_intersect_key( $stored, self::defaults() ) ) );
 		}
 		return self::$cache;
+	}
+
+	/**
+	 * Gives every value the type of its default, so a value damaged in the
+	 * database (by hand or by another plugin) cannot break the front end.
+	 * A value of the wrong kind falls back to the default.
+	 *
+	 * @param array $settings Merged settings.
+	 * @return array
+	 */
+	private static function coerce( array $settings ) {
+		foreach ( self::defaults() as $key => $default ) {
+			$value = $settings[ $key ];
+			if ( is_array( $default ) ) {
+				$settings[ $key ] = is_array( $value ) ? array_values( array_filter( $value, 'is_scalar' ) ) : $default;
+			} elseif ( is_bool( $default ) ) {
+				$settings[ $key ] = is_scalar( $value ) ? (bool) $value : $default;
+			} elseif ( is_int( $default ) ) {
+				$settings[ $key ] = is_numeric( $value ) ? (int) $value : $default;
+			} else {
+				$settings[ $key ] = is_scalar( $value ) ? (string) $value : $default;
+			}
+		}
+		return $settings;
 	}
 
 	/**
@@ -234,7 +258,9 @@ class Settings {
 	 *
 	 * @param string $tab   Tab key from tab_fields().
 	 * @param array  $input Raw, unslashed form input.
-	 * @return bool False when the tab is unknown.
+	 * @return array|false Keys of the fields whose input was not valid and was
+	 *                     replaced, adjusted or partly dropped; false when the
+	 *                     tab is unknown.
 	 */
 	public static function save_tab( $tab, array $input ) {
 		$fields = self::tab_fields();
@@ -243,14 +269,48 @@ class Settings {
 		}
 
 		$settings = self::all();
+		$adjusted = array();
 		foreach ( $fields[ $tab ] as $key ) {
-			$settings[ $key ] = self::sanitize_field( $key, isset( $input[ $key ] ) ? $input[ $key ] : null );
+			$raw              = isset( $input[ $key ] ) ? $input[ $key ] : null;
+			$settings[ $key ] = self::sanitize_field( $key, $raw );
+			if ( self::was_adjusted( $key, $raw, $settings[ $key ] ) ) {
+				$adjusted[] = $key;
+			}
 		}
 
 		self::ensure_option();
 		update_option( self::OPTION, $settings, false );
 		self::$cache = null;
-		return true;
+		return $adjusted;
+	}
+
+	/**
+	 * Whether a submitted value was not stored as the admin entered it.
+	 * Whitespace, letter case and duplicate list entries do not count.
+	 *
+	 * @param string $key   Setting name.
+	 * @param mixed  $raw   Submitted value.
+	 * @param mixed  $clean Stored value.
+	 * @return bool
+	 */
+	private static function was_adjusted( $key, $raw, $clean ) {
+		if ( null === $raw ) {
+			return false;
+		}
+		if ( isset( self::bounds()[ $key ] ) ) {
+			return ! is_scalar( $raw ) || trim( (string) $raw ) !== (string) $clean;
+		}
+		switch ( $key ) {
+			case 'notify_email':
+				return is_string( $raw ) && '' !== trim( $raw ) && '' === $clean;
+			case 'content_selector':
+				return ! is_string( $raw ) || trim( (string) preg_replace( '/\s+/', ' ', $raw ) ) !== $clean;
+			case 'exclude_ips':
+			case 'trusted_proxies':
+			case 'exclude_posts':
+				return count( array_unique( array_map( 'strtolower', self::split_lines( $raw ) ) ) ) !== count( $clean );
+		}
+		return false;
 	}
 
 	/**
@@ -361,7 +421,7 @@ class Settings {
 			return $default;
 		}
 		$value = trim( preg_replace( '/\s+/', ' ', $value ) );
-		if ( '' === $value || strlen( $value ) > 500 || ! preg_match( '/^[A-Za-z0-9_\-\.#,:\s\[\]="\'>+~*()]+$/', $value ) ) {
+		if ( '' === $value || strlen( $value ) > 500 || ! preg_match( '/^[\p{L}\p{N}_\-\.#,:\s\[\]="\'>+~*()^$|!]+$/u', $value ) ) {
 			return $default;
 		}
 		return $value;

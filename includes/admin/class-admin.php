@@ -32,6 +32,13 @@ class Admin {
 	private $hook = '';
 
 	/**
+	 * The log table, prepared before output.
+	 *
+	 * @var Log_Table|null
+	 */
+	private $table = null;
+
+	/**
 	 * Registers hooks.
 	 *
 	 * @return void
@@ -44,6 +51,18 @@ class Admin {
 		// Screen options are saved before load-{page}, so this cannot wait.
 		add_filter( 'set_screen_option_' . QCNOTICE_PREFIX . 'per_page', array( $this, 'save_per_page' ), 10, 3 );
 		add_filter( 'plugin_action_links_' . plugin_basename( QCNOTICE_FILE ), array( $this, 'action_links' ) );
+		add_filter( 'removable_query_args', array( $this, 'removable_query_args' ) );
+	}
+
+	/**
+	 * Keeps one-off result messages out of the URLs that paging, sorting and
+	 * filtering build from the current one, so a notice is not shown again.
+	 *
+	 * @param array $args Query args WordPress removes.
+	 * @return array
+	 */
+	public function removable_query_args( $args ) {
+		return array_merge( (array) $args, array( 'qcnotice_msg', 'qcnotice_count', 'qcnotice_fields' ) );
 	}
 
 	/**
@@ -156,8 +175,9 @@ class Admin {
 	}
 
 	/**
-	 * Runs before output on the log tab: handles bulk deletion and
-	 * sets up screen options.
+	 * Runs before output on the log tab: handles bulk deletion, sets up
+	 * screen options and loads the rows, so the table can still redirect
+	 * (for example from a page number past the end).
 	 *
 	 * @return void
 	 */
@@ -185,6 +205,21 @@ class Admin {
 		);
 		$table = new Log_Table();
 		$table->process_bulk_action();
+
+		// The filter form is sent by GET with the bulk-action nonce. Drop that
+		// and the page number, as the Posts screen does, so filtering starts
+		// on page one and the URL stays clean.
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only navigation; nothing is changed.
+		if ( ! empty( $_GET['_wp_http_referer'] ) || ( isset( $_GET['filter_action'] ) && isset( $_GET['paged'] ) ) ) {
+			$uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+			$uri = remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'action2', 'filter_action', 'paged' ), $uri );
+			wp_safe_redirect( $uri );
+			exit;
+		}
+		// phpcs:enable
+
+		$table->prepare_items();
+		$this->table = $table;
 	}
 
 	/**
@@ -260,9 +295,22 @@ class Admin {
 		// phpcs:enable
 
 		$text = '';
+		$type = 'success';
 		switch ( $message ) {
 			case 'saved':
 				$text = __( 'Settings saved.', 'quiet-copy-notice' );
+				break;
+			case 'saved_adjusted':
+				$type = 'warning';
+				$text = sprintf(
+					/* translators: %s: list of field names. */
+					__( 'Settings saved, but some values were not valid and were changed or left out: %s. Check them below.', 'quiet-copy-notice' ),
+					implode( wp_get_list_item_separator(), $this->adjusted_field_labels() )
+				);
+				break;
+			case 'none_selected':
+				$type = 'warning';
+				$text = __( 'No entries were selected.', 'quiet-copy-notice' );
 				break;
 			case 'deleted':
 				/* translators: %d: number of log entries deleted. */
@@ -274,8 +322,26 @@ class Admin {
 		}
 
 		if ( '' !== $text ) {
-			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( $text ) . '</p></div>';
+			echo '<div class="notice notice-' . esc_attr( $type ) . ' is-dismissible"><p>' . esc_html( $text ) . '</p></div>';
 		}
+	}
+
+	/**
+	 * Labels of the fields named in qcnotice_fields, known fields only.
+	 *
+	 * @return string[]
+	 */
+	private function adjusted_field_labels() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display only; keys are looked up in a fixed list.
+		$keys   = isset( $_GET['qcnotice_fields'] ) ? explode( ',', sanitize_text_field( wp_unslash( $_GET['qcnotice_fields'] ) ) ) : array();
+		$labels = Settings_Page::field_labels();
+		$out    = array();
+		foreach ( $keys as $key ) {
+			if ( isset( $labels[ $key ] ) ) {
+				$out[] = $labels[ $key ];
+			}
+		}
+		return $out ? $out : array( __( 'unknown field', 'quiet-copy-notice' ) );
 	}
 
 	/**
@@ -291,7 +357,7 @@ class Admin {
 		}
 		printf(
 			'<div class="notice notice-warning"><p>%1$s <a href="%2$s">%3$s</a></p></div>',
-			esc_html__( 'Check Copy Contents is still active. It is no longer maintained. Its settings were carried over where possible, so you can deactivate it.', 'quiet-copy-notice' ),
+			esc_html__( 'Check Copy Contents is still active. It is no longer maintained. Settings it had when Quiet Copy Notice was first activated were carried over where possible, so you can deactivate it.', 'quiet-copy-notice' ),
 			esc_url( admin_url( 'plugins.php' ) ),
 			esc_html__( 'Go to Plugins', 'quiet-copy-notice' )
 		);
@@ -303,19 +369,26 @@ class Admin {
 	 * @return void
 	 */
 	private function render_log() {
-		$table = new Log_Table();
-		$table->prepare_items();
+		$table = $this->table;
+		if ( null === $table ) {
+			$table = new Log_Table();
+			$table->prepare_items();
+		}
 
 		echo '<form method="get">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( QCNOTICE_SLUG ) . '" />';
 		$table->display();
 		echo '</form>';
 
-		if ( Logger::count() > 0 ) {
-			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="qcnotice-delete-all" onsubmit="return window.confirm(' . esc_attr( wp_json_encode( __( 'Delete every log entry? This cannot be undone.', 'quiet-copy-notice' ) ) ) . ');">';
+		if ( Logger::has_rows() ) {
+			$filtered = $table->is_filtered();
+			$confirm  = $filtered
+				? __( 'Delete every log entry, not only the ones shown by this filter? This cannot be undone.', 'quiet-copy-notice' )
+				: __( 'Delete every log entry? This cannot be undone.', 'quiet-copy-notice' );
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="qcnotice-delete-all" onsubmit="return window.confirm(' . esc_attr( wp_json_encode( $confirm ) ) . ');">';
 			echo '<input type="hidden" name="action" value="' . esc_attr( self::ACTION_DELETE_ALL ) . '" />';
 			wp_nonce_field( self::ACTION_DELETE_ALL );
-			submit_button( __( 'Delete all entries', 'quiet-copy-notice' ), 'delete', 'submit', false );
+			submit_button( $filtered ? __( 'Delete all entries (not only this filter)', 'quiet-copy-notice' ) : __( 'Delete all entries', 'quiet-copy-notice' ), 'delete', 'submit', false );
 			echo '</form>';
 		}
 
@@ -343,11 +416,18 @@ class Admin {
 			? wp_unslash( $_POST['qcnotice'] )
 			: array();
 
-		if ( ! Settings::save_tab( $tab, $input ) ) {
+		$adjusted = Settings::save_tab( $tab, $input );
+		if ( false === $adjusted ) {
 			wp_die( esc_html__( 'Unknown settings section.', 'quiet-copy-notice' ), 400 );
 		}
 
-		wp_safe_redirect( self::url( $tab, array( 'qcnotice_msg' => 'saved' ) ) );
+		$args = $adjusted
+			? array(
+				'qcnotice_msg'    => 'saved_adjusted',
+				'qcnotice_fields' => implode( ',', $adjusted ),
+			)
+			: array( 'qcnotice_msg' => 'saved' );
+		wp_safe_redirect( self::url( $tab, $args ) );
 		exit;
 	}
 

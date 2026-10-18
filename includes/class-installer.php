@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Installer {
 
-	const DB_VERSION        = '1';
+	const DB_VERSION        = '2';
 	const DB_VERSION_OPTION = QCNOTICE_PREFIX . 'db_version';
 
 	/**
@@ -32,10 +32,27 @@ class Installer {
 	/**
 	 * Deactivation hook. Logs and settings stay until uninstall.
 	 *
+	 * On a network deactivation the hook runs once, on the main site, so the
+	 * events of every other site are removed here too.
+	 *
+	 * @param bool $network_wide Whether the plugin is deactivated network-wide.
 	 * @return void
 	 */
-	public static function deactivate() {
-		Cron::unschedule();
+	public static function deactivate( $network_wide = false ) {
+		if ( ! $network_wide || ! is_multisite() ) {
+			Cron::unschedule();
+			return;
+		}
+		foreach ( get_sites(
+			array(
+				'fields' => 'ids',
+				'number' => 0,
+			)
+		) as $site_id ) {
+			switch_to_blog( (int) $site_id );
+			Cron::unschedule();
+			restore_current_blog();
+		}
 	}
 
 	/**
@@ -103,11 +120,19 @@ class Installer {
   notified tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY  (id),
   KEY created_at (created_at),
-  KEY post_id (post_id),
+  KEY post_created (post_id,created_at),
   KEY post_paragraph (post_id,paragraph_hash),
   KEY notified (notified)
 ) {$charset};"
 		);
+
+		// Schema 2 replaced KEY post_id with post_created, which starts with
+		// the same column. dbDelta adds indexes but never drops them.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema check on a custom table.
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW INDEX FROM %i WHERE Key_name = %s', $table, 'post_id' ) ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- One-time index migration.
+			$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i DROP INDEX post_id', $table ) );
+		}
 
 		Settings::ensure_option();
 		update_option( self::DB_VERSION_OPTION, self::DB_VERSION );

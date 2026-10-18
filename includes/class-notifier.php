@@ -33,6 +33,11 @@ class Notifier {
 	const DIGEST_BATCH_MAX = 5000;
 
 	/**
+	 * Seconds a new row is left alone by the digest.
+	 */
+	const DIGEST_SETTLE = MINUTE_IN_SECONDS;
+
+	/**
 	 * Characters of copied text shown per entry.
 	 */
 	const TEXT_EXCERPT = 200;
@@ -77,10 +82,19 @@ class Notifier {
 	/**
 	 * Hourly digest of everything not yet notified.
 	 *
+	 * Rows from the last minute are left for the next run: in instant mode
+	 * the request that stored them may still be sending their own mail, and
+	 * taking them here too would notify them twice. The cutoff is an ID, so
+	 * marking "through the last row" never covers a row that was skipped.
+	 *
 	 * @return void
 	 */
 	public static function send_digest() {
-		$rows = Logger::unnotified( self::DIGEST_BATCH_MAX );
+		$max_id = Logger::max_id_before( gmdate( 'Y-m-d H:i:s', time() - self::DIGEST_SETTLE ) );
+		if ( $max_id <= 0 ) {
+			return;
+		}
+		$rows = Logger::unnotified( self::DIGEST_BATCH_MAX, $max_id );
 		if ( empty( $rows ) ) {
 			return;
 		}
@@ -211,7 +225,8 @@ class Notifier {
 		$post = get_post( (int) $row['post_id'] );
 
 		$lines   = array();
-		$lines[] = self::quote( mb_substr( (string) $row['copied_text'], 0, self::TEXT_EXCERPT ) );
+		$text    = (string) $row['copied_text'];
+		$lines[] = self::quote( mb_strlen( $text ) > self::TEXT_EXCERPT ? mb_substr( $text, 0, self::TEXT_EXCERPT ) . '…' : $text );
 		$lines[] = '';
 		$lines[] = __( 'Date:', 'quiet-copy-notice' ) . ' ' . wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $time );
 		$lines[] = __( 'Post:', 'quiet-copy-notice' ) . ' ' . ( $post ? self::plain( get_the_title( $post ) ) : '#' . (int) $row['post_id'] );
@@ -220,7 +235,7 @@ class Notifier {
 		}
 		$lines[] = sprintf(
 			/* translators: %d: length of the original selection in characters. */
-			__( 'Length: %d characters', 'quiet-copy-notice' ),
+			_n( 'Length: %d character', 'Length: %d characters', (int) $row['text_length'], 'quiet-copy-notice' ),
 			(int) $row['text_length']
 		);
 		$lines[] = __( 'IP:', 'quiet-copy-notice' ) . ' ' . self::one_line( $row['ip'] );

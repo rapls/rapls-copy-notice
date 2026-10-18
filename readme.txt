@@ -4,7 +4,7 @@ Tags: copy, notification, analytics, content protection, plagiarism
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -30,11 +30,12 @@ right-click as usual; you simply find out which passages are being taken.
 * A dashboard widget with the number of copies in the last 7 days and the three
   most copied posts.
 * Checks in **Tools → Site Health** for the log table, the scheduled tasks, the
-  notification address and proxy setup.
+  notification address, notifications that keep failing, the monitored post
+  types and proxy setup.
 * Two optional features for readers, both off by default: a short message after
   they copy (for example, asking them to link to the source), and the post title
   and URL appended to the copied text.
-* Records are deleted automatically after 90 days (adjustable).
+* Log entries are deleted automatically after 90 days (adjustable).
 * Works with page caching: the detection script needs no per-visitor token.
 
 = Quiet Copy Notice Pro (optional add-on) =
@@ -92,12 +93,14 @@ plugin treats all of it as untrusted.
   exact place they appear (HTML text, attribute or URL). The plugin does not
   rely on cleaning values when they are saved.
 * **Plain-text email only.** Notifications are always sent as `text/plain`. The
-  subject line contains fixed wording, your site name and a count, never
-  anything a visitor sent or a post title. Copied text is quoted line by line in
+  subject line contains your site name, the label you set (by default "Copy
+  notification") and a count, never anything a visitor sent or a post title. Copied text is quoted line by line in
   the body so it cannot imitate other fields.
 * **Rate limited.** By default at most 10 reports per minute from one IP address
-  and 500 per hour for the whole site are accepted. Reports over either limit
-  are neither stored nor emailed.
+  and 500 per hour for the whole site are accepted. One address is also held to
+  a fifth of the site limit per hour (100 by default), so it cannot use up the
+  site limit alone, and IPv6 addresses are counted per /64 block. Reports over a
+  limit are neither stored nor emailed.
 * **Checked against real posts.** A report is accepted only for a published
   post of a monitored type. Copied text is capped at 500 characters and the
   user agent and referrer host at 255.
@@ -150,8 +153,10 @@ site with little traffic, the email goes out with the first visit after the hour
 = Can I count copies in Google Analytics or another tool? =
 
 The plugin does not send anything to analytics services itself. It does fire a
-`qcnotice:copy` event on the page after each recorded copy, with the post ID and
-the length of the selection, which your own script can forward:
+`qcnotice:copy` event on the page each time it reports a copy to your site, with
+the post ID and the length of the selection, which your own script can forward.
+The event fires in the browser, before the site applies its rate limits and
+ignored IP addresses, so the count can be a little higher than the log's:
 
 `document.addEventListener( 'qcnotice:copy', function ( e ) { /* e.detail.postId, e.detail.length */ } );`
 
@@ -171,9 +176,23 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
+= 1.3.2 =
+* Fix: copied text is stored as copied. Code such as `a < b` or `<div>` is no longer changed or cut out, and no longer shows up as `&lt;` in emails.
+* Fix: filtering the log while on a later page no longer shows an empty list with "No copies recorded yet."
+* Fix: a result notice such as "3 entries deleted." no longer comes back when you move to another page of the log.
+* Fix: in "one email per copy" mode, a copy could occasionally be emailed twice when the hourly summary ran at the same moment.
+* Fix: deactivating the plugin network-wide now removes its scheduled tasks on every site.
+* Fix: IPv4 addresses that the server reports in IPv6 form (`::ffff:192.0.2.1`), and `X-Forwarded-For` entries with a port, are now handled like plain addresses.
+* Fix: CSS selectors with `^=`, `$=`, `|=`, non-ASCII class names or `:is(a, b)` are now accepted for the content area.
+* Change: one IP address can no longer use up the whole site limit: it is also held to a fifth of the site limit per hour, and IPv6 addresses are counted per /64 block.
+* Change: when a setting is not valid and is changed on save, the notice now says which one, instead of only "Settings saved."
+* New: Site Health warns when notifications keep failing and when no post type is monitored. The Detection tab warns about the latter too.
+* Improved: long copied text can be opened in full in the log, and the log screen needs fewer database queries.
+* Improved: clearer wording on the settings screens; the suggested privacy policy text now mentions the paragraph fingerprint.
+
 = 1.3.1 =
 * Fix: uninstalling the plugin no longer deletes the settings of the separate Pro add-on.
-* Added the plugin's home page.
+* The plugin's Plugin URI now points to its page on raplsworks.com.
 * Clarified that a multisite network needs the 5-site Pro license.
 
 = 1.3.0 =
@@ -194,6 +213,9 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 * First release.
 
 == Upgrade Notice ==
+
+= 1.3.2 =
+Stores copied text exactly as copied, fixes an empty log after filtering, and stops one IP address from using up the site-wide limit.
 
 = 1.3.1 =
 Uninstalling the plugin now keeps the Pro add-on's settings.
