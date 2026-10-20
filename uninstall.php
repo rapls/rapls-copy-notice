@@ -148,3 +148,12 @@ if ( is_multisite() ) {
 // Rows-per-page screen option. User meta is shared by the whole network, so
 // this runs once.
 delete_metadata( 'user', 0, 'qcnotice_per_page', '', true );
+
+// With a persistent object cache, transients live only in the cache, and the
+// per-IP rate limit counters have names made from the address, so they cannot
+// be listed and deleted one by one. Transients may disappear at any time by
+// design, so the group is flushed once where the cache supports that. Where it
+// does not, they expire on their own: the rate limit counters within an hour.
+if ( wp_using_ext_object_cache() && function_exists( 'wp_cache_supports' ) && wp_cache_supports( 'flush_group' ) ) {
+	wp_cache_flush_group( 'transient' );
+}

@@ -4,7 +4,7 @@ Tags: copy, notification, analytics, content protection, plagiarism
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.5
+Stable tag: 1.3.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,6 +184,9 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
+= 1.3.6 =
+* Fix: with a persistent object cache (Redis, Memcached), uninstalling left the per-IP rate limit counters in the cache until they expired. Where the cache supports it, its transients are now cleared once at the end.
+
 = 1.3.5 =
 * Changed: uninstalling on a large multisite network is faster. Sites are handled 500 at a time through their own tables, without switching to each one, and the plugin's scheduled events are removed from every site.
 
@@ -233,6 +236,9 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 * First release.
 
 == Upgrade Notice ==
+
+= 1.3.6 =
+Uninstalling now also clears cached rate limit counters on sites with a persistent object cache.
 
 = 1.3.5 =
 Faster, more complete uninstall on large multisite networks.
