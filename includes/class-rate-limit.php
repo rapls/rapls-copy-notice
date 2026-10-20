@@ -26,10 +26,20 @@ if ( ! defined( 'ABSPATH' ) ) {
  * per-IP key is created (so at most rate_site_per_hour IP keys exist per
  * hour), and the IP is hashed rather than stored. WordPress core deletes
  * expired transients daily.
+ *
+ * The per-IP key names also carry a generation ID, made once per install and
+ * removed on uninstall. With a persistent object cache the counters live only
+ * in the cache, where uninstall cannot find them by name; after a reinstall
+ * the new generation never reads them, and they expire within the hour.
  */
 class Rate_Limit {
 
 	const KEY_PREFIX = QCNOTICE_PREFIX . 'rl_';
+
+	/**
+	 * Option holding the generation ID.
+	 */
+	const GENERATION_OPTION = QCNOTICE_PREFIX . 'cache_gen';
 
 	/**
 	 * Counts this request and reports whether it is within both limits.
@@ -69,7 +79,7 @@ class Rate_Limit {
 		$minute_max = (int) Settings::get( 'rate_ip_per_minute' );
 		$hour_max   = self::ip_hourly_limit( $minute_max, $site_max );
 
-		$ip_key = self::KEY_PREFIX . 'ip_' . substr( hash_hmac( 'sha256', self::bucket( $ip ), wp_salt( 'nonce' ) ), 0, 32 );
+		$ip_key = self::KEY_PREFIX . 'ip_' . self::generation() . '_' . substr( hash_hmac( 'sha256', self::bucket( $ip ), wp_salt( 'nonce' ) ), 0, 32 );
 		$per_ip = self::read( $ip_key );
 		$now    = time();
 		if ( $now - $per_ip['minute_start'] >= MINUTE_IN_SECONDS ) {
@@ -95,6 +105,28 @@ class Rate_Limit {
 	 */
 	public static function ip_hourly_limit( $minute_max, $site_max ) {
 		return max( (int) $minute_max, (int) ceil( (int) $site_max / 5 ) );
+	}
+
+	/**
+	 * This install's generation ID: 8 lowercase letters and digits, made on
+	 * first use. Autoloaded, so reading it costs no query on a copy request.
+	 *
+	 * @return string
+	 */
+	public static function generation() {
+		$gen = get_option( self::GENERATION_OPTION );
+		if ( is_string( $gen ) && preg_match( '/^[a-z0-9]{8}$/', $gen ) ) {
+			return $gen;
+		}
+		$new = strtolower( wp_generate_password( 8, false, false ) );
+		if ( false === $gen ) {
+			// Two first requests at once: one insert wins, both use it.
+			add_option( self::GENERATION_OPTION, $new, '', 'yes' );
+			$gen = get_option( self::GENERATION_OPTION, $new );
+			return is_string( $gen ) && '' !== $gen ? $gen : $new;
+		}
+		update_option( self::GENERATION_OPTION, $new, true );
+		return $new;
 	}
 
 	/**

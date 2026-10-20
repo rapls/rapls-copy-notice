@@ -47,7 +47,7 @@ function qcnotice_uninstall_site( $site_id ) {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-off cleanup on uninstall.
 	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE ( option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s ) AND option_name NOT LIKE %s AND option_name NOT LIKE %s AND option_name NOT LIKE %s', $options, $like[0], $like[1], $like[2], $keep[0], $keep[1], $keep[2] ) );
 
-	qcnotice_uninstall_cache( $site_id, array( $prefix . 'settings', $prefix . 'db_version' ), array( $prefix . 'rl_site', $prefix . 'instant_sent' ) );
+	qcnotice_uninstall_cache( $site_id, array( $prefix . 'settings', $prefix . 'db_version', $prefix . 'cache_gen' ), array( $prefix . 'rl_site', $prefix . 'instant_sent' ) );
 }
 
 /**
@@ -94,6 +94,11 @@ function qcnotice_uninstall_cron( $options, array $hooks ) {
  * With a persistent object cache, drops the cached copies of what was
  * deleted directly, so a later install does not read old settings.
  * Without one, nothing is cached across requests and this does nothing.
+ *
+ * The per-IP rate limit counters cannot be named here (their names hold a
+ * hashed address). They carry the generation ID deleted with the options, so
+ * a reinstall never reads them, and they expire within the hour. Flushing
+ * the whole transient group instead would drop every other plugin's too.
  *
  * @param int   $site_id    Site ID.
  * @param array $options    Option names.
@@ -148,12 +153,3 @@ if ( is_multisite() ) {
 // Rows-per-page screen option. User meta is shared by the whole network, so
 // this runs once.
 delete_metadata( 'user', 0, 'qcnotice_per_page', '', true );
-
-// With a persistent object cache, transients live only in the cache, and the
-// per-IP rate limit counters have names made from the address, so they cannot
-// be listed and deleted one by one. Transients may disappear at any time by
-// design, so the group is flushed once where the cache supports that. Where it
-// does not, they expire on their own: the rate limit counters within an hour.
-if ( wp_using_ext_object_cache() && function_exists( 'wp_cache_supports' ) && wp_cache_supports( 'flush_group' ) ) {
-	wp_cache_flush_group( 'transient' );
-}
