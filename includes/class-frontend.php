@@ -124,7 +124,8 @@ class Frontend {
 		// Visitor-side features are off by default; their values reach the page
 		// only when switched on.
 		if ( Settings::get( 'show_message' ) ) {
-			$config['message'] = Settings::message_text();
+			$config['message']    = Settings::message_text();
+			$config['closeLabel'] = __( 'Close', 'quiet-copy-notice' );
 		}
 		if ( Settings::get( 'add_attribution' ) ) {
 			$config['attribution'] = array(

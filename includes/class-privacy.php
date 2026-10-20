@@ -241,15 +241,28 @@ class Privacy {
 		}
 
 		$paragraphs = array(
-			__( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address. By default the IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed) so it no longer identifies a single device.', 'quiet-copy-notice' ),
-			__( 'This information is used to tell the site administrator, by email, which content is being copied. It is not shared with anyone else and is not sent to any outside service. No cookies are set and no identifier is created for you.', 'quiet-copy-notice' ),
+			'collected' => __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address. By default the IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed) so it no longer identifies a single device.', 'quiet-copy-notice' ),
+			'use'       => __( 'This information is used to tell the site administrator, by email, which content is being copied. It is not shared with anyone else and is not sent to any outside service. No cookies are set and no identifier is created for you.', 'quiet-copy-notice' ),
 			/* translators: %d: number of days copy records are kept. */
-			sprintf( __( 'Copy records are deleted automatically after %d days.', 'quiet-copy-notice' ), (int) Settings::get( 'retention_days' ) ),
+			'retention' => sprintf( __( 'Copy records are deleted automatically after %d days.', 'quiet-copy-notice' ), (int) Settings::get( 'retention_days' ) ),
 		);
+
+		/**
+		 * Lets an add-on that sends copy records elsewhere describe it. The
+		 * 'use' paragraph says nothing leaves the site; an add-on that sends
+		 * data out must replace it.
+		 *
+		 * @param string[] $paragraphs Plain-text paragraphs, keyed 'collected',
+		 *                             'use' and 'retention'. Escaped on output.
+		 */
+		$paragraphs = apply_filters( QCNOTICE_PREFIX . 'privacy_policy_paragraphs', $paragraphs );
+		$paragraphs = is_array( $paragraphs ) ? $paragraphs : array();
 
 		$content = '';
 		foreach ( $paragraphs as $paragraph ) {
-			$content .= '<p>' . esc_html( $paragraph ) . '</p>';
+			if ( is_string( $paragraph ) && '' !== $paragraph ) {
+				$content .= '<p>' . esc_html( $paragraph ) . '</p>';
+			}
 		}
 
 		wp_add_privacy_policy_content( __( 'Quiet Copy Notice', 'quiet-copy-notice' ), wp_kses_post( $content ) );

@@ -242,10 +242,35 @@
 	}
 
 	var toast = null;
+	var toastText = null;
 	var toastTimer = 0;
 
 	/**
+	 * Hides the message. Not the hidden attribute: the inline display:flex
+	 * would override it.
+	 */
+	function hideMessage() {
+		window.clearTimeout( toastTimer );
+		toast.style.display = 'none';
+	}
+
+	/**
+	 * Hides the message after five seconds, unless the pointer or the
+	 * keyboard focus is on it.
+	 */
+	function scheduleHide() {
+		window.clearTimeout( toastTimer );
+		toastTimer = window.setTimeout( function () {
+			hideMessage();
+		}, 5000 );
+	}
+
+	/**
 	 * Shows the site owner's message for a few seconds. Text only.
+	 *
+	 * It can be closed with Escape from anywhere on the page, with its
+	 * button or by clicking it, and stays while hovered or focused. Focus is
+	 * not moved to it: the reader keeps their place on the page.
 	 */
 	function showMessage() {
 		if ( ! config.message ) {
@@ -270,21 +295,60 @@
 				boxShadow: '0 4px 16px rgba(0,0,0,.25)',
 				zIndex: '2147483000',
 				cursor: 'pointer',
+				display: 'flex',
+				alignItems: 'flex-start',
+				gap: '12px',
 			};
 			for ( var key in css ) {
 				toast.style[ key ] = css[ key ];
 			}
+
+			toastText = document.createElement( 'span' );
+			toast.appendChild( toastText );
+
+			var close = document.createElement( 'button' );
+			close.type = 'button';
+			close.className = 'qcnotice-message-close';
+			close.textContent = '\u00d7';
+			close.setAttribute( 'aria-label', config.closeLabel || 'Close' );
+			var buttonCss = {
+				flex: 'none',
+				margin: '0',
+				padding: '0 4px',
+				border: '0',
+				background: 'transparent',
+				color: 'inherit',
+				font: '18px/1 sans-serif',
+				cursor: 'pointer',
+			};
+			for ( var prop in buttonCss ) {
+				close.style[ prop ] = buttonCss[ prop ];
+			}
+			toast.appendChild( close );
+
 			toast.addEventListener( 'click', function () {
-				toast.hidden = true;
+				hideMessage();
+			} );
+			toast.addEventListener( 'mouseenter', function () {
+				window.clearTimeout( toastTimer );
+			} );
+			toast.addEventListener( 'focusin', function () {
+				window.clearTimeout( toastTimer );
+			} );
+			toast.addEventListener( 'mouseleave', scheduleHide );
+			toast.addEventListener( 'focusout', scheduleHide );
+			// Only while the message is shown, and without stopping the
+			// event, so the page's own Escape handling still runs.
+			document.addEventListener( 'keydown', function ( e ) {
+				if ( ( 'Escape' === e.key || 'Esc' === e.key ) && 'none' !== toast.style.display ) {
+					hideMessage();
+				}
 			} );
 			document.body.appendChild( toast );
 		}
-		toast.textContent = config.message;
-		toast.hidden = false;
-		window.clearTimeout( toastTimer );
-		toastTimer = window.setTimeout( function () {
-			toast.hidden = true;
-		}, 5000 );
+		toastText.textContent = config.message;
+		toast.style.display = 'flex';
+		scheduleHide();
 	}
 
 	document.addEventListener( 'copy', function ( event ) {

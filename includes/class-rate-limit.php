@@ -34,12 +34,31 @@ class Rate_Limit {
 	/**
 	 * Counts this request and reports whether it is within both limits.
 	 *
-	 * A request over either limit is not counted further.
+	 * A request over either limit is not counted further. The counters are
+	 * read and written under one lock, so requests arriving together cannot
+	 * all read the same count and pass; a request that cannot get the lock
+	 * within Lock::WAIT seconds is refused like one over the limit.
 	 *
 	 * @param string $ip Client IP, not anonymized. Only its hash is stored.
 	 * @return bool True when the request may proceed.
 	 */
 	public static function allow( $ip ) {
+		return (bool) Lock::run(
+			'rate_limit',
+			static function () use ( $ip ) {
+				return self::count( $ip );
+			},
+			false
+		);
+	}
+
+	/**
+	 * The counting itself. Call only through allow(), under the lock.
+	 *
+	 * @param string $ip Client IP.
+	 * @return bool
+	 */
+	private static function count( $ip ) {
 		$site_key = self::KEY_PREFIX . 'site';
 		$site     = self::read( $site_key );
 		$site_max = (int) Settings::get( 'rate_site_per_hour' );

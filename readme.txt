@@ -4,7 +4,7 @@ Tags: copy, notification, analytics, content protection, plagiarism
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -176,6 +176,11 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
+= 1.3.3 =
+* Fix: requests arriving at the same moment could all pass the rate limits, and instant emails could go over the hourly cap, because each read the same count. The counters are now updated one request at a time.
+* Fix: the message shown after copying can be closed with the Escape key or its new Close button, and it stays while the pointer is on it.
+* New: the `qcnotice_privacy_policy_paragraphs` filter lets an add-on that sends copy records elsewhere describe that in the suggested privacy policy text.
+
 = 1.3.2 =
 * Fix: copied text is stored as copied. Code such as `a < b` or `<div>` is no longer changed or cut out, and no longer shows up as `&lt;` in emails.
 * Fix: filtering the log while on a later page no longer shows an empty list with "No copies recorded yet."
@@ -213,6 +218,9 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 * First release.
 
 == Upgrade Notice ==
+
+= 1.3.3 =
+Rate limits now hold when many requests arrive at once, and the message shown after copying can be closed with the keyboard.
 
 = 1.3.2 =
 Stores copied text exactly as copied, fixes an empty log after filtering, and stops one IP address from using up the site-wide limit.

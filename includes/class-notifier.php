@@ -55,24 +55,36 @@ class Notifier {
 	 * @return void
 	 */
 	public static function send_instant( $log_id ) {
-		$counter = get_transient( self::INSTANT_COUNTER );
-		if ( ! is_array( $counter ) || ! isset( $counter['start'], $counter['count'] ) ) {
-			$counter = array(
-				'start' => time(),
-				'count' => 0,
-			);
-		}
-		if ( (int) $counter['count'] >= (int) Settings::get( 'instant_hourly_cap' ) ) {
-			return;
-		}
-
 		$row = Logger::get( $log_id );
 		if ( ! $row || 1 === (int) $row['notified'] ) {
 			return;
 		}
 
-		$counter['count'] = (int) $counter['count'] + 1;
-		set_transient( self::INSTANT_COUNTER, $counter, max( 1, HOUR_IN_SECONDS - ( time() - (int) $counter['start'] ) ) );
+		// Under a lock, so mails sent at the same moment cannot all read the
+		// same count and pass the cap. Busy counts as over the cap: the row
+		// waits for the digest.
+		$within_cap = Lock::run(
+			'instant_cap',
+			static function () {
+				$counter = get_transient( self::INSTANT_COUNTER );
+				if ( ! is_array( $counter ) || ! isset( $counter['start'], $counter['count'] ) ) {
+					$counter = array(
+						'start' => time(),
+						'count' => 0,
+					);
+				}
+				if ( (int) $counter['count'] >= (int) Settings::get( 'instant_hourly_cap' ) ) {
+					return false;
+				}
+				$counter['count'] = (int) $counter['count'] + 1;
+				set_transient( self::INSTANT_COUNTER, $counter, max( 1, HOUR_IN_SECONDS - ( time() - (int) $counter['start'] ) ) );
+				return true;
+			},
+			false
+		);
+		if ( ! $within_cap ) {
+			return;
+		}
 
 		if ( self::send( array( $row ), 1, 'instant' ) ) {
 			Logger::mark_notified( $log_id );
