@@ -208,7 +208,7 @@ class Settings_Page {
 			esc_url( admin_url( 'options-privacy.php?tab=policyguide' ) ),
 			esc_html__( 'Suggested text for your privacy policy', 'quiet-copy-notice' )
 		);
-		$this->row_end( __( 'This plugin sets no cookies and sends nothing to outside services.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Quiet Copy Notice itself sets no cookies and sends nothing to outside services. An add-on that sends notifications elsewhere adds that to the suggested text.', 'quiet-copy-notice' ) );
 	}
 
 	/**

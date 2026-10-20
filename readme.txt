@@ -4,11 +4,11 @@ Tags: copy, notification, analytics, content protection, plagiarism
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.3
+Stable tag: 1.3.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Copy notification and copy tracking for posts: logs what visitors copy and emails you a plain-text summary. No outside services.
+Copy notification and copy tracking for posts: logs what visitors copy and emails you a plain-text summary. Contacts no outside service.
 
 == Description ==
 
@@ -46,7 +46,7 @@ Pro is a separate plugin, sold on the author's website, for sites that want to
 act on copies:
 
 * Statistics by post and by paragraph, compared with the previous period.
-* Notifications to Slack, Chatwork, Discord or your own webhook.
+* Notifications to Slack, Chatwork, Discord or your own webhook, with a delivery history and retries, and a choice of which visitor data they receive.
 * Rules that route each copy to the right channel, and burst alerts.
 * Daily web search for your most copied paragraphs, with your own search API key.
 * CSV export of the log.
@@ -76,6 +76,9 @@ pages, so sites served over plain HTTP record copies without it.
   notification email; an empty array skips the email for that notification.
 * `qcnotice_is_pro` (filter) is set to `true` by the Pro add-on;
   `qcnotice_show_upsell` and `qcnotice_pro_url` control the Pro features tab.
+* `qcnotice_privacy_policy_paragraphs` (filter) gets the suggested privacy
+  policy paragraphs, keyed `collected`, `use` and `retention`, as plain text;
+  an add-on that sends copy records out should replace `use`.
 * `qcnotice_admin_tabs` (filter), `qcnotice_admin_load` and
   `qcnotice_render_tab_{key}` (actions) let an add-on add tabs to the plugin's
   screen.
@@ -115,10 +118,15 @@ plugin treats all of it as untrusted.
 
 Quiet Copy Notice sets no cookies and creates no visitor identifier. The
 optional reader message and source link use only the post's own title and URL
-and your text; they record nothing extra. It never
-contacts any external service: copy reports go only to your own site, and
-notifications are sent with WordPress's own mail function. Suggested wording
-for your privacy policy is added to **Settings → Privacy**.
+and your text; they record nothing extra. This plugin never contacts any
+external service: copy reports go only to your own site, and notifications
+are sent with WordPress's own mail function. Suggested wording for your
+privacy policy is added to **Settings → Privacy**.
+
+An add-on can send notifications elsewhere: Quiet Copy Notice Pro, for
+example, sends them to the chat services or webhook you switch on. It then
+changes the suggested privacy policy wording to name those services and what
+they receive.
 
 == Installation ==
 
@@ -176,6 +184,10 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
+= 1.3.4 =
+* Changed: the Privacy tab and the readme say that Quiet Copy Notice itself contacts no outside service, and that an add-on which sends notifications elsewhere says so in the suggested privacy policy text. The previous wording could be read as covering add-ons too.
+* Docs: the `qcnotice_privacy_policy_paragraphs` filter is listed with the other hooks.
+
 = 1.3.3 =
 * Fix: requests arriving at the same moment could all pass the rate limits, and instant emails could go over the hourly cap, because each read the same count. The counters are now updated one request at a time.
 * Fix: the message shown after copying can be closed with the Escape key or its new Close button, and it stays while the pointer is on it.
@@ -218,6 +230,9 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 * First release.
 
 == Upgrade Notice ==
+
+= 1.3.4 =
+Clearer wording about outside services on the Privacy tab.
 
 = 1.3.3 =
 Rate limits now hold when many requests arrive at once, and the message shown after copying can be closed with the keyboard.
