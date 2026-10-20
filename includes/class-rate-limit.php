@@ -111,22 +111,70 @@ class Rate_Limit {
 	 * This install's generation ID: 8 lowercase letters and digits, made on
 	 * first use. Autoloaded, so reading it costs no query on a copy request.
 	 *
+	 * A missing or invalid ID is made under a lock, and the option is read
+	 * again from the database inside it, so requests arriving together all
+	 * end up with the one ID that was stored. A request that cannot get the
+	 * lock in time uses whatever is stored by then.
+	 *
 	 * @return string
 	 */
 	public static function generation() {
 		$gen = get_option( self::GENERATION_OPTION );
-		if ( is_string( $gen ) && preg_match( '/^[a-z0-9]{8}$/', $gen ) ) {
+		if ( self::valid_generation( $gen ) ) {
 			return $gen;
 		}
-		$new = strtolower( wp_generate_password( 8, false, false ) );
-		if ( false === $gen ) {
-			// Two first requests at once: one insert wins, both use it.
-			add_option( self::GENERATION_OPTION, $new, '', 'yes' );
-			$gen = get_option( self::GENERATION_OPTION, $new );
-			return is_string( $gen ) && '' !== $gen ? $gen : $new;
+
+		$made = Lock::run(
+			'cache_gen',
+			static function () {
+				$stored = self::stored_generation();
+				if ( self::valid_generation( $stored ) ) {
+					return $stored;
+				}
+				$new = strtolower( wp_generate_password( 8, false, false ) );
+				if ( null === $stored ) {
+					add_option( self::GENERATION_OPTION, $new, '', 'yes' );
+				} else {
+					update_option( self::GENERATION_OPTION, $new, true );
+				}
+				$stored = self::stored_generation();
+				return self::valid_generation( $stored ) ? $stored : $new;
+			},
+			null
+		);
+		if ( null !== $made ) {
+			return $made;
 		}
-		update_option( self::GENERATION_OPTION, $new, true );
-		return $new;
+
+		// Another request held the lock for Lock::WAIT seconds; it has most
+		// likely stored an ID by now. If not, this request alone uses a
+		// fresh one, unsaved.
+		$stored = self::stored_generation();
+		return self::valid_generation( $stored ) ? $stored : strtolower( wp_generate_password( 8, false, false ) );
+	}
+
+	/**
+	 * The generation ID as stored in the database, bypassing this request's
+	 * option cache, which may predate another request's write.
+	 *
+	 * @return string|null Null when the option does not exist.
+	 */
+	private static function stored_generation() {
+		global $wpdb;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Must see other requests' writes.
+		$row = $wpdb->get_row( $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::GENERATION_OPTION ), ARRAY_A );
+		// Not get_var(), which returns null for an empty value too.
+		return is_array( $row ) ? (string) $row['option_value'] : null;
+	}
+
+	/**
+	 * Whether a value is a generation ID.
+	 *
+	 * @param mixed $value Value.
+	 * @return bool
+	 */
+	private static function valid_generation( $value ) {
+		return is_string( $value ) && 1 === preg_match( '/^[a-z0-9]{8}$/', $value );
 	}
 
 	/**

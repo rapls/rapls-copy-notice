@@ -4,7 +4,7 @@ Tags: copy, notification, analytics, content protection, plagiarism
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.7
+Stable tag: 1.3.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -184,8 +184,11 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
+= 1.3.8 =
+* Fix: if the stored generation ID was invalid, two requests repairing it at the same moment could each use a different ID. It is now made under a database lock and read back, so every request uses the stored one.
+
 = 1.3.7 =
-* Changed: uninstalling no longer clears every transient in a persistent object cache, which dropped other plugins' cached data too. Instead, the per-IP rate limit counters carry an ID made for each install, so after a reinstall the old counters are never read. With a persistent object cache (Redis, Memcached) they stay in the cache until they expire, within an hour; without one they are deleted on uninstall as before.
+* Changed: uninstalling no longer clears every transient in a persistent object cache, which dropped other plugins' cached data too. Instead, the per-IP rate limit counters carry an ID made for each install (the site-wide and instant-email hourly counters are deleted by name as before), so after a reinstall the old counters are never read. With a persistent object cache (Redis, Memcached) they stay in the cache until they expire, within an hour; without one they are deleted on uninstall as before.
 
 = 1.3.6 =
 * Fix: with a persistent object cache (Redis, Memcached), uninstalling left the per-IP rate limit counters in the cache until they expired. Where the cache supports it, its transients are now cleared once at the end.
@@ -240,8 +243,11 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Upgrade Notice ==
 
+= 1.3.8 =
+A small fix to the per-install ID used in rate limit counter names.
+
 = 1.3.7 =
-Uninstalling no longer clears other plugins' cached data on sites with a persistent object cache. Rate limit counters start fresh once after updating.
+Uninstalling no longer clears other plugins' cached data on sites with a persistent object cache. Per-IP rate limit counters start fresh once after updating; the site-wide and instant-email hourly limits carry over.
 
 = 1.3.6 =
 Uninstalling now also clears cached rate limit counters on sites with a persistent object cache.
