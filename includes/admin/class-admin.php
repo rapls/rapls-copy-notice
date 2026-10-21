@@ -8,6 +8,7 @@
 namespace QuietCopyNotice\Admin;
 
 use QuietCopyNotice\Logger;
+use QuietCopyNotice\Notifier;
 use QuietCopyNotice\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -23,6 +24,7 @@ class Admin {
 
 	const ACTION_SAVE       = QCNOTICE_PREFIX . 'save_settings';
 	const ACTION_DELETE_ALL = QCNOTICE_PREFIX . 'delete_all';
+	const ACTION_TEST_EMAIL = QCNOTICE_PREFIX . 'test_email';
 
 	/**
 	 * Page hook suffix.
@@ -47,6 +49,7 @@ class Admin {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_post_' . self::ACTION_SAVE, array( $this, 'handle_save' ) );
 		add_action( 'admin_post_' . self::ACTION_DELETE_ALL, array( $this, 'handle_delete_all' ) );
+		add_action( 'admin_post_' . self::ACTION_TEST_EMAIL, array( $this, 'handle_test_email' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 		// Screen options are saved before load-{page}, so this cannot wait.
 		add_filter( 'set_screen_option_' . QCNOTICE_PREFIX . 'per_page', array( $this, 'save_per_page' ), 10, 3 );
@@ -307,6 +310,13 @@ class Admin {
 					__( 'Settings saved, but some values were not valid and were changed or left out: %s. Check them below.', 'quiet-copy-notice' ),
 					implode( wp_get_list_item_separator(), $this->adjusted_field_labels() )
 				);
+				if ( in_array( 'notify_email', $this->adjusted_field_keys(), true ) ) {
+					$text .= ' ' . sprintf(
+						/* translators: %s: the site administration email address. */
+						__( 'The notification address was not valid, so notifications go to the site administration email address, %s.', 'quiet-copy-notice' ),
+						(string) get_option( 'admin_email' )
+					);
+				}
 				break;
 			case 'none_selected':
 				$type = 'warning';
@@ -318,6 +328,21 @@ class Admin {
 				break;
 			case 'deleted_all':
 				$text = __( 'All log entries deleted.', 'quiet-copy-notice' );
+				break;
+			case 'delete_failed':
+				$type = 'error';
+				$text = __( 'The log entries could not be deleted. The database refused the request; try again, or ask your host about the database user\'s permissions.', 'quiet-copy-notice' );
+				break;
+			case 'test_sent':
+				$text = sprintf(
+					/* translators: %s: email address. */
+					__( 'Test email sent to %s. If it does not arrive within a few minutes, check the spam folder and the site\'s email settings.', 'quiet-copy-notice' ),
+					Settings::notify_email()
+				);
+				break;
+			case 'test_failed':
+				$type = 'error';
+				$text = __( 'The test email could not be sent: WordPress reported an error while sending. Check the site\'s email settings, for example an SMTP plugin.', 'quiet-copy-notice' );
 				break;
 		}
 
@@ -332,16 +357,25 @@ class Admin {
 	 * @return string[]
 	 */
 	private function adjusted_field_labels() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display only; keys are looked up in a fixed list.
-		$keys   = isset( $_GET['qcnotice_fields'] ) ? explode( ',', sanitize_text_field( wp_unslash( $_GET['qcnotice_fields'] ) ) ) : array();
 		$labels = Settings_Page::field_labels();
 		$out    = array();
-		foreach ( $keys as $key ) {
+		foreach ( $this->adjusted_field_keys() as $key ) {
 			if ( isset( $labels[ $key ] ) ) {
 				$out[] = $labels[ $key ];
 			}
 		}
 		return $out ? $out : array( __( 'unknown field', 'quiet-copy-notice' ) );
+	}
+
+	/**
+	 * Keys named in qcnotice_fields, unchecked: compare them against fixed
+	 * keys only.
+	 *
+	 * @return string[]
+	 */
+	private function adjusted_field_keys() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display only; keys are looked up in a fixed list.
+		return isset( $_GET['qcnotice_fields'] ) ? explode( ',', sanitize_text_field( wp_unslash( $_GET['qcnotice_fields'] ) ) ) : array();
 	}
 
 	/**
@@ -357,7 +391,7 @@ class Admin {
 		}
 		printf(
 			'<div class="notice notice-warning"><p>%1$s <a href="%2$s">%3$s</a></p></div>',
-			esc_html__( 'Check Copy Contents is still active. It is no longer maintained. Settings it had when Quiet Copy Notice was first activated were carried over where possible, so you can deactivate it.', 'quiet-copy-notice' ),
+			esc_html__( 'Check Copy Contents is still active. It is no longer maintained, and until you deactivate it you get two emails for each copy. Settings it had when Quiet Copy Notice was first activated were carried over where possible, so you can deactivate it.', 'quiet-copy-notice' ),
 			esc_url( admin_url( 'plugins.php' ) ),
 			esc_html__( 'Go to Plugins', 'quiet-copy-notice' )
 		);
@@ -375,7 +409,10 @@ class Admin {
 			$table->prepare_items();
 		}
 
-		echo '<form method="get">';
+		// Deleting selected entries is permanent too, so it asks first, like
+		// "Delete all". Only the bulk action asks; filtering does not.
+		$bulk_confirm = __( 'Delete the selected log entries? This cannot be undone.', 'quiet-copy-notice' );
+		echo '<form method="get" onsubmit="' . esc_attr( 'var s=event.submitter;if(s&&(s.id==="doaction"||s.id==="doaction2")){var a=this.querySelector(s.id==="doaction"?"#bulk-action-selector-top":"#bulk-action-selector-bottom");if(a&&a.value==="delete"){return window.confirm(' . wp_json_encode( $bulk_confirm ) . ');}}return true;' ) . '">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( QCNOTICE_SLUG ) . '" />';
 		$table->display();
 		echo '</form>';
@@ -442,9 +479,26 @@ class Admin {
 		}
 		check_admin_referer( self::ACTION_DELETE_ALL );
 
-		Logger::delete_all();
+		$deleted = Logger::delete_all();
 
-		wp_safe_redirect( self::url( 'log', array( 'qcnotice_msg' => 'deleted_all' ) ) );
+		wp_safe_redirect( self::url( 'log', array( 'qcnotice_msg' => $deleted ? 'deleted_all' : 'delete_failed' ) ) );
+		exit;
+	}
+
+	/**
+	 * Sends a test email to the notification address.
+	 *
+	 * @return void
+	 */
+	public function handle_test_email() {
+		if ( ! current_user_can( self::CAPABILITY ) ) {
+			wp_die( esc_html__( 'You are not allowed to change these settings.', 'quiet-copy-notice' ), 403 );
+		}
+		check_admin_referer( self::ACTION_TEST_EMAIL );
+
+		$sent = Notifier::send_test();
+
+		wp_safe_redirect( self::url( 'notifications', array( 'qcnotice_msg' => $sent ? 'test_sent' : 'test_failed' ) ) );
 		exit;
 	}
 }

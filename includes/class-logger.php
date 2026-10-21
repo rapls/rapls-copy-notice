@@ -18,6 +18,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Logger {
 
 	/**
+	 * Rows deleted per statement by the daily purge, and statements per run.
+	 */
+	const PURGE_BATCH   = 5000;
+	const PURGE_BATCHES = 200;
+
+	/**
 	 * Inserts one row and fires qcnotice_logged.
 	 *
 	 * @param array $row Validated values: post_id, copied_text, text_length, ip, user_agent, referrer_host, and optionally paragraph_hash.
@@ -180,16 +186,21 @@ class Logger {
 	}
 
 	/**
-	 * Deletes every row.
+	 * Deletes every row. TRUNCATE needs a privilege some hosts withhold, so a
+	 * plain DELETE is tried when it fails.
 	 *
-	 * @return void
+	 * @return bool Whether the rows were deleted.
 	 */
 	public static function delete_all() {
 		global $wpdb;
 
 		$table = Installer::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table.
-		$wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table ) );
+		if ( false !== $wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table ) ) ) {
+			return true;
+		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
+		return false !== $wpdb->query( $wpdb->prepare( 'DELETE FROM %i', $table ) );
 	}
 
 	/**
@@ -203,8 +214,18 @@ class Logger {
 
 		$table  = Installer::table();
 		$cutoff = gmdate( 'Y-m-d H:i:s', time() - max( 1, (int) $days ) * DAY_IN_SECONDS );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
-		return (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $table, $cutoff ) );
+		$total  = 0;
+		// In batches, so lowering the retention on a large log does not lock
+		// the table for one long statement. What is left goes the next day.
+		for ( $i = 0; $i < self::PURGE_BATCHES; $i++ ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
+			$deleted = (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s ORDER BY id LIMIT %d', $table, $cutoff, self::PURGE_BATCH ) );
+			$total  += $deleted;
+			if ( $deleted < self::PURGE_BATCH ) {
+				break;
+			}
+		}
+		return $total;
 	}
 
 	/**

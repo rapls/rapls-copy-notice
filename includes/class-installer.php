@@ -43,16 +43,27 @@ class Installer {
 			Cron::unschedule();
 			return;
 		}
-		foreach ( get_sites(
-			array(
-				'fields' => 'ids',
-				'number' => 0,
-			)
-		) as $site_id ) {
-			switch_to_blog( (int) $site_id );
-			Cron::unschedule();
-			restore_current_blog();
-		}
+		// In pages, as uninstall does, so a large network is never loaded
+		// into memory at once.
+		$offset = 0;
+		do {
+			$sites = get_sites(
+				array(
+					'fields'            => 'ids',
+					'number'            => 500,
+					'offset'            => $offset,
+					'orderby'           => 'id',
+					'update_site_cache' => false,
+				)
+			);
+			foreach ( $sites as $site_id ) {
+				switch_to_blog( (int) $site_id );
+				Cron::unschedule();
+				restore_current_blog();
+			}
+			$offset += 500;
+			$full    = 500 === count( $sites );
+		} while ( $full );
 	}
 
 	/**

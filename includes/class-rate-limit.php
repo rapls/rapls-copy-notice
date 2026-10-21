@@ -53,10 +53,13 @@ class Rate_Limit {
 	 * @return bool True when the request may proceed.
 	 */
 	public static function allow( $ip ) {
+		// Settled before the lock: making it takes a lock of its own, and some
+		// older MySQL versions release the first lock when a second is taken.
+		$generation = self::generation();
 		return (bool) Lock::run(
 			'rate_limit',
-			static function () use ( $ip ) {
-				return self::count( $ip );
+			static function () use ( $ip, $generation ) {
+				return self::count( $ip, $generation );
 			},
 			false
 		);
@@ -65,10 +68,11 @@ class Rate_Limit {
 	/**
 	 * The counting itself. Call only through allow(), under the lock.
 	 *
-	 * @param string $ip Client IP.
+	 * @param string $ip         Client IP.
+	 * @param string $generation Generation ID, see generation().
 	 * @return bool
 	 */
-	private static function count( $ip ) {
+	private static function count( $ip, $generation ) {
 		$site_key = self::KEY_PREFIX . 'site';
 		$site     = self::read( $site_key );
 		$site_max = (int) Settings::get( 'rate_site_per_hour' );
@@ -79,7 +83,7 @@ class Rate_Limit {
 		$minute_max = (int) Settings::get( 'rate_ip_per_minute' );
 		$hour_max   = self::ip_hourly_limit( $minute_max, $site_max );
 
-		$ip_key = self::KEY_PREFIX . 'ip_' . self::generation() . '_' . substr( hash_hmac( 'sha256', self::bucket( $ip ), wp_salt( 'nonce' ) ), 0, 32 );
+		$ip_key = self::KEY_PREFIX . 'ip_' . $generation . '_' . substr( hash_hmac( 'sha256', self::bucket( $ip ), wp_salt( 'nonce' ) ), 0, 32 );
 		$per_ip = self::read( $ip_key );
 		$now    = time();
 		if ( $now - $per_ip['minute_start'] >= MINUTE_IN_SECONDS ) {
@@ -131,7 +135,7 @@ class Rate_Limit {
 				if ( self::valid_generation( $stored ) ) {
 					return $stored;
 				}
-				$new = strtolower( wp_generate_password( 8, false, false ) );
+				$new = self::new_generation();
 				if ( null === $stored ) {
 					add_option( self::GENERATION_OPTION, $new, '', 'yes' );
 				} else {
@@ -150,7 +154,22 @@ class Rate_Limit {
 		// likely stored an ID by now. If not, this request alone uses a
 		// fresh one, unsaved.
 		$stored = self::stored_generation();
-		return self::valid_generation( $stored ) ? $stored : strtolower( wp_generate_password( 8, false, false ) );
+		return self::valid_generation( $stored ) ? $stored : self::new_generation();
+	}
+
+	/**
+	 * A fresh generation ID. Not wp_generate_password(): that is pluggable
+	 * and filtered, and a plugin forcing "strong" passwords would make every
+	 * ID invalid, so a new one would be made on every request.
+	 *
+	 * @return string 8 lowercase hex digits.
+	 */
+	private static function new_generation() {
+		try {
+			return bin2hex( random_bytes( 4 ) );
+		} catch ( \Exception $e ) {
+			return substr( md5( uniqid( (string) wp_rand(), true ) ), 0, 8 );
+		}
 	}
 
 	/**

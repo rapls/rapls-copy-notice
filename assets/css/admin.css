@@ -30,6 +30,10 @@
 	border-left: 3px solid #c3c4c7;
 }
 
+.qcnotice-wrap .qcnotice-from {
+	display: block;
+}
+
 .qcnotice-wrap .qcnotice-delete-all {
 	margin-top: 1em;
 }

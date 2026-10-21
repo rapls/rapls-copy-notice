@@ -102,6 +102,18 @@ class Notifier {
 	 * @return void
 	 */
 	public static function send_digest() {
+		// Two runs at once (a system cron next to WP-Cron, a slow mail server)
+		// would read the same rows and send them twice; the second one waits
+		// for the lock or skips this round.
+		Lock::run( 'digest', array( __CLASS__, 'digest' ), null );
+	}
+
+	/**
+	 * The digest itself. Call only through send_digest(), under the lock.
+	 *
+	 * @return void
+	 */
+	public static function digest() {
 		$max_id = Logger::max_id_before( gmdate( 'Y-m-d H:i:s', time() - self::DIGEST_SETTLE ) );
 		if ( $max_id <= 0 ) {
 			return;
@@ -193,6 +205,9 @@ class Notifier {
 			)
 		);
 
+		// One query for every post in the email, not one per row.
+		_prime_post_caches( array_unique( array_map( 'intval', wp_list_pluck( $rows, 'post_id' ) ) ), false, false );
+
 		$body   = array();
 		$body[] = self::RULE . "\n" . __( 'It appears that the following text was copied.', 'quiet-copy-notice' ) . "\n" . self::RULE;
 		foreach ( $rows as $row ) {
@@ -208,16 +223,51 @@ class Notifier {
 		$body[] = __( 'Log:', 'quiet-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG ) . "\n"
 			. __( 'Settings:', 'quiet-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG . '&tab=notifications' );
 
+		return self::mail( $to, $subject, implode( "\n\n", $body ) );
+	}
+
+	/**
+	 * Sends a fixed test message to the notification address, so the site
+	 * owner can check that notifications arrive. Nothing from the log is in it.
+	 *
+	 * @return bool Whether wp_mail() accepted it.
+	 */
+	public static function send_test() {
+		$to = Settings::notify_email();
+		if ( '' === $to ) {
+			return false;
+		}
+		$label = Settings::get( 'subject_label' );
+		if ( '' === $label ) {
+			$label = __( 'Copy notification', 'quiet-copy-notice' );
+		}
+		$subject = sprintf(
+			'[%1$s] %2$s (%3$s)',
+			self::plain( get_bloginfo( 'name' ) ),
+			self::one_line( $label ),
+			/* translators: shown in brackets at the end of the test email's subject, where notifications show the number of copies. */
+			__( 'test', 'quiet-copy-notice' )
+		);
+		$body = __( 'This is a test message from Quiet Copy Notice. Copy notifications for this site will arrive at this address.', 'quiet-copy-notice' )
+			. "\n\n" . __( 'Settings:', 'quiet-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG . '&tab=notifications' );
+		return self::mail( $to, $subject, $body );
+	}
+
+	/**
+	 * Sends a plain-text email, whatever another plugin sets as the default
+	 * content type.
+	 *
+	 * @param string $to      Recipient.
+	 * @param string $subject Subject.
+	 * @param string $body    Plain-text body.
+	 * @return bool
+	 */
+	private static function mail( $to, $subject, $body ) {
 		$force_plain = static function () {
 			return 'text/plain';
 		};
 		add_filter( 'wp_mail_content_type', $force_plain, PHP_INT_MAX );
-		$sent = wp_mail(
-			$to,
-			$subject,
-			implode( "\n\n", $body ),
-			array( 'Content-Type: text/plain; charset=UTF-8' )
-		);
+		$sent = wp_mail( $to, $subject, $body, array( 'Content-Type: text/plain; charset=UTF-8' ) );
 		remove_filter( 'wp_mail_content_type', $force_plain, PHP_INT_MAX );
 
 		return (bool) $sent;
@@ -277,7 +327,8 @@ class Notifier {
 	 * @return string
 	 */
 	private static function one_line( $text ) {
-		return trim( (string) preg_replace( '/[\x00-\x1F\x7F]+/u', ' ', (string) $text ) );
+		$text = (string) preg_replace( '/[\x00-\x1F\x7F\x{0085}\x{2028}\x{2029}]+/u', ' ', (string) $text );
+		return trim( (string) preg_replace( '/[\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', $text ) );
 	}
 
 	/**

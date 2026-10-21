@@ -243,7 +243,13 @@ class Log_Table extends \WP_List_Table {
 		return sprintf(
 			'<input type="checkbox" name="entry[]" value="%1$d" id="qcnotice-entry-%1$d" /><label for="qcnotice-entry-%1$d" class="screen-reader-text">%2$s</label>',
 			(int) $item['id'],
-			esc_html__( 'Select entry', 'quiet-copy-notice' )
+			esc_html(
+				sprintf(
+					/* translators: %s: date and time of the copy. */
+					__( 'Select the copy from %s', 'quiet-copy-notice' ),
+					wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $item['created_at'] . ' UTC' ) )
+				)
+			)
 		);
 	}
 
@@ -334,19 +340,23 @@ class Log_Table extends \WP_List_Table {
 	}
 
 	/**
-	 * Browser column: a short summary, the full user agent in a tooltip.
+	 * Browser column: a short summary that opens to the full user agent, so
+	 * it can be read with a keyboard or on a touch screen too.
 	 *
 	 * @param array $item Row.
 	 * @return string
 	 */
 	protected function column_browser( $item ) {
-		$ua  = (string) $item['user_agent'];
-		$out = '<span title="' . esc_attr( $ua ) . '">' . esc_html( self::summarize_user_agent( $ua ) ) . '</span>';
+		$ua      = (string) $item['user_agent'];
+		$summary = self::summarize_user_agent( $ua );
+		$out     = '' === $ua || $summary === $ua
+			? esc_html( $summary )
+			: '<details class="qcnotice-text"><summary>' . esc_html( $summary ) . '</summary><code>' . esc_html( $ua ) . '</code></details>';
 		if ( '' !== $item['referrer_host'] ) {
-			$out .= '<br /><span class="description">' . esc_html(
+			$out .= '<span class="description qcnotice-from">' . esc_html(
 				sprintf(
 					/* translators: %s: host name of the referring page. */
-					__( 'from %s', 'quiet-copy-notice' ),
+					__( 'Came from: %s', 'quiet-copy-notice' ),
 					$item['referrer_host']
 				)
 			) . '</span>';

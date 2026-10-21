@@ -4,7 +4,7 @@ Tags: copy, notification, analytics, content protection, plagiarism
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.8
+Stable tag: 1.3.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -54,9 +54,10 @@ act on copies:
 
 One-time purchase, no subscription. Details: https://raplsworks.com/quiet-copy-notice-pro-en/
 
-The plugin's screen has a **Pro features** tab describing the add-on. It
-disappears once the add-on is active, and the `qcnotice_show_upsell` filter
-hides it (return `false`).
+The plugin's screen has a **Pro features** tab describing the add-on, and short
+notes about it on the Log and Notifications tabs and in its row on the Plugins
+screen. All of them disappear once the add-on is active, and the
+`qcnotice_show_upsell` filter hides them (return `false`).
 
 = Paragraphs =
 
@@ -152,6 +153,14 @@ theme does not use `.entry-content`, `.post-content` or `article` around the
 post body, either enter the right CSS selector under **Detection → Content
 area**, or turn on **Detection → Find the post body**. That option is off by
 default because it adds one empty, hidden element after the post content.
+Copies from form fields (a comment box, a contact form) are never recorded:
+that text is usually the reader's own.
+
+= How do I check that notification emails arrive? =
+
+Use **Send a test email** on the Notifications tab. It sends a short fixed
+message to the notification address. If it does not arrive, check the spam
+folder and the site's email settings; many hosts need an SMTP plugin.
 
 = Why did the hourly summary arrive late? =
 
@@ -184,6 +193,19 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
+= 1.3.9 =
+* Fix: text copied from a form field inside the post (a comment, a contact form) was recorded and emailed. Copies from form fields and editable areas are now ignored.
+* Fix: an IP address copied from the log, where addresses are shortened, did nothing under "Ignore IP addresses". A shortened address now ignores every visitor shortened to it.
+* Fix: the suggested privacy policy text described the default IP setting, not the site's own, and said "1 days" with a one-day retention.
+* Fix: two summary runs at the same moment could send the same copies twice.
+* Fix: "Delete all" said the log was deleted even when the database refused; it now tries another way and reports a failure.
+* Fix: line and paragraph separator characters in copied text or the browser string could start a line of their own in the email.
+* Fix: the ID in rate limit counter names no longer depends on WordPress's password generator, which other plugins can change.
+* New: "Send a test email" on the Notifications tab.
+* Changed: deleting selected log entries asks for confirmation; the full browser string opens on click instead of only on hover; clearer labels and help texts.
+* Changed: old log entries are purged in batches, and network deactivation goes through sites 500 at a time.
+* Changed: the summary email loads all its posts in one query.
+
 = 1.3.8 =
 * Fix: if the stored generation ID was invalid, two requests repairing it at the same moment could each use a different ID. It is now made under a database lock and read back, so every request uses the stored one.
 
@@ -213,8 +235,8 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 * Fix: deactivating the plugin network-wide now removes its scheduled tasks on every site.
 * Fix: IPv4 addresses that the server reports in IPv6 form (`::ffff:192.0.2.1`), and `X-Forwarded-For` entries with a port, are now handled like plain addresses.
 * Fix: CSS selectors with `^=`, `$=`, `|=`, non-ASCII class names or `:is(a, b)` are now accepted for the content area.
-* Change: one IP address can no longer use up the whole site limit: it is also held to a fifth of the site limit per hour, and IPv6 addresses are counted per /64 block.
-* Change: when a setting is not valid and is changed on save, the notice now says which one, instead of only "Settings saved."
+* Changed: one IP address can no longer use up the whole site limit: it is also held to a fifth of the site limit per hour, and IPv6 addresses are counted per /64 block.
+* Changed: when a setting is not valid and is changed on save, the notice now says which one, instead of only "Settings saved."
 * New: Site Health warns when notifications keep failing and when no post type is monitored. The Detection tab warns about the latter too.
 * Improved: long copied text can be opened in full in the log, and the log screen needs fewer database queries.
 * Improved: clearer wording on the settings screens; the suggested privacy policy text now mentions the paragraph fingerprint.
@@ -242,6 +264,9 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 * First release.
 
 == Upgrade Notice ==
+
+= 1.3.9 =
+Copies from form fields are no longer recorded, and a test email button is added.
 
 = 1.3.8 =
 A small fix to the per-install ID used in rate limit counter names.

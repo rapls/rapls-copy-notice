@@ -236,15 +236,23 @@ class Privacy {
 	 * @return void
 	 */
 	public function add_policy_content() {
-		if ( ! function_exists( 'wp_add_privacy_policy_content' ) ) {
+		// Only page loads can show the policy guide; skip AJAX requests,
+		// which would otherwise read the settings for nothing.
+		if ( ! function_exists( 'wp_add_privacy_policy_content' ) || wp_doing_ajax() ) {
 			return;
 		}
 
+		$retention  = (int) Settings::get( 'retention_days' );
 		$paragraphs = array(
-			'collected' => __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address. By default the IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed) so it no longer identifies a single device.', 'quiet-copy-notice' ),
+			'collected' => Settings::get( 'anonymize_ip' )
+				? __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address. The IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed) so it no longer identifies a single device.', 'quiet-copy-notice' )
+				: __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your full IP address.', 'quiet-copy-notice' ),
 			'use'       => __( 'This information is used to tell the site administrator, by email, which content is being copied. It is not shared with anyone else and is not sent to any outside service. No cookies are set and no identifier is created for you.', 'quiet-copy-notice' ),
-			/* translators: %d: number of days copy records are kept. */
-			'retention' => sprintf( __( 'Copy records are deleted automatically after %d days.', 'quiet-copy-notice' ), (int) Settings::get( 'retention_days' ) ),
+			'retention' => sprintf(
+				/* translators: %d: number of days copy records are kept. */
+				_n( 'Copy records are deleted automatically after %d day.', 'Copy records are deleted automatically after %d days.', $retention, 'quiet-copy-notice' ),
+				$retention
+			),
 		);
 
 		/**

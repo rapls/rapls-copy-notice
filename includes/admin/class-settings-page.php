@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Renders the Notifications, Detection and Privacy forms. Each posts to
+ * Renders the Notifications, Detection, Privacy and Visitors forms. Each posts to
  * admin-post.php and is validated in Settings::save_tab().
  */
 class Settings_Page {
@@ -131,7 +131,7 @@ class Settings_Page {
 			);
 		}
 		echo '</fieldset>';
-		$this->row_end( __( 'Summary emails are sent by WP-Cron, so on a quiet site they go out with the first visit after each hour.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'WordPress sends summary emails when someone visits the site, so on a quiet site they can arrive later than on the hour.', 'quiet-copy-notice' ) );
 
 		$this->number_row( 'instant_hourly_cap', __( 'Instant email limit', 'quiet-copy-notice' ), __( 'Used only with "One email per copy, right away". Copies over the limit go into the next hourly summary instead.', 'quiet-copy-notice' ), __( 'emails per hour', 'quiet-copy-notice' ) );
 	}
@@ -144,6 +144,20 @@ class Settings_Page {
 	 */
 	private function after_form( $tab ) {
 		if ( 'notifications' === $tab ) {
+			echo '<h2>' . esc_html__( 'Test email', 'quiet-copy-notice' ) . '</h2>';
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+			echo '<input type="hidden" name="action" value="' . esc_attr( Admin::ACTION_TEST_EMAIL ) . '" />';
+			wp_nonce_field( Admin::ACTION_TEST_EMAIL );
+			echo '<p>' . esc_html(
+				sprintf(
+					/* translators: %s: email address. */
+					__( 'Sends a short test message to %s, the address saved above, so you can check that notifications arrive. Save first if you changed it.', 'quiet-copy-notice' ),
+					Settings::notify_email()
+				)
+			) . '</p>';
+			submit_button( __( 'Send a test email', 'quiet-copy-notice' ), 'secondary', 'submit', false );
+			echo '</form>';
+
 			Upsell::row(
 				__( 'Slack, Chatwork, Discord and webhooks', 'quiet-copy-notice' ),
 				__( 'Quiet Copy Notice Pro sends these notifications to your team chat or your own system too, with rules that decide which copies go where.', 'quiet-copy-notice' )
@@ -172,21 +186,21 @@ class Settings_Page {
 			'<input type="text" class="large-text code" id="qcnotice-content_selector" name="qcnotice[content_selector]" value="%s" />',
 			esc_attr( $this->settings['content_selector'] )
 		);
-		$this->row_end( __( 'CSS selectors, separated by commas. The first selector that matches anything on the page is used, with every element it matches; copies from outside them are ignored.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'CSS selectors, separated by commas. The first one found on the page is used, with every element it matches; copies from outside those elements are ignored.', 'quiet-copy-notice' ) );
 
 		$roles = array();
 		foreach ( wp_roles()->get_names() as $role => $name ) {
 			$roles[ $role ] = translate_user_role( $name );
 		}
-		$this->row_start( '', __( 'Ignore logged-in users', 'quiet-copy-notice' ) );
-		$this->checkboxes( 'exclude_roles', $roles, __( 'Ignore logged-in users', 'quiet-copy-notice' ) );
+		$this->row_start( '', __( 'Ignore logged-in users with these roles', 'quiet-copy-notice' ) );
+		$this->checkboxes( 'exclude_roles', $roles, __( 'Ignore logged-in users with these roles', 'quiet-copy-notice' ) );
 		$this->row_end( __( 'The detection script is not loaded for logged-in users with these roles.', 'quiet-copy-notice' ) );
 
-		$this->textarea_row( 'exclude_ips', __( 'Ignore IP addresses', 'quiet-copy-notice' ), __( 'One per line. CIDR ranges such as 192.0.2.0/24 are allowed.', 'quiet-copy-notice' ) );
-		$this->textarea_row( 'exclude_posts', __( 'Ignore posts', 'quiet-copy-notice' ), __( 'Post IDs, one per line.', 'quiet-copy-notice' ) );
+		$this->textarea_row( 'exclude_ips', __( 'Ignore IP addresses', 'quiet-copy-notice' ), __( 'One per line. Ranges such as 192.0.2.0/24 are allowed. When addresses are shortened, the log shows 192.0.2.55 as 192.0.2.0; entering such a shortened address ignores every visitor whose address is shortened to it.', 'quiet-copy-notice' ) );
+		$this->textarea_row( 'exclude_posts', __( 'Ignore posts', 'quiet-copy-notice' ), __( 'Post IDs, one per line. The log shows each post\'s ID after its title, for example #123.', 'quiet-copy-notice' ) );
 		$this->textarea_row( 'trusted_proxies', __( 'Trusted proxies', 'quiet-copy-notice' ), __( 'Leave empty unless the site is behind a reverse proxy or CDN. Only when a request arrives from one of these addresses is the X-Forwarded-For header used to find the visitor\'s IP.', 'quiet-copy-notice' ) );
 
-		$this->number_row( 'rate_ip_per_minute', __( 'Limit per IP', 'quiet-copy-notice' ), __( 'Most copy reports accepted from one IP address (for IPv6, one /64 block). One address is also held to a fifth of the site limit per hour, so it cannot use up the site limit alone.', 'quiet-copy-notice' ), __( 'per minute', 'quiet-copy-notice' ) );
+		$this->number_row( 'rate_ip_per_minute', __( 'Limit per IP', 'quiet-copy-notice' ), __( 'Most copy reports accepted from one IP address (IPv6 visitors are counted per network). One address is also held to a fifth of the site limit per hour, so it cannot use up the site limit alone.', 'quiet-copy-notice' ), __( 'per minute', 'quiet-copy-notice' ) );
 		$this->number_row( 'rate_site_per_hour', __( 'Limit for the site', 'quiet-copy-notice' ), __( 'Most copy reports accepted in total. Reports over either limit are neither stored nor emailed.', 'quiet-copy-notice' ), __( 'per hour', 'quiet-copy-notice' ) );
 	}
 
@@ -223,16 +237,20 @@ class Settings_Page {
 		$this->checkbox( 'show_message', __( 'Show a short message to the reader after they copy', 'quiet-copy-notice' ) );
 		$this->row_end( __( 'Shown for five seconds at the bottom of the screen. It does not stop the copy.', 'quiet-copy-notice' ) );
 
-		$this->text_row( 'message_text', __( 'Message', 'quiet-copy-notice' ), Settings::MESSAGE_MAX, __( 'Thank you for reading. If you quote this article, please link to it.', 'quiet-copy-notice' ), __( 'Plain text. Leave empty to use the wording shown.', 'quiet-copy-notice' ) );
+		$default_message = __( 'Thank you for reading. If you quote this article, please link to it.', 'quiet-copy-notice' );
+		/* translators: %s: the default wording. */
+		$this->text_row( 'message_text', __( 'Message', 'quiet-copy-notice' ), Settings::MESSAGE_MAX, $default_message, sprintf( __( 'Plain text. Leave empty to use: "%s"', 'quiet-copy-notice' ), $default_message ) );
 
 		$this->row_start( '', __( 'Source link', 'quiet-copy-notice' ) );
 		$this->checkbox( 'add_attribution', __( 'Add the post title and URL to copied text', 'quiet-copy-notice' ) );
-		$this->row_end( __( 'Appended after a blank line, for example "Source: Post title" and the URL on the next line. Copies from form fields are left unchanged.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Appended after a blank line, for example "Source: Post title" and the URL on the next line.', 'quiet-copy-notice' ) );
 
-		$this->text_row( 'attribution_label', __( 'Source label', 'quiet-copy-notice' ), Settings::LABEL_MAX, __( 'Source:', 'quiet-copy-notice' ), __( 'Leave empty to use the wording shown.', 'quiet-copy-notice' ) );
+		$default_label = __( 'Source:', 'quiet-copy-notice' );
+		/* translators: %s: the default wording. */
+		$this->text_row( 'attribution_label', __( 'Source label', 'quiet-copy-notice' ), Settings::LABEL_MAX, $default_label, sprintf( __( 'Leave empty to use: "%s"', 'quiet-copy-notice' ), $default_label ) );
 
 		$this->row_start( '', __( 'Applies to', 'quiet-copy-notice' ) );
-		echo '<p>' . esc_html__( 'Both options follow the Detection settings for the minimum length, the content area, post types, ignored posts and ignored roles. Ignored IP addresses and the rate limits are checked on the server, so readers they apply to still see the message and get the source line.', 'quiet-copy-notice' ) . '</p>';
+		echo '<p>' . esc_html__( 'Both options follow the Detection settings for the minimum length, the content area, post types, ignored posts and ignored roles. Ignored IP addresses and the rate limits are checked on the server, so readers they apply to still see the message and get the source line. Copies from form fields, such as a comment the reader is typing, are left alone: not recorded, no message, no source line.', 'quiet-copy-notice' ) . '</p>';
 		$this->row_end();
 	}
 

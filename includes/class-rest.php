@@ -112,10 +112,13 @@ class Rest {
 		$paragraph = strtolower( self::scalar_param( $request, 'para' ) );
 		$paragraph = preg_match( '/^[0-9a-f]{40}$/', $paragraph ) ? $paragraph : null;
 
-		// 6. Exclusions are silent: same response as a stored event.
+		// 6. Exclusions are silent: same response as a stored event. The
+		// address is also checked as the log shows it, so a shortened address
+		// copied from the log ignores every address shortened to it.
 		$exclude_ips = Settings::get( 'exclude_ips' );
 		if ( in_array( $post_id, Settings::get( 'exclude_posts' ), true )
-			|| ( '' !== $ip && ! empty( $exclude_ips ) && Privacy::ip_matches_any( $ip, $exclude_ips ) ) ) {
+			|| ( '' !== $ip && ! empty( $exclude_ips )
+				&& ( Privacy::ip_matches_any( $ip, $exclude_ips ) || Privacy::ip_matches_any( Privacy::ip_for_storage( $ip ), $exclude_ips ) ) ) ) {
 			return self::empty_response( 204 );
 		}
 
@@ -182,7 +185,9 @@ class Rest {
 	 */
 	private static function copied_text( $value ) {
 		$text = wp_check_invalid_utf8( $value, true );
-		$text = str_replace( array( "\r\n", "\r" ), "\n", $text );
+		// Unicode line and paragraph separators count as line breaks, so the
+		// email quotes every line they start.
+		$text = str_replace( array( "\r\n", "\r", "\u{0085}", "\u{2028}", "\u{2029}" ), "\n", $text );
 		$text = (string) preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', $text );
 		return trim( mb_substr( $text, 0, self::TEXT_MAX ) );
 	}
@@ -202,7 +207,8 @@ class Rest {
 			return '';
 		}
 		$ua = wp_check_invalid_utf8( $ua, true );
-		$ua = preg_replace( '/[\x00-\x1F\x7F]+/u', ' ', $ua );
+		$ua = preg_replace( '/[\x00-\x1F\x7F\x{0085}\x{2028}\x{2029}]+/u', ' ', $ua );
+		$ua = preg_replace( '/[\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', (string) $ua );
 		return mb_substr( trim( (string) $ua ), 0, self::HEADER_MAX );
 	}
 

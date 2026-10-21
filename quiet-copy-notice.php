@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Quiet Copy Notice
  * Plugin URI:        https://raplsworks.com/plugins/quiet-copy-notice/
- * Description:       Notices when visitors copy text from your posts and tells you by email. Lightweight copy notification and copy tracking with no external services.
- * Version:           1.3.8
+ * Description:       Detects when visitors copy text from your posts and tells you by email. Lightweight copy notification and copy tracking with no external services.
+ * Version:           1.3.9
  * Requires at least: 6.3
  * Requires PHP:      7.4
  * Author:            Rapls Works
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'QCNOTICE_VERSION', '1.3.8' );
+define( 'QCNOTICE_VERSION', '1.3.9' );
 define( 'QCNOTICE_FILE', __FILE__ );
 define( 'QCNOTICE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QCNOTICE_URL', plugin_dir_url( __FILE__ ) );

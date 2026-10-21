@@ -176,7 +176,7 @@ class Site_Health {
 				'pending',
 				'good',
 				__( 'Copy notifications are being delivered', 'quiet-copy-notice' ),
-				__( 'No copy recorded more than two hours ago is still waiting to be notified.', 'quiet-copy-notice' )
+				__( 'Every copy recorded more than two hours ago has been sent to you.', 'quiet-copy-notice' )
 			);
 		}
 
@@ -185,10 +185,10 @@ class Site_Health {
 			'recommended',
 			sprintf(
 				/* translators: %s: number of log entries. */
-				_n( '%s copy is waiting to be notified', '%s copies are waiting to be notified', $pending, 'quiet-copy-notice' ),
+				_n( 'Notification for %s copy has not been sent', 'Notifications for %s copies have not been sent', $pending, 'quiet-copy-notice' ),
 				number_format_i18n( $pending )
 			),
-			__( 'Copies recorded more than two hours ago have not been notified, so the notification keeps failing. Check that this site can send email (an SMTP plugin may be needed) and that the address under Notifications is right. They stay in the log and go out with the next summary once sending works.', 'quiet-copy-notice' ),
+			__( 'Copies recorded more than two hours ago have still not been sent to you, so sending keeps failing. Check that this site can send email (an SMTP plugin may be needed) and that the address under Notifications is right. They stay in the log and go out with the next summary once sending works.', 'quiet-copy-notice' ),
 			'notifications'
 		);
 	}

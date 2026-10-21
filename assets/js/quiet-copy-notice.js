@@ -87,10 +87,10 @@
 	 * Whether every range of the selection lies inside one content area.
 	 *
 	 * @param {Selection} selection Current selection.
+	 * @param {Element[]} areas     Result of contentAreas().
 	 * @return {boolean}
 	 */
-	function insideContent( selection ) {
-		var areas = contentAreas();
+	function insideContent( selection, areas ) {
 		if ( ! areas.length ) {
 			return false;
 		}
@@ -118,16 +118,16 @@
 	 * content area. Read synchronously, before the selection can change.
 	 *
 	 * @param {Selection} selection Current selection.
+	 * @param {Element[]} areas     Result of contentAreas().
 	 * @return {string}
 	 */
-	function paragraphText( selection ) {
+	function paragraphText( selection, areas ) {
 		var node = selection.getRangeAt( 0 ).startContainer;
 		var el = node && node.nodeType === 1 ? node : node && node.parentElement;
 		var block = el && el.closest ? el.closest( BLOCKS ) : null;
 		if ( ! block ) {
 			return '';
 		}
-		var areas = contentAreas();
 		for ( var a = 0; a < areas.length; a++ ) {
 			if ( areas[ a ].contains( block ) ) {
 				var text = block.textContent.replace( /\s+/g, ' ' ).trim();
@@ -195,14 +195,21 @@
 	}
 
 	/**
-	 * Whether the copy comes from a form field or editable region, where the
-	 * clipboard is left exactly as the browser made it.
+	 * Whether the copy comes from a form field or editable region. Such text
+	 * is usually the reader's own (a comment, a message in a contact form),
+	 * so it is neither recorded nor changed on the clipboard.
 	 *
+	 * @param {Selection} selection Current selection.
 	 * @return {boolean}
 	 */
-	function copyingFromField() {
+	function copyingFromField( selection ) {
 		var el = document.activeElement;
-		return !! el && ( el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable );
+		if ( el && ( el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable ) ) {
+			return true;
+		}
+		var node = selection.anchorNode;
+		var parent = node && node.nodeType === 1 ? node : node && node.parentElement;
+		return !! ( parent && parent.closest && parent.closest( 'input,textarea,select,[contenteditable]:not([contenteditable="false"])' ) );
 	}
 
 	/**
@@ -215,7 +222,7 @@
 	 */
 	function addAttribution( event, selection ) {
 		var source = config.attribution;
-		if ( ! source || ! source.url || ! event.clipboardData || copyingFromField() ) {
+		if ( ! source || ! source.url || ! event.clipboardData ) {
 			return false;
 		}
 
@@ -280,7 +287,6 @@
 			toast = document.createElement( 'div' );
 			toast.className = 'qcnotice-message';
 			toast.setAttribute( 'role', 'status' );
-			toast.setAttribute( 'aria-live', 'polite' );
 			var css = {
 				position: 'fixed',
 				left: '50%',
@@ -345,6 +351,14 @@
 				}
 			} );
 			document.body.appendChild( toast );
+			toast.style.display = 'flex';
+			scheduleHide();
+			// Filled on the next frame: some screen readers announce only
+			// changes to a live region that is already in the page.
+			window.requestAnimationFrame( function () {
+				toastText.textContent = config.message;
+			} );
+			return;
 		}
 		toastText.textContent = config.message;
 		toast.style.display = 'flex';
@@ -353,16 +367,24 @@
 
 	document.addEventListener( 'copy', function ( event ) {
 		var selection;
+		var areas;
 		var chars;
 		try {
 			selection = window.getSelection();
-			if ( ! selection || ! selection.rangeCount ) {
+			if ( ! selection || ! selection.rangeCount || copyingFromField( selection ) ) {
+				return;
+			}
+
+			// The cheap check first: a whole-page selection is rejected here
+			// before its text is split into code points.
+			areas = contentAreas();
+			if ( ! insideContent( selection, areas ) ) {
 				return;
 			}
 
 			// Count code points, as the server does.
 			chars = Array.from( selection.toString().trim() );
-			if ( chars.length < config.minLength || ! insideContent( selection ) ) {
+			if ( chars.length < config.minLength ) {
 				return;
 			}
 		} catch ( e ) {
@@ -392,7 +414,7 @@
 			body.append( 'text', text );
 			body.append( 'length', String( chars.length ) );
 			body.append( 'ref', referrerHost() );
-			paragraphHash( paragraphText( selection ) ).then( function ( hash ) {
+			paragraphHash( paragraphText( selection, areas ) ).then( function ( hash ) {
 				if ( hash ) {
 					body.append( 'para', hash );
 				}
