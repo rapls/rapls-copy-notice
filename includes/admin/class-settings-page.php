@@ -101,20 +101,20 @@ class Settings_Page {
 	private function notifications() {
 		$this->row_start( 'notify_email', __( 'Send notifications to', 'quiet-copy-notice' ) );
 		printf(
-			'<input type="email" class="regular-text" id="qcnotice-notify_email" name="qcnotice[notify_email]" value="%1$s" placeholder="%2$s" />',
+			'<input type="email" class="regular-text" id="qcnotice-notify_email" name="qcnotice[notify_email]" value="%1$s" placeholder="%2$s" aria-describedby="qcnotice-notify_email-description" />',
 			esc_attr( $this->settings['notify_email'] ),
 			esc_attr( (string) get_option( 'admin_email' ) )
 		);
-		$this->row_end( __( 'Leave empty to use the site administration email address. Example: you@example.com', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Leave empty to use the site administration email address. Example: you@example.com', 'quiet-copy-notice' ), 'notify_email' );
 
 		$this->row_start( 'subject_label', __( 'Email subject', 'quiet-copy-notice' ) );
 		printf(
-			'<input type="text" class="regular-text" id="qcnotice-subject_label" name="qcnotice[subject_label]" value="%1$s" maxlength="%2$d" placeholder="%3$s" />',
+			'<input type="text" class="regular-text" id="qcnotice-subject_label" name="qcnotice[subject_label]" value="%1$s" maxlength="%2$d" placeholder="%3$s" aria-describedby="qcnotice-subject_label-description" />',
 			esc_attr( $this->settings['subject_label'] ),
 			(int) Settings::SUBJECT_MAX,
 			esc_attr__( 'Copy notification', 'quiet-copy-notice' )
 		);
-		$this->row_end( __( 'Emails are titled "[Site name] Copy notification (3 copies)". This field changes only the middle part, so you can filter these emails. Nothing a visitor sent appears in the subject.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Emails are titled "[Site name] Copy notification (3 copies)". This field changes only the middle part, so you can filter these emails. Nothing a visitor sent appears in the subject.', 'quiet-copy-notice' ), 'subject_label' );
 
 		$this->row_start( '', __( 'When to send', 'quiet-copy-notice' ) );
 		echo '<fieldset><legend class="screen-reader-text">' . esc_html__( 'When to send', 'quiet-copy-notice' ) . '</legend>';
@@ -131,7 +131,7 @@ class Settings_Page {
 			);
 		}
 		echo '</fieldset>';
-		$this->row_end( __( 'WordPress sends summary emails when someone visits the site, so on a quiet site they can arrive later than on the hour.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'WordPress sends summary emails when someone visits the site, so on a quiet site they can arrive more than an hour apart.', 'quiet-copy-notice' ) );
 
 		$this->number_row( 'instant_hourly_cap', __( 'Instant email limit', 'quiet-copy-notice' ), __( 'Used only with "One email per copy, right away". Copies over the limit go into the next hourly summary instead.', 'quiet-copy-notice' ), __( 'emails per hour', 'quiet-copy-notice' ) );
 	}
@@ -148,14 +148,17 @@ class Settings_Page {
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 			echo '<input type="hidden" name="action" value="' . esc_attr( Admin::ACTION_TEST_EMAIL ) . '" />';
 			wp_nonce_field( Admin::ACTION_TEST_EMAIL );
+			$to = Settings::notify_email();
 			echo '<p>' . esc_html(
-				sprintf(
-					/* translators: %s: email address. */
-					__( 'Sends a short test message to %s, the address saved above, so you can check that notifications arrive. Save first if you changed it.', 'quiet-copy-notice' ),
-					Settings::notify_email()
-				)
+				'' !== $to
+					? sprintf(
+						/* translators: %s: email address. */
+						__( 'Sends a short test message to %s, where notifications go now, so you can check that they arrive. If you changed the address above, save first.', 'quiet-copy-notice' ),
+						$to
+					)
+					: __( 'There is no valid address to send notifications to. Enter one under Send notifications to, or correct the Administration Email Address under Settings → General.', 'quiet-copy-notice' )
 			) . '</p>';
-			submit_button( __( 'Send a test email', 'quiet-copy-notice' ), 'secondary', 'submit', false );
+			submit_button( __( 'Send a test email', 'quiet-copy-notice' ), 'secondary', 'qcnotice_send_test', false, '' !== $to ? null : array( 'disabled' => 'disabled' ) );
 			echo '</form>';
 
 			Upsell::row(
@@ -183,10 +186,10 @@ class Settings_Page {
 
 		$this->row_start( 'content_selector', __( 'Content area', 'quiet-copy-notice' ) );
 		printf(
-			'<input type="text" class="large-text code" id="qcnotice-content_selector" name="qcnotice[content_selector]" value="%s" />',
+			'<input type="text" class="large-text code" id="qcnotice-content_selector" name="qcnotice[content_selector]" value="%s" aria-describedby="qcnotice-content_selector-description" />',
 			esc_attr( $this->settings['content_selector'] )
 		);
-		$this->row_end( __( 'CSS selectors, separated by commas. The first one found on the page is used, with every element it matches; copies from outside those elements are ignored.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'CSS selectors, separated by commas. The first one found on the page is used, with every element it matches; copies from outside those elements are ignored. Copies from form fields, such as a comment box, are never recorded.', 'quiet-copy-notice' ), 'content_selector' );
 
 		$roles = array();
 		foreach ( wp_roles()->get_names() as $role => $name ) {
@@ -196,7 +199,7 @@ class Settings_Page {
 		$this->checkboxes( 'exclude_roles', $roles, __( 'Ignore logged-in users with these roles', 'quiet-copy-notice' ) );
 		$this->row_end( __( 'The detection script is not loaded for logged-in users with these roles.', 'quiet-copy-notice' ) );
 
-		$this->textarea_row( 'exclude_ips', __( 'Ignore IP addresses', 'quiet-copy-notice' ), __( 'One per line. Ranges such as 192.0.2.0/24 are allowed. When addresses are shortened, the log shows 192.0.2.55 as 192.0.2.0; entering such a shortened address ignores every visitor whose address is shortened to it.', 'quiet-copy-notice' ) );
+		$this->textarea_row( 'exclude_ips', __( 'Ignore IP addresses', 'quiet-copy-notice' ), __( 'One per line. Ranges such as 192.0.2.0/24 are allowed. You can paste an address from the log: when Privacy → Shorten IP addresses is on, the log shows 192.0.2.55 as 192.0.2.0, and entering 192.0.2.0 ignores every address from 192.0.2.0 to 192.0.2.255.', 'quiet-copy-notice' ) );
 		$this->textarea_row( 'exclude_posts', __( 'Ignore posts', 'quiet-copy-notice' ), __( 'Post IDs, one per line. The log shows each post\'s ID after its title, for example #123.', 'quiet-copy-notice' ) );
 		$this->textarea_row( 'trusted_proxies', __( 'Trusted proxies', 'quiet-copy-notice' ), __( 'Leave empty unless the site is behind a reverse proxy or CDN. Only when a request arrives from one of these addresses is the X-Forwarded-For header used to find the visitor\'s IP.', 'quiet-copy-notice' ) );
 
@@ -239,7 +242,8 @@ class Settings_Page {
 
 		$default_message = __( 'Thank you for reading. If you quote this article, please link to it.', 'quiet-copy-notice' );
 		/* translators: %s: the default wording. */
-		$this->text_row( 'message_text', __( 'Message', 'quiet-copy-notice' ), Settings::MESSAGE_MAX, $default_message, sprintf( __( 'Plain text. Leave empty to use: "%s"', 'quiet-copy-notice' ), $default_message ) );
+		$message_help = sprintf( __( 'Plain text. Leave empty to use: "%s"', 'quiet-copy-notice' ), $default_message );
+		$this->text_row( 'message_text', __( 'Message', 'quiet-copy-notice' ), Settings::MESSAGE_MAX, $default_message, $message_help );
 
 		$this->row_start( '', __( 'Source link', 'quiet-copy-notice' ) );
 		$this->checkbox( 'add_attribution', __( 'Add the post title and URL to copied text', 'quiet-copy-notice' ) );
@@ -247,7 +251,8 @@ class Settings_Page {
 
 		$default_label = __( 'Source:', 'quiet-copy-notice' );
 		/* translators: %s: the default wording. */
-		$this->text_row( 'attribution_label', __( 'Source label', 'quiet-copy-notice' ), Settings::LABEL_MAX, $default_label, sprintf( __( 'Leave empty to use: "%s"', 'quiet-copy-notice' ), $default_label ) );
+		$label_help = sprintf( __( 'Leave empty to use: "%s"', 'quiet-copy-notice' ), $default_label );
+		$this->text_row( 'attribution_label', __( 'Source label', 'quiet-copy-notice' ), Settings::LABEL_MAX, $default_label, $label_help );
 
 		$this->row_start( '', __( 'Applies to', 'quiet-copy-notice' ) );
 		echo '<p>' . esc_html__( 'Both options follow the Detection settings for the minimum length, the content area, post types, ignored posts and ignored roles. Ignored IP addresses and the rate limits are checked on the server, so readers they apply to still see the message and get the source line. Copies from form fields, such as a comment the reader is typing, are left alone: not recorded, no message, no source line.', 'quiet-copy-notice' ) . '</p>';
@@ -283,14 +288,15 @@ class Settings_Page {
 	private function text_row( $key, $label, $max, $placeholder, $help ) {
 		$this->row_start( $key, $label );
 		printf(
-			'<input type="text" class="large-text" id="%1$s" name="qcnotice[%2$s]" value="%3$s" maxlength="%4$d" placeholder="%5$s" />',
+			'<input type="text" class="large-text" id="%1$s" name="qcnotice[%2$s]" value="%3$s" maxlength="%4$d" placeholder="%5$s" aria-describedby="%6$s" />',
 			esc_attr( 'qcnotice-' . $key ),
 			esc_attr( $key ),
 			esc_attr( $this->settings[ $key ] ),
 			(int) $max,
-			esc_attr( $placeholder )
+			esc_attr( $placeholder ),
+			esc_attr( self::help_id( $key ) )
 		);
-		$this->row_end( $help );
+		$this->row_end( $help, $key );
 	}
 
 	/**
@@ -314,13 +320,25 @@ class Settings_Page {
 	 * Closes a form row.
 	 *
 	 * @param string $help Help text.
+	 * @param string $key  Field key: the help text gets the id that the input
+	 *                     points at with aria-describedby.
 	 * @return void
 	 */
-	private function row_end( $help = '' ) {
+	private function row_end( $help = '', $key = '' ) {
 		if ( '' !== $help ) {
-			echo '<p class="description">' . esc_html( $help ) . '</p>';
+			echo '<p class="description"' . ( '' !== $key ? ' id="' . esc_attr( self::help_id( $key ) ) . '"' : '' ) . '>' . esc_html( $help ) . '</p>';
 		}
 		echo '</td></tr>';
+	}
+
+	/**
+	 * Id of a field's help text.
+	 *
+	 * @param string $key Field key.
+	 * @return string
+	 */
+	private static function help_id( $key ) {
+		return 'qcnotice-' . $key . '-description';
 	}
 
 	/**
@@ -336,15 +354,17 @@ class Settings_Page {
 		$bounds = Settings::bounds()[ $key ];
 		$this->row_start( $key, $label );
 		printf(
-			'<input type="number" class="small-text" id="%1$s" name="qcnotice[%2$s]" value="%3$d" min="%4$d" max="%5$d" step="1" /> %6$s',
+			'<input type="number" class="small-text" id="%1$s" name="qcnotice[%2$s]" value="%3$d" min="%4$d" max="%5$d" step="1" aria-describedby="%7$s %8$s" /> <span id="%7$s">%6$s</span>',
 			esc_attr( 'qcnotice-' . $key ),
 			esc_attr( $key ),
 			(int) $this->settings[ $key ],
 			(int) $bounds[0],
 			(int) $bounds[1],
-			esc_html( $unit )
+			esc_html( $unit ),
+			esc_attr( 'qcnotice-' . $key . '-unit' ),
+			esc_attr( self::help_id( $key ) )
 		);
-		$this->row_end( $help );
+		$this->row_end( $help, $key );
 	}
 
 	/**
@@ -358,12 +378,13 @@ class Settings_Page {
 	private function textarea_row( $key, $label, $help ) {
 		$this->row_start( $key, $label );
 		printf(
-			'<textarea class="large-text code" rows="4" id="%1$s" name="qcnotice[%2$s]">%3$s</textarea>',
+			'<textarea class="large-text code" rows="4" id="%1$s" name="qcnotice[%2$s]" aria-describedby="%4$s">%3$s</textarea>',
 			esc_attr( 'qcnotice-' . $key ),
 			esc_attr( $key ),
-			esc_textarea( implode( "\n", (array) $this->settings[ $key ] ) )
+			esc_textarea( implode( "\n", (array) $this->settings[ $key ] ) ),
+			esc_attr( self::help_id( $key ) )
 		);
-		$this->row_end( $help );
+		$this->row_end( $help, $key );
 	}
 
 	/**

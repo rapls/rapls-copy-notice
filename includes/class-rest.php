@@ -188,7 +188,7 @@ class Rest {
 		// Unicode line and paragraph separators count as line breaks, so the
 		// email quotes every line they start.
 		$text = str_replace( array( "\r\n", "\r", "\u{0085}", "\u{2028}", "\u{2029}" ), "\n", $text );
-		$text = (string) preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', $text );
+		$text = (string) preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\x{061C}\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', $text );
 		return trim( mb_substr( $text, 0, self::TEXT_MAX ) );
 	}
 
@@ -208,7 +208,7 @@ class Rest {
 		}
 		$ua = wp_check_invalid_utf8( $ua, true );
 		$ua = preg_replace( '/[\x00-\x1F\x7F\x{0085}\x{2028}\x{2029}]+/u', ' ', $ua );
-		$ua = preg_replace( '/[\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', (string) $ua );
+		$ua = preg_replace( '/[\x{061C}\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', (string) $ua );
 		return mb_substr( trim( (string) $ua ), 0, self::HEADER_MAX );
 	}
 

@@ -328,7 +328,7 @@ class Notifier {
 	 */
 	private static function one_line( $text ) {
 		$text = (string) preg_replace( '/[\x00-\x1F\x7F\x{0085}\x{2028}\x{2029}]+/u', ' ', (string) $text );
-		return trim( (string) preg_replace( '/[\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', $text ) );
+		return trim( (string) preg_replace( '/[\x{061C}\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]+/u', '', $text ) );
 	}
 
 	/**

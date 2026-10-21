@@ -176,7 +176,7 @@ class Site_Health {
 				'pending',
 				'good',
 				__( 'Copy notifications are being delivered', 'quiet-copy-notice' ),
-				__( 'Every copy recorded more than two hours ago has been sent to you.', 'quiet-copy-notice' )
+				__( 'Every copy recorded more than two hours ago has been notified.', 'quiet-copy-notice' )
 			);
 		}
 
@@ -188,7 +188,7 @@ class Site_Health {
 				_n( 'Notification for %s copy has not been sent', 'Notifications for %s copies have not been sent', $pending, 'quiet-copy-notice' ),
 				number_format_i18n( $pending )
 			),
-			__( 'Copies recorded more than two hours ago have still not been sent to you, so sending keeps failing. Check that this site can send email (an SMTP plugin may be needed) and that the address under Notifications is right. They stay in the log and go out with the next summary once sending works.', 'quiet-copy-notice' ),
+			__( 'Copies recorded more than two hours ago have still not been sent to you. Either sending keeps failing or the hourly summary is not running. Use Send a test email on the Notifications tab to check that this site can send email (an SMTP plugin may be needed), and look at the "Quiet Copy Notice scheduled tasks" check on this screen. These copies stay in the log and go out with the next summary once this is fixed.', 'quiet-copy-notice' ),
 			'notifications'
 		);
 	}

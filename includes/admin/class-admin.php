@@ -252,7 +252,7 @@ class Admin {
 		echo '<div class="wrap qcnotice-wrap">';
 		echo '<h1>' . esc_html__( 'Quiet Copy Notice', 'quiet-copy-notice' ) . '</h1>';
 
-		echo '<nav class="nav-tab-wrapper">';
+		echo '<nav class="nav-tab-wrapper" aria-label="' . esc_attr__( 'Quiet Copy Notice sections', 'quiet-copy-notice' ) . '">';
 		foreach ( self::tabs() as $key => $label ) {
 			$active = $key === $tab;
 			printf(
@@ -297,23 +297,30 @@ class Admin {
 		$count   = isset( $_GET['qcnotice_count'] ) ? absint( $_GET['qcnotice_count'] ) : 0;
 		// phpcs:enable
 
-		$text = '';
-		$type = 'success';
+		$text  = '';
+		$extra = '';
+		$type  = 'success';
 		switch ( $message ) {
 			case 'saved':
 				$text = __( 'Settings saved.', 'quiet-copy-notice' );
 				break;
 			case 'saved_adjusted':
-				$type = 'warning';
-				$text = sprintf(
-					/* translators: %s: list of field names. */
-					__( 'Settings saved, but some values were not valid and were changed or left out: %s. Check them below.', 'quiet-copy-notice' ),
-					implode( wp_get_list_item_separator(), $this->adjusted_field_labels() )
-				);
-				if ( in_array( 'notify_email', $this->adjusted_field_keys(), true ) ) {
-					$text .= ' ' . sprintf(
+				$type  = 'warning';
+				$email = in_array( 'notify_email', $this->adjusted_field_keys(), true );
+				// The address gets its own paragraph, which says more than its
+				// name in the list would.
+				$labels = $this->adjusted_field_labels( $email ? array( 'notify_email' ) : array() );
+				if ( $labels ) {
+					$text = sprintf(
+						/* translators: %s: list of field names. */
+						__( 'Settings saved, but some values were not valid and were changed or left out: %s. Check them below.', 'quiet-copy-notice' ),
+						implode( wp_get_list_item_separator(), $labels )
+					);
+				}
+				if ( $email ) {
+					$extra = sprintf(
 						/* translators: %s: the site administration email address. */
-						__( 'The notification address was not valid, so notifications go to the site administration email address, %s.', 'quiet-copy-notice' ),
+						__( 'The address under Send notifications to was not valid and was not saved. Notifications go to the site administration email address, %s, until you enter a valid one.', 'quiet-copy-notice' ),
 						(string) get_option( 'admin_email' )
 					);
 				}
@@ -340,31 +347,46 @@ class Admin {
 					Settings::notify_email()
 				);
 				break;
+			case 'test_no_address':
+				$type = 'error';
+				$text = __( 'There is no valid address to send the test email to. Enter one under Send notifications to, or correct the Administration Email Address under Settings → General.', 'quiet-copy-notice' );
+				break;
 			case 'test_failed':
 				$type = 'error';
 				$text = __( 'The test email could not be sent: WordPress reported an error while sending. Check the site\'s email settings, for example an SMTP plugin.', 'quiet-copy-notice' );
 				break;
 		}
 
-		if ( '' !== $text ) {
-			echo '<div class="notice notice-' . esc_attr( $type ) . ' is-dismissible"><p>' . esc_html( $text ) . '</p></div>';
+		if ( '' !== $text || '' !== $extra ) {
+			echo '<div class="notice notice-' . esc_attr( $type ) . ' is-dismissible">';
+			foreach ( array( $text, $extra ) as $paragraph ) {
+				if ( '' !== $paragraph ) {
+					echo '<p>' . esc_html( $paragraph ) . '</p>';
+				}
+			}
+			echo '</div>';
 		}
 	}
 
 	/**
 	 * Labels of the fields named in qcnotice_fields, known fields only.
 	 *
-	 * @return string[]
+	 * @param string[] $skip Keys reported separately.
+	 * @return string[] Empty when every named field is in $skip.
 	 */
-	private function adjusted_field_labels() {
+	private function adjusted_field_labels( array $skip = array() ) {
 		$labels = Settings_Page::field_labels();
+		$keys   = array_diff( $this->adjusted_field_keys(), $skip );
 		$out    = array();
-		foreach ( $this->adjusted_field_keys() as $key ) {
+		foreach ( $keys as $key ) {
 			if ( isset( $labels[ $key ] ) ) {
 				$out[] = $labels[ $key ];
 			}
 		}
-		return $out ? $out : array( __( 'unknown field', 'quiet-copy-notice' ) );
+		if ( ! $out && $keys ) {
+			$out[] = __( 'unknown field', 'quiet-copy-notice' );
+		}
+		return $out;
 	}
 
 	/**
@@ -391,7 +413,7 @@ class Admin {
 		}
 		printf(
 			'<div class="notice notice-warning"><p>%1$s <a href="%2$s">%3$s</a></p></div>',
-			esc_html__( 'Check Copy Contents is still active. It is no longer maintained, and until you deactivate it you get two emails for each copy. Settings it had when Quiet Copy Notice was first activated were carried over where possible, so you can deactivate it.', 'quiet-copy-notice' ),
+			esc_html__( 'Check Copy Contents is still active. It is no longer maintained, and while both plugins are active you get two emails for each copy. Its settings were carried over where possible when Quiet Copy Notice was first activated, so you can deactivate it now.', 'quiet-copy-notice' ),
 			esc_url( admin_url( 'plugins.php' ) ),
 			esc_html__( 'Go to Plugins', 'quiet-copy-notice' )
 		);
@@ -412,7 +434,7 @@ class Admin {
 		// Deleting selected entries is permanent too, so it asks first, like
 		// "Delete all". Only the bulk action asks; filtering does not.
 		$bulk_confirm = __( 'Delete the selected log entries? This cannot be undone.', 'quiet-copy-notice' );
-		echo '<form method="get" onsubmit="' . esc_attr( 'var s=event.submitter;if(s&&(s.id==="doaction"||s.id==="doaction2")){var a=this.querySelector(s.id==="doaction"?"#bulk-action-selector-top":"#bulk-action-selector-bottom");if(a&&a.value==="delete"){return window.confirm(' . wp_json_encode( $bulk_confirm ) . ');}}return true;' ) . '">';
+		echo '<form method="get" onsubmit="' . esc_attr( 'var s=event.submitter,p=this.querySelector("#current-page-selector");if(p&&p.value!==p.defaultValue){return true;}if(s&&(s.id==="doaction"||s.id==="doaction2")&&this.querySelector("input[name=\'entry[]\']:checked")){var a=this.querySelector(s.id==="doaction"?"#bulk-action-selector-top":"#bulk-action-selector-bottom");if(a&&a.value==="delete"){return window.confirm(' . wp_json_encode( $bulk_confirm ) . ');}}return true;' ) . '">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( QCNOTICE_SLUG ) . '" />';
 		$table->display();
 		echo '</form>';
@@ -496,9 +518,13 @@ class Admin {
 		}
 		check_admin_referer( self::ACTION_TEST_EMAIL );
 
-		$sent = Notifier::send_test();
+		if ( '' === Settings::notify_email() ) {
+			$result = 'test_no_address';
+		} else {
+			$result = Notifier::send_test() ? 'test_sent' : 'test_failed';
+		}
 
-		wp_safe_redirect( self::url( 'notifications', array( 'qcnotice_msg' => $sent ? 'test_sent' : 'test_failed' ) ) );
+		wp_safe_redirect( self::url( 'notifications', array( 'qcnotice_msg' => $result ) ) );
 		exit;
 	}
 }

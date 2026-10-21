@@ -245,8 +245,9 @@ class Log_Table extends \WP_List_Table {
 			(int) $item['id'],
 			esc_html(
 				sprintf(
-					/* translators: %s: date and time of the copy. */
-					__( 'Select the copy from %s', 'quiet-copy-notice' ),
+					/* translators: 1: post title, 2: date and time of the copy. */
+					__( 'Select the copy from %1$s on %2$s', 'quiet-copy-notice' ),
+					html_entity_decode( wp_strip_all_tags( get_the_title( (int) $item['post_id'] ) ), ENT_QUOTES, 'UTF-8' ),
 					wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $item['created_at'] . ' UTC' ) )
 				)
 			)

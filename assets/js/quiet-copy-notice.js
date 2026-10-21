@@ -321,6 +321,8 @@
 				flex: 'none',
 				margin: '0',
 				padding: '0 4px',
+				minWidth: '24px',
+				minHeight: '24px',
 				border: '0',
 				background: 'transparent',
 				color: 'inherit',
@@ -351,18 +353,17 @@
 				}
 			} );
 			document.body.appendChild( toast );
-			toast.style.display = 'flex';
-			scheduleHide();
-			// Filled on the next frame: some screen readers announce only
-			// changes to a live region that is already in the page.
-			window.requestAnimationFrame( function () {
-				toastText.textContent = config.message;
-			} );
-			return;
 		}
-		toastText.textContent = config.message;
+		// The text is emptied, the region shown, and the text put back a
+		// moment later: screen readers announce a change to a live region
+		// that is already displayed, not one that appears with its text, and
+		// a repeat of the same text would otherwise not count as a change.
+		toastText.textContent = '';
 		toast.style.display = 'flex';
 		scheduleHide();
+		window.setTimeout( function () {
+			toastText.textContent = config.message;
+		}, 100 );
 	}
 
 	document.addEventListener( 'copy', function ( event ) {

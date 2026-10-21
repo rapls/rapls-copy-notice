@@ -195,8 +195,13 @@ class Logger {
 		global $wpdb;
 
 		$table = Installer::table();
+		// A refused TRUNCATE is expected on some hosts; its error must not be
+		// printed before the redirect that follows.
+		$suppress = $wpdb->suppress_errors( true );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table.
-		if ( false !== $wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table ) ) ) {
+		$truncated = $wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table ) );
+		$wpdb->suppress_errors( $suppress );
+		if ( false !== $truncated ) {
 			return true;
 		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
@@ -219,7 +224,14 @@ class Logger {
 		// the table for one long statement. What is left goes the next day.
 		for ( $i = 0; $i < self::PURGE_BATCHES; $i++ ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
-			$deleted = (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s ORDER BY id LIMIT %d', $table, $cutoff, self::PURGE_BATCH ) );
+			$deleted = $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s ORDER BY id LIMIT %d', $table, $cutoff, self::PURGE_BATCH ) );
+			if ( false === $deleted ) {
+				// A database that does not take DELETE ... LIMIT (SQLite, some
+				// clusters): one plain DELETE, so retention still holds.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
+				return $total + (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $table, $cutoff ) );
+			}
+			$deleted = (int) $deleted;
 			$total  += $deleted;
 			if ( $deleted < self::PURGE_BATCH ) {
 				break;
