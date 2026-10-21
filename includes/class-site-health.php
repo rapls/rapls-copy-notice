@@ -159,7 +159,7 @@ class Site_Health {
 			'notify_email',
 			'recommended',
 			__( 'Copy notifications have no valid address', 'quiet-copy-notice' ),
-			__( 'Copies are still recorded in the log, but no email can be sent. Enter an address under Tools → Quiet Copy Notice → Notifications, or fix the site administration email address.', 'quiet-copy-notice' ),
+			__( 'Copies are still recorded in the log, but no email can be sent. Enter an address in "Send notifications to" on the Notifications tab (Tools → Quiet Copy Notice), or correct the Administration Email Address under Settings → General.', 'quiet-copy-notice' ),
 			'notifications'
 		);
 	}
@@ -189,7 +189,7 @@ class Site_Health {
 				_n( 'Notification for %s copy has not been sent', 'Notifications for %s copies have not been sent', $pending, 'quiet-copy-notice' ),
 				number_format_i18n( $pending )
 			),
-			__( 'Copies recorded more than two hours ago are still waiting to be sent to you. Sending may be failing, there may be no valid notification address, or the hourly summary may not be running. Use "Send a test email" on the Notifications tab to check that this site can send email (an SMTP plugin may be needed), and check whether this screen also reports that copy summaries are not running on time. These copies stay in the log and go out with the next summary once this is fixed.', 'quiet-copy-notice' ),
+			__( 'Copies recorded more than two hours ago are still waiting to be sent to you. Sending may be failing, there may be no valid notification address, or the hourly summary may not be running. Use "Send a test email" on the Notifications tab to check that this site can send email (an SMTP plugin may be needed), and look on this screen for "Copy summaries or log cleanup are not running on time". These copies stay in the log and go out with the next summary once this is fixed.', 'quiet-copy-notice' ),
 			'notifications'
 		);
 	}
@@ -205,7 +205,7 @@ class Site_Health {
 				'post_types',
 				'good',
 				__( 'Copies are detected on at least one post type', 'quiet-copy-notice' ),
-				__( 'At least one post type is selected under Detection.', 'quiet-copy-notice' )
+				__( 'At least one post type is selected on the Detection tab (Tools → Quiet Copy Notice).', 'quiet-copy-notice' )
 			);
 		}
 
@@ -213,7 +213,7 @@ class Site_Health {
 			'post_types',
 			'recommended',
 			__( 'No post type is monitored for copies', 'quiet-copy-notice' ),
-			__( 'No post type is selected under Detection, so no copies are detected anywhere on the site.', 'quiet-copy-notice' ),
+			__( 'No post type is selected on the Detection tab (Tools → Quiet Copy Notice), so no copies are detected anywhere on the site.', 'quiet-copy-notice' ),
 			'detection'
 		);
 	}
@@ -249,7 +249,9 @@ class Site_Health {
 				'proxy',
 				'good',
 				__( 'Visitor IP addresses are read safely', 'quiet-copy-notice' ),
-				__( 'Visitor IP addresses come from the direct connection. Forwarding headers are used only from proxies you list as trusted.', 'quiet-copy-notice' )
+				empty( Settings::get( 'trusted_proxies' ) )
+					? __( 'Visitor IP addresses come from the direct connection. Forwarding headers are used only from proxies you list as trusted.', 'quiet-copy-notice' )
+					: __( 'Forwarding headers are used only for requests from the addresses in "Trusted proxies"; other requests use the address of the direct connection.', 'quiet-copy-notice' )
 			);
 		}
 
@@ -257,7 +259,7 @@ class Site_Health {
 			'proxy',
 			'recommended',
 			__( 'This site may be behind a proxy that is not listed as trusted', 'quiet-copy-notice' ),
-			__( 'This request arrived with a forwarding header, so the site may sit behind a reverse proxy or CDN. If it does, every visitor appears with the proxy\'s IP address, and the per-IP rate limit applies to all of them together. Add the proxy\'s addresses under Tools → Quiet Copy Notice → Detection → Trusted proxies. If you do not use a proxy, nothing needs to change.', 'quiet-copy-notice' ),
+			__( 'This request arrived with a forwarding header, so the site may sit behind a reverse proxy or CDN. If it does, every visitor appears with the proxy\'s IP address, and the per-IP rate limit applies to all of them together. Add the proxy\'s addresses in "Trusted proxies" on the Detection tab (Tools → Quiet Copy Notice). If you do not use a proxy, nothing needs to change.', 'quiet-copy-notice' ),
 			'detection'
 		);
 	}
@@ -359,7 +361,7 @@ class Site_Health {
 			$actions = sprintf(
 				'<p><a href="%1$s">%2$s</a></p>',
 				esc_url( Admin\Admin::url( $tab ) ),
-				esc_html__( 'Open the settings', 'quiet-copy-notice' )
+				esc_html__( 'Open Quiet Copy Notice settings', 'quiet-copy-notice' )
 			);
 		}
 

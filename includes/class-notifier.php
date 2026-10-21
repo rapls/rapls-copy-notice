@@ -208,7 +208,7 @@ class Notifier {
 		if ( $total > count( $rows ) ) {
 			$body[] = sprintf(
 				/* translators: %d: number of events not listed in the email. */
-				_n( '...and %d more. See the log screen for all of them.', '...and %d more. See the log screen for all of them.', $total - count( $rows ), 'quiet-copy-notice' ),
+				_n( '…and %d more copy, listed in the log.', '…and %d more copies, listed in the log.', $total - count( $rows ), 'quiet-copy-notice' ),
 				$total - count( $rows )
 			);
 		}

@@ -169,7 +169,7 @@ class Logger {
 	 * Deletes rows by ID.
 	 *
 	 * @param int[] $ids Row IDs.
-	 * @return int Rows deleted.
+	 * @return int Rows deleted, or -1 when the database refused.
 	 */
 	public static function delete( array $ids ) {
 		global $wpdb;
@@ -182,7 +182,8 @@ class Logger {
 		$table        = Installer::table();
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Custom table; $placeholders is one %d per ID.
-		return (int) $wpdb->query( $wpdb->prepare( "DELETE FROM %i WHERE id IN ({$placeholders})", array_merge( array( $table ), $ids ) ) );
+		$deleted = $wpdb->query( $wpdb->prepare( "DELETE FROM %i WHERE id IN ({$placeholders})", array_merge( array( $table ), $ids ) ) );
+		return false === $deleted ? -1 : (int) $deleted;
 	}
 
 	/**
@@ -232,13 +233,13 @@ class Logger {
 				$wpdb->suppress_errors( $suppress );
 			}
 			if ( false === $deleted ) {
-				if ( 0 === $i ) {
-					// The statement itself was refused (SQLite, some
+				if ( 0 === $i && self::cannot_limit_delete() ) {
+					// The statement itself is not supported (SQLite, some
 					// clusters): one plain DELETE, so retention still holds.
 					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
 					return (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $table, $cutoff ) );
 				}
-				// A later batch failed (a lock timeout, say): stop for today
+				// Any other failure (a lock timeout, say): stop for today
 				// rather than lock the table with one long statement.
 				break;
 			}
@@ -249,6 +250,20 @@ class Logger {
 			}
 		}
 		return $total;
+	}
+
+	/**
+	 * Whether the database refused DELETE ... LIMIT itself, as SQLite does,
+	 * rather than failing for a passing reason such as a lock timeout.
+	 *
+	 * @return bool
+	 */
+	private static function cannot_limit_delete() {
+		global $wpdb;
+		if ( defined( 'DB_ENGINE' ) && 'sqlite' === DB_ENGINE ) {
+			return true;
+		}
+		return false !== stripos( (string) $wpdb->last_error, 'syntax' );
 	}
 
 	/**

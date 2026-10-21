@@ -184,7 +184,7 @@ class Settings_Page {
 
 		$this->row_start( '', __( 'Find the post body', 'quiet-copy-notice' ) );
 		$this->checkbox( 'mark_content', __( 'Mark the end of the post body so it is found in any theme', 'quiet-copy-notice' ) );
-		$this->row_end( __( 'Adds one empty, hidden element after the post content on monitored pages, and uses the element around it as the content area. When this is on, the selectors below are only a fallback. Leave it off if your theme already uses one of the selectors below.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Adds one empty, hidden element after the post content on monitored pages, and uses the element around it as the content area. When this is on, the selectors below are only a fallback. Leave it off if your theme already uses one of the selectors below.', 'quiet-copy-notice' ), 'mark_content' );
 
 		$this->row_start( 'content_selector', __( 'Content area', 'quiet-copy-notice' ) );
 		printf(
@@ -192,7 +192,7 @@ class Settings_Page {
 			esc_attr( $this->settings['content_selector'] ),
 			esc_attr( self::help_id( 'content_selector' ) )
 		);
-		$this->row_end( __( 'CSS selectors, separated by commas. They are tried in order, and the first one that matches something on the page is used, including every element it matches. Copies from outside those elements, or from form fields such as a comment box, are not recorded.', 'quiet-copy-notice' ), 'content_selector' );
+		$this->row_end( __( 'CSS selectors, separated by commas, tried in order. The first selector that matches anything on the page is used, and every element it matches counts as the post body. Copies from outside those elements, or from form fields such as a comment box, are not recorded.', 'quiet-copy-notice' ), 'content_selector' );
 
 		$roles = array();
 		foreach ( wp_roles()->get_names() as $role => $name ) {
@@ -218,7 +218,7 @@ class Settings_Page {
 	private function privacy() {
 		$this->row_start( '', __( 'IP addresses', 'quiet-copy-notice' ) );
 		$this->checkbox( 'anonymize_ip', __( 'Shorten IP addresses before storing them', 'quiet-copy-notice' ) );
-		$this->row_end( __( 'Removes the last part of IPv4 addresses and the last 80 bits of IPv6 addresses. Log entries already stored are not changed.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Removes the last part of IPv4 addresses and the last 80 bits of IPv6 addresses. Log entries already stored are not changed.', 'quiet-copy-notice' ), 'anonymize_ip' );
 
 		$this->number_row( 'retention_days', __( 'Keep log entries for', 'quiet-copy-notice' ), __( 'Older log entries are deleted once a day.', 'quiet-copy-notice' ), __( 'days', 'quiet-copy-notice' ) );
 
@@ -241,7 +241,7 @@ class Settings_Page {
 	private function visitors() {
 		$this->row_start( '', __( 'Message after copying', 'quiet-copy-notice' ) );
 		$this->checkbox( 'show_message', __( 'Show a short message to the reader after they copy', 'quiet-copy-notice' ) );
-		$this->row_end( __( 'Shown for five seconds at the bottom of the screen. It does not stop the copy.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Shown for five seconds at the bottom of the screen. It does not stop the copy.', 'quiet-copy-notice' ), 'show_message' );
 
 		$default_message = __( 'Thank you for reading. If you quote this article, please link to it.', 'quiet-copy-notice' );
 		/* translators: %s: the default wording. */
@@ -250,7 +250,7 @@ class Settings_Page {
 
 		$this->row_start( '', __( 'Source link', 'quiet-copy-notice' ) );
 		$this->checkbox( 'add_attribution', __( 'Add the post title and URL to copied text', 'quiet-copy-notice' ) );
-		$this->row_end( __( 'Appended after a blank line, for example "Source: Post title" and the URL on the next line.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Appended after a blank line, for example "Source: Post title" and the URL on the next line.', 'quiet-copy-notice' ), 'add_attribution' );
 
 		$default_label = __( 'Source:', 'quiet-copy-notice' );
 		/* translators: %s: the default wording. */
@@ -271,10 +271,11 @@ class Settings_Page {
 	 */
 	private function checkbox( $key, $label ) {
 		printf(
-			'<input type="hidden" name="qcnotice[%1$s]" value="0" /><label><input type="checkbox" name="qcnotice[%1$s]" value="1"%2$s /> %3$s</label>',
+			'<input type="hidden" name="qcnotice[%1$s]" value="0" /><label><input type="checkbox" name="qcnotice[%1$s]" value="1"%2$s aria-describedby="%4$s" /> %3$s</label>',
 			esc_attr( $key ),
 			checked( $this->settings[ $key ], true, false ),
-			esc_html( $label )
+			esc_html( $label ),
+			esc_attr( self::help_id( $key ) )
 		);
 	}
 

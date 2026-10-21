@@ -154,10 +154,13 @@ class Log_Table extends \WP_List_Table {
 		$ids  = isset( $_REQUEST['entry'] ) ? array_filter( array_map( 'absint', (array) wp_unslash( $_REQUEST['entry'] ) ) ) : array();
 		$args = array( 'qcnotice_msg' => 'none_selected' );
 		if ( $ids ) {
-			$args = array(
-				'qcnotice_msg'   => 'deleted',
-				'qcnotice_count' => Logger::delete( $ids ),
-			);
+			$deleted = Logger::delete( $ids );
+			$args    = $deleted < 0
+				? array( 'qcnotice_msg' => 'delete_selected_failed' )
+				: array(
+					'qcnotice_msg'   => 'deleted',
+					'qcnotice_count' => $deleted,
+				);
 		}
 		if ( $this->filter_post_id() ) {
 			$args['qcnotice_post'] = $this->filter_post_id();
@@ -384,7 +387,7 @@ class Log_Table extends \WP_List_Table {
 	 */
 	private function post_label( $post_id ) {
 		$title = get_the_title( $post_id );
-		$title = '' === $title ? __( '(no title)', 'quiet-copy-notice' ) : wp_strip_all_tags( html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ) );
+		$title = '' === $title ? __( '(no title)', 'quiet-copy-notice' ) : html_entity_decode( wp_strip_all_tags( $title ), ENT_QUOTES, 'UTF-8' );
 		return sprintf( '%s (#%d)', $title, $post_id );
 	}
 
@@ -396,10 +399,12 @@ class Log_Table extends \WP_List_Table {
 	 */
 	public static function summarize_user_agent( $ua ) {
 		if ( '' === $ua ) {
+			/* translators: shown in place of a browser name. */
 			return __( 'Unknown', 'quiet-copy-notice' );
 		}
 
 		$browsers = array(
+			/* translators: shown in place of a browser name, for search engine crawlers. */
 			'bot|crawl|spider|slurp' => __( 'Bot', 'quiet-copy-notice' ),
 			'Edg/'                   => 'Edge',
 			'OPR/|Opera'             => 'Opera',
@@ -417,6 +422,7 @@ class Log_Table extends \WP_List_Table {
 			'Linux'              => 'Linux',
 		);
 
+		/* translators: shown in place of a browser name. */
 		$browser = __( 'Other', 'quiet-copy-notice' );
 		foreach ( $browsers as $pattern => $name ) {
 			if ( preg_match( '#' . $pattern . '#i', $ua ) ) {

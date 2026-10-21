@@ -244,9 +244,10 @@ class Privacy {
 
 		$retention  = (int) Settings::get( 'retention_days' );
 		$paragraphs = array(
-			'collected' => Settings::get( 'anonymize_ip' )
-				? __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address. The IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed) so it no longer identifies a single device.', 'quiet-copy-notice' )
-				: __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your full IP address.', 'quiet-copy-notice' ),
+			'collected' => __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address.', 'quiet-copy-notice' ),
+			'ip'        => Settings::get( 'anonymize_ip' )
+				? __( 'The IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed) so it no longer identifies a single device.', 'quiet-copy-notice' )
+				: __( 'The full IP address is stored.', 'quiet-copy-notice' ),
 			'use'       => __( 'This information is used to tell the site administrator, by email, which content is being copied. It is not shared with anyone else and is not sent to any outside service. No cookies are set and no identifier is created for you.', 'quiet-copy-notice' ),
 			'retention' => sprintf(
 				/* translators: %d: number of days copy records are kept. */
@@ -261,7 +262,8 @@ class Privacy {
 		 * data out must replace it.
 		 *
 		 * @param string[] $paragraphs Plain-text paragraphs, keyed 'collected',
-		 *                             'use' and 'retention'. Escaped on output.
+		 *                             'ip', 'use' and 'retention'. Escaped on
+		 *                             output.
 		 */
 		$paragraphs = apply_filters( QCNOTICE_PREFIX . 'privacy_policy_paragraphs', $paragraphs );
 		$paragraphs = is_array( $paragraphs ) ? $paragraphs : array();

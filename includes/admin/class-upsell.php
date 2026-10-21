@@ -124,7 +124,7 @@ class Upsell {
 		echo '</section>';
 
 		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'Free covers detection. Pro covers what you do next.', 'quiet-copy-notice' ) . '</h2>';
-		echo '<table class="qcnotice-pro-steps"><thead><tr><th scope="col">' . esc_html__( 'Free', 'quiet-copy-notice' ) . '</th><th scope="col">' . esc_html__( 'Pro adds', 'quiet-copy-notice' ) . '</th></tr></thead><tbody>';
+		echo '<table class="qcnotice-pro-steps"><thead><tr><th scope="col">' . esc_html_x( 'Free', 'the free plugin, compared with Pro', 'quiet-copy-notice' ) . '</th><th scope="col">' . esc_html__( 'Pro adds', 'quiet-copy-notice' ) . '</th></tr></thead><tbody>';
 		foreach ( array(
 			array( __( 'Log of every copy', 'quiet-copy-notice' ), __( 'Statistics by post and by paragraph, against the previous period', 'quiet-copy-notice' ) ),
 			array( __( 'Email: hourly summary or instant', 'quiet-copy-notice' ), __( 'Slack, Chatwork, Discord and your own webhook', 'quiet-copy-notice' ) ),

@@ -75,6 +75,7 @@ class Admin {
 	 */
 	public static function tabs() {
 		$tabs = array(
+			/* translators: tab name; the noun, the list of recorded copies. */
 			'log'           => __( 'Log', 'quiet-copy-notice' ),
 			'notifications' => __( 'Notifications', 'quiet-copy-notice' ),
 			'detection'     => __( 'Detection', 'quiet-copy-notice' ),
@@ -143,7 +144,7 @@ class Admin {
 	public function action_links( $links ) {
 		array_unshift(
 			$links,
-			'<a href="' . esc_url( self::url() ) . '">' . esc_html__( 'Log', 'quiet-copy-notice' ) . '</a>',
+			'<a href="' . esc_url( self::url() ) . '">' . esc_html_x( 'Log', 'the list of recorded copies', 'quiet-copy-notice' ) . '</a>',
 			'<a href="' . esc_url( self::url( 'notifications' ) ) . '">' . esc_html__( 'Settings', 'quiet-copy-notice' ) . '</a>'
 		);
 		if ( Upsell::visible() ) {
@@ -209,13 +210,18 @@ class Admin {
 		$table = new Log_Table();
 		$table->process_bulk_action();
 
-		// The filter form is sent by GET with the bulk-action nonce. Drop that
-		// and the page number, as the Posts screen does, so filtering starts
-		// on page one and the URL stays clean.
+		// The list form is sent by GET with the bulk-action nonce. Drop that,
+		// as the Posts screen does, so the URL stays clean. The page number
+		// goes too only when filtering, so filtering starts on page one while
+		// a page number typed into the box is kept.
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only navigation; nothing is changed.
 		if ( ! empty( $_GET['_wp_http_referer'] ) || ( isset( $_GET['filter_action'] ) && isset( $_GET['paged'] ) ) ) {
-			$uri = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
-			$uri = remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'action2', 'filter_action', 'paged' ), $uri );
+			$uri    = isset( $_SERVER['REQUEST_URI'] ) ? esc_url_raw( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+			$remove = array( '_wp_http_referer', '_wpnonce', 'action', 'action2', 'filter_action' );
+			if ( isset( $_GET['filter_action'] ) ) {
+				$remove[] = 'paged';
+			}
+			$uri = remove_query_arg( $remove, $uri );
 			wp_safe_redirect( $uri );
 			exit;
 		}
@@ -329,6 +335,10 @@ class Admin {
 				$type = 'warning';
 				$text = __( 'No entries were selected.', 'quiet-copy-notice' );
 				break;
+			case 'delete_selected_failed':
+				$type = 'error';
+				$text = __( 'The selected log entries could not be deleted. Try again; if it keeps failing, ask your host to check the database.', 'quiet-copy-notice' );
+				break;
 			case 'deleted':
 				/* translators: %s: number of log entries deleted. */
 				$text = sprintf( _n( '%s entry deleted.', '%s entries deleted.', $count, 'quiet-copy-notice' ), number_format_i18n( $count ) );
@@ -413,7 +423,7 @@ class Admin {
 		}
 		printf(
 			'<div class="notice notice-warning"><p>%1$s <a href="%2$s">%3$s</a></p></div>',
-			esc_html__( 'Check Copy Contents is still active. It is no longer maintained, and while both plugins are active you get two emails for each copy. Its settings were carried over where possible when Quiet Copy Notice was first activated, so you can deactivate it now.', 'quiet-copy-notice' ),
+			esc_html__( 'Check Copy Contents is still active. It is no longer maintained, and while both plugins are active you may get two emails for the same copy. Settings it had when Quiet Copy Notice was first activated were carried over where possible, so you can deactivate it now.', 'quiet-copy-notice' ),
 			esc_url( admin_url( 'plugins.php' ) ),
 			esc_html__( 'Go to Plugins', 'quiet-copy-notice' )
 		);
@@ -436,6 +446,12 @@ class Admin {
 		$bulk_confirm = __( 'Delete the selected log entries? This cannot be undone.', 'quiet-copy-notice' );
 		echo '<form method="get" onsubmit="' . esc_attr( 'var s=event.submitter,p=this.querySelector("#current-page-selector");if(p&&p.value!==p.defaultValue){this.querySelectorAll(".bulkactions select").forEach(function(b){b.value="-1";});return true;}if(s&&(s.id==="doaction"||s.id==="doaction2")&&this.querySelector("input[name=\'entry[]\']:checked")){var a=this.querySelector(s.id==="doaction"?"#bulk-action-selector-top":"#bulk-action-selector-bottom");if(a&&a.value==="delete"){return window.confirm(' . wp_json_encode( $bulk_confirm ) . ');}}return true;' ) . '">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( QCNOTICE_SLUG ) . '" />';
+		// Keeps an ascending sort when filtering or changing page; the only
+		// sortable column is the date.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only view parameter, compared with a fixed value.
+		if ( isset( $_GET['order'] ) && 'asc' === strtolower( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ) {
+			echo '<input type="hidden" name="orderby" value="created_at" /><input type="hidden" name="order" value="asc" />';
+		}
 		$table->display();
 		echo '</form>';
 

@@ -125,7 +125,7 @@ class Frontend {
 		// only when switched on.
 		if ( Settings::get( 'show_message' ) ) {
 			$config['message']    = Settings::message_text();
-			$config['closeLabel'] = __( 'Close', 'quiet-copy-notice' );
+			$config['closeLabel'] = __( 'Close message', 'quiet-copy-notice' );
 		}
 		if ( Settings::get( 'add_attribution' ) ) {
 			$config['attribution'] = array(

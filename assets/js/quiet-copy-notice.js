@@ -251,6 +251,7 @@
 	var toast = null;
 	var toastText = null;
 	var announcer = null;
+	var announceTimer = 0;
 	var toastTimer = 0;
 
 	/**
@@ -259,7 +260,38 @@
 	 */
 	function hideMessage() {
 		window.clearTimeout( toastTimer );
+		window.clearTimeout( announceTimer );
 		toast.style.display = 'none';
+		// Emptied too, so a screen reader that later reads to the end of the
+		// page does not come across a message that is no longer shown.
+		announcer.textContent = '';
+	}
+
+	/**
+	 * The live region screen readers announce the message from. Made when
+	 * the script loads, so it is already in the page when the first message
+	 * arrives (some screen readers ignore a region added at that moment).
+	 * Visually hidden; it stays in the accessibility tree, unlike the
+	 * message box, which is hidden with display:none.
+	 */
+	function makeAnnouncer() {
+		announcer = document.createElement( 'span' );
+		announcer.setAttribute( 'role', 'status' );
+		var hidden = {
+			position: 'absolute',
+			width: '1px',
+			height: '1px',
+			margin: '-1px',
+			padding: '0',
+			overflow: 'hidden',
+			clip: 'rect(0, 0, 0, 0)',
+			whiteSpace: 'nowrap',
+			border: '0',
+		};
+		for ( var h in hidden ) {
+			announcer.style[ h ] = hidden[ h ];
+		}
+		document.body.appendChild( announcer );
 	}
 
 	/**
@@ -283,6 +315,9 @@
 	function showMessage() {
 		if ( ! config.message ) {
 			return;
+		}
+		if ( ! announcer ) {
+			makeAnnouncer();
 		}
 		if ( ! toast ) {
 			toast = document.createElement( 'div' );
@@ -310,6 +345,8 @@
 			}
 
 			toastText = document.createElement( 'span' );
+			// Read out through the announcer instead, not twice.
+			toastText.setAttribute( 'aria-hidden', 'true' );
 			toast.appendChild( toastText );
 
 			var close = document.createElement( 'button' );
@@ -353,27 +390,6 @@
 				}
 			} );
 			document.body.appendChild( toast );
-
-			// Screen readers get the message from a separate live region that
-			// stays in the page, visually hidden, so it is never removed from
-			// the accessibility tree the way the hidden message box is.
-			announcer = document.createElement( 'span' );
-			announcer.setAttribute( 'role', 'status' );
-			var hidden = {
-				position: 'absolute',
-				width: '1px',
-				height: '1px',
-				margin: '-1px',
-				padding: '0',
-				overflow: 'hidden',
-				clip: 'rect(0, 0, 0, 0)',
-				whiteSpace: 'nowrap',
-				border: '0',
-			};
-			for ( var h in hidden ) {
-				announcer.style[ h ] = hidden[ h ];
-			}
-			document.body.appendChild( announcer );
 		}
 		toastText.textContent = config.message;
 		toast.style.display = 'flex';
@@ -381,9 +397,14 @@
 		// Emptied and filled again a moment later, so a repeat of the same
 		// text still counts as a change and is announced.
 		announcer.textContent = '';
-		window.setTimeout( function () {
+		window.clearTimeout( announceTimer );
+		announceTimer = window.setTimeout( function () {
 			announcer.textContent = config.message;
 		}, 100 );
+	}
+
+	if ( config.message && document.body ) {
+		makeAnnouncer();
 	}
 
 	document.addEventListener( 'copy', function ( event ) {
