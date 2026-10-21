@@ -4,7 +4,7 @@ Tags: copy, notification, analytics, content protection, plagiarism
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.10
+Stable tag: 1.3.11
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -193,28 +193,21 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
-= 1.3.10 =
-* Fix: on a database that does not accept a limited DELETE (for example SQLite), old log entries were never removed. They are now removed in one step there.
-* Fix: "Send a test email" said sending had failed when there was no valid address to send to; it now says so, and the button is off until there is one.
-* Fix: screen readers now announce the message shown after copying every time, not only the first time.
-* Fix: deleting selected entries asked for confirmation even when nothing was selected or when changing the page number.
-* Changed: when the notification address is not valid, the notice says so in a sentence of its own, with the address notifications go to instead.
-* Changed: help texts are read out with their fields by screen readers, the message's close button is larger, and the tabs and the "Quiet Copy Notice Pro" link have accessible names.
-* Changed: clearer wording for Site Health, the "Ignore IP addresses" and "Content area" help, and the notice about Check Copy Contents.
-
-= 1.3.9 =
+= 1.3.11 =
 * Fix: text copied from a form field inside the post (a comment, a contact form) was recorded and emailed. Copies from form fields and editable areas are now ignored, and the reader sees no message for them.
 * Fix: an IP address copied from the log, where addresses are shortened, did nothing under "Ignore IP addresses". A shortened address now ignores every visitor shortened to it.
 * Fix: the suggested privacy policy text described the default IP setting, not the site's own, and said "1 days" with a one-day retention.
 * Fix: two summary runs at the same moment could send the same copies twice.
 * Fix: "Delete all" said the log was deleted even when the database refused; it now tries another way and reports a failure.
-* Fix: special line-break characters in copied text or the browser details could start a line of their own in the email.
+* Fix: special line-break and text-direction characters in copied text or the browser details could change how a line of the email reads.
 * Fix: on sites where another plugin changes how WordPress makes passwords, the per-IP rate limit did not hold.
-* New: "Send a test email" on the Notifications tab.
+* New: "Send a test email" on the Notifications tab. When there is no valid address to send to, it says so instead.
 * New: a notice says where notifications go when the address entered is not valid.
-* Changed: deleting selected log entries asks for confirmation; the full browser details open on click instead of only on hover; clearer labels and help texts.
-* Changed: old log entries are purged in batches, and network deactivation goes through sites 500 at a time.
+* Changed: deleting selected log entries asks for confirmation first.
+* Changed: old log entries are removed in batches, so lowering the retention on a large log does not lock the table; databases that cannot do this, such as SQLite, still get them removed. Network deactivation goes through sites 500 at a time.
+* Changed: screen readers announce the message shown after copying every time and read most help texts with their fields; the message's close button is larger; the tab bar has a name; the "See Quiet Copy Notice Pro" link says it opens in a new tab; the full browser details in the log open on click instead of only on hover.
 * Changed: notification emails need fewer database queries.
+* Changed: clearer labels and help texts, Site Health messages, and wording of the notice shown while the plugin this one replaces is still active.
 
 = 1.3.8 =
 * Fix: if the stored generation ID was invalid, two requests repairing it at the same moment could each use a different ID. It is now made under a database lock and read back, so every request uses the stored one.
@@ -230,7 +223,7 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 = 1.3.4 =
 * Changed: the Privacy tab and the readme say that Quiet Copy Notice itself contacts no outside service, and that an add-on which sends notifications elsewhere says so in the suggested privacy policy text. The previous wording could be read as covering add-ons too.
-* Changed: the readme lists the `qcnotice_privacy_policy_paragraphs` filter is listed with the other hooks.
+* Changed: the readme lists the `qcnotice_privacy_policy_paragraphs` filter with the other hooks.
 
 = 1.3.3 =
 * Fix: requests arriving at the same moment could all pass the rate limits, and instant emails could go over the hourly cap, because each read the same count. The counters are now updated one request at a time.
@@ -275,10 +268,7 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Upgrade Notice ==
 
-= 1.3.10 =
-Old log entries are removed on every database, and the test email and screen reader support are improved.
-
-= 1.3.9 =
+= 1.3.11 =
 Copies from form fields are no longer recorded, summary emails can no longer be sent twice, and the Notifications tab gets a Send a test email button.
 
 = 1.3.8 =

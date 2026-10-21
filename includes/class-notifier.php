@@ -188,16 +188,8 @@ class Notifier {
 			return false;
 		}
 
-		$label = Settings::get( 'subject_label' );
-		if ( '' === $label ) {
-			$label = __( 'Copy notification', 'quiet-copy-notice' );
-		}
-
 		// Site name, the admin's label and a count. Nothing a visitor sent.
-		$subject = sprintf(
-			'[%1$s] %2$s (%3$s)',
-			self::plain( get_bloginfo( 'name' ) ),
-			self::one_line( $label ),
+		$subject = self::subject(
 			sprintf(
 				/* translators: %d: number of copy events. */
 				_n( '%d copy', '%d copies', $total, 'quiet-copy-notice' ),
@@ -237,20 +229,28 @@ class Notifier {
 		if ( '' === $to ) {
 			return false;
 		}
-		$label = Settings::get( 'subject_label' );
-		if ( '' === $label ) {
-			$label = __( 'Copy notification', 'quiet-copy-notice' );
-		}
-		$subject = sprintf(
-			'[%1$s] %2$s (%3$s)',
-			self::plain( get_bloginfo( 'name' ) ),
-			self::one_line( $label ),
+		$subject = self::subject(
 			/* translators: shown in brackets at the end of the test email's subject, where notifications show the number of copies. */
 			__( 'test', 'quiet-copy-notice' )
 		);
 		$body = __( 'This is a test message from Quiet Copy Notice. Copy notifications for this site will arrive at this address.', 'quiet-copy-notice' )
 			. "\n\n" . __( 'Settings:', 'quiet-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG . '&tab=notifications' );
 		return self::mail( $to, $subject, $body );
+	}
+
+	/**
+	 * Subject line: "[Site name] Label (suffix)", with the admin's label or
+	 * the default one.
+	 *
+	 * @param string $suffix Text in the brackets: the count, or "test".
+	 * @return string
+	 */
+	private static function subject( $suffix ) {
+		$label = Settings::get( 'subject_label' );
+		if ( '' === $label ) {
+			$label = __( 'Copy notification', 'quiet-copy-notice' );
+		}
+		return sprintf( '[%1$s] %2$s (%3$s)', self::plain( get_bloginfo( 'name' ) ), self::one_line( $label ), $suffix );
 	}
 
 	/**

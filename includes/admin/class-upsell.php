@@ -109,7 +109,7 @@ class Upsell {
 			'<a class="qcnotice-pro-cta" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s<span class="screen-reader-text"> %3$s</span></a>',
 			esc_url( $url ),
 			esc_html__( 'See Quiet Copy Notice Pro', 'quiet-copy-notice' ),
-			/* translators: accessibility text. */
+			/* translators: Hidden accessibility text. */
 			esc_html__( '(opens in a new tab)', 'quiet-copy-notice' )
 		);
 

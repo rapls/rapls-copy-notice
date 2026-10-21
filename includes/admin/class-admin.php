@@ -256,10 +256,10 @@ class Admin {
 		foreach ( self::tabs() as $key => $label ) {
 			$active = $key === $tab;
 			printf(
-				'<a href="%1$s" class="%2$s" aria-current="%3$s">%4$s</a>',
+				'<a href="%1$s" class="%2$s"%3$s>%4$s</a>',
 				esc_url( self::url( $key ) ),
 				esc_attr( $active ? 'nav-tab nav-tab-active' : 'nav-tab' ),
-				esc_attr( $active ? 'page' : 'false' ),
+				$active ? ' aria-current="page"' : '',
 				esc_html( $label )
 			);
 		}
@@ -320,7 +320,7 @@ class Admin {
 				if ( $email ) {
 					$extra = sprintf(
 						/* translators: %s: the site administration email address. */
-						__( 'The address under Send notifications to was not valid and was not saved. Notifications go to the site administration email address, %s, until you enter a valid one.', 'quiet-copy-notice' ),
+						__( 'The address entered in "Send notifications to" was not valid and was not saved. Notifications go to the site administration email address, %s, until you enter a valid one.', 'quiet-copy-notice' ),
 						(string) get_option( 'admin_email' )
 					);
 				}
@@ -330,8 +330,8 @@ class Admin {
 				$text = __( 'No entries were selected.', 'quiet-copy-notice' );
 				break;
 			case 'deleted':
-				/* translators: %d: number of log entries deleted. */
-				$text = sprintf( _n( '%d entry deleted.', '%d entries deleted.', $count, 'quiet-copy-notice' ), $count );
+				/* translators: %s: number of log entries deleted. */
+				$text = sprintf( _n( '%s entry deleted.', '%s entries deleted.', $count, 'quiet-copy-notice' ), number_format_i18n( $count ) );
 				break;
 			case 'deleted_all':
 				$text = __( 'All log entries deleted.', 'quiet-copy-notice' );
@@ -349,7 +349,7 @@ class Admin {
 				break;
 			case 'test_no_address':
 				$type = 'error';
-				$text = __( 'There is no valid address to send the test email to. Enter one under Send notifications to, or correct the Administration Email Address under Settings → General.', 'quiet-copy-notice' );
+				$text = __( 'There is no valid address to send the test email to. Enter one in "Send notifications to", or correct the Administration Email Address under Settings → General.', 'quiet-copy-notice' );
 				break;
 			case 'test_failed':
 				$type = 'error';
@@ -434,7 +434,7 @@ class Admin {
 		// Deleting selected entries is permanent too, so it asks first, like
 		// "Delete all". Only the bulk action asks; filtering does not.
 		$bulk_confirm = __( 'Delete the selected log entries? This cannot be undone.', 'quiet-copy-notice' );
-		echo '<form method="get" onsubmit="' . esc_attr( 'var s=event.submitter,p=this.querySelector("#current-page-selector");if(p&&p.value!==p.defaultValue){return true;}if(s&&(s.id==="doaction"||s.id==="doaction2")&&this.querySelector("input[name=\'entry[]\']:checked")){var a=this.querySelector(s.id==="doaction"?"#bulk-action-selector-top":"#bulk-action-selector-bottom");if(a&&a.value==="delete"){return window.confirm(' . wp_json_encode( $bulk_confirm ) . ');}}return true;' ) . '">';
+		echo '<form method="get" onsubmit="' . esc_attr( 'var s=event.submitter,p=this.querySelector("#current-page-selector");if(p&&p.value!==p.defaultValue){this.querySelectorAll(".bulkactions select").forEach(function(b){b.value="-1";});return true;}if(s&&(s.id==="doaction"||s.id==="doaction2")&&this.querySelector("input[name=\'entry[]\']:checked")){var a=this.querySelector(s.id==="doaction"?"#bulk-action-selector-top":"#bulk-action-selector-bottom");if(a&&a.value==="delete"){return window.confirm(' . wp_json_encode( $bulk_confirm ) . ');}}return true;' ) . '">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( QCNOTICE_SLUG ) . '" />';
 		$table->display();
 		echo '</form>';

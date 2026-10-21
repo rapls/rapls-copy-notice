@@ -250,6 +250,7 @@
 
 	var toast = null;
 	var toastText = null;
+	var announcer = null;
 	var toastTimer = 0;
 
 	/**
@@ -286,7 +287,6 @@
 		if ( ! toast ) {
 			toast = document.createElement( 'div' );
 			toast.className = 'qcnotice-message';
-			toast.setAttribute( 'role', 'status' );
 			var css = {
 				position: 'fixed',
 				left: '50%',
@@ -353,16 +353,36 @@
 				}
 			} );
 			document.body.appendChild( toast );
+
+			// Screen readers get the message from a separate live region that
+			// stays in the page, visually hidden, so it is never removed from
+			// the accessibility tree the way the hidden message box is.
+			announcer = document.createElement( 'span' );
+			announcer.setAttribute( 'role', 'status' );
+			var hidden = {
+				position: 'absolute',
+				width: '1px',
+				height: '1px',
+				margin: '-1px',
+				padding: '0',
+				overflow: 'hidden',
+				clip: 'rect(0, 0, 0, 0)',
+				whiteSpace: 'nowrap',
+				border: '0',
+			};
+			for ( var h in hidden ) {
+				announcer.style[ h ] = hidden[ h ];
+			}
+			document.body.appendChild( announcer );
 		}
-		// The text is emptied, the region shown, and the text put back a
-		// moment later: screen readers announce a change to a live region
-		// that is already displayed, not one that appears with its text, and
-		// a repeat of the same text would otherwise not count as a change.
-		toastText.textContent = '';
+		toastText.textContent = config.message;
 		toast.style.display = 'flex';
 		scheduleHide();
+		// Emptied and filled again a moment later, so a repeat of the same
+		// text still counts as a change and is announced.
+		announcer.textContent = '';
 		window.setTimeout( function () {
-			toastText.textContent = config.message;
+			announcer.textContent = config.message;
 		}, 100 );
 	}
 

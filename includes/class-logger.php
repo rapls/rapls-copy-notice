@@ -223,13 +223,24 @@ class Logger {
 		// In batches, so lowering the retention on a large log does not lock
 		// the table for one long statement. What is left goes the next day.
 		for ( $i = 0; $i < self::PURGE_BATCHES; $i++ ) {
+			// The first batch is tried quietly: a database that does not
+			// take DELETE ... LIMIT would otherwise log an error every day.
+			$suppress = 0 === $i ? $wpdb->suppress_errors( true ) : null;
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
 			$deleted = $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s ORDER BY id LIMIT %d', $table, $cutoff, self::PURGE_BATCH ) );
+			if ( null !== $suppress ) {
+				$wpdb->suppress_errors( $suppress );
+			}
 			if ( false === $deleted ) {
-				// A database that does not take DELETE ... LIMIT (SQLite, some
-				// clusters): one plain DELETE, so retention still holds.
-				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
-				return $total + (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $table, $cutoff ) );
+				if ( 0 === $i ) {
+					// The statement itself was refused (SQLite, some
+					// clusters): one plain DELETE, so retention still holds.
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
+					return (int) $wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $table, $cutoff ) );
+				}
+				// A later batch failed (a lock timeout, say): stop for today
+				// rather than lock the table with one long statement.
+				break;
 			}
 			$deleted = (int) $deleted;
 			$total  += $deleted;

@@ -135,7 +135,8 @@ class Site_Health {
 			'cron',
 			'recommended',
 			__( 'Copy summaries or log cleanup are not running on time', 'quiet-copy-notice' ),
-			implode( ' ', $problems ) . ' ' . __( 'WP-Cron runs when the site gets visits, so a very quiet site, or one with WP-Cron disabled and no server cron job, delays these tasks.', 'quiet-copy-notice' )
+			// Separate paragraphs, so no language has to join sentences with a space.
+			array_merge( $problems, array( __( 'WP-Cron runs when the site gets visits, so a very quiet site, or one with WP-Cron disabled and no server cron job, delays these tasks.', 'quiet-copy-notice' ) ) )
 		);
 	}
 
@@ -176,7 +177,7 @@ class Site_Health {
 				'pending',
 				'good',
 				__( 'Copy notifications are being delivered', 'quiet-copy-notice' ),
-				__( 'Every copy recorded more than two hours ago has been notified.', 'quiet-copy-notice' )
+				__( 'No copy recorded more than two hours ago is still waiting to be notified.', 'quiet-copy-notice' )
 			);
 		}
 
@@ -188,7 +189,7 @@ class Site_Health {
 				_n( 'Notification for %s copy has not been sent', 'Notifications for %s copies have not been sent', $pending, 'quiet-copy-notice' ),
 				number_format_i18n( $pending )
 			),
-			__( 'Copies recorded more than two hours ago have still not been sent to you. Either sending keeps failing or the hourly summary is not running. Use Send a test email on the Notifications tab to check that this site can send email (an SMTP plugin may be needed), and look at the "Quiet Copy Notice scheduled tasks" check on this screen. These copies stay in the log and go out with the next summary once this is fixed.', 'quiet-copy-notice' ),
+			__( 'Copies recorded more than two hours ago are still waiting to be sent to you. Sending may be failing, there may be no valid notification address, or the hourly summary may not be running. Use "Send a test email" on the Notifications tab to check that this site can send email (an SMTP plugin may be needed), and check whether this screen also reports that copy summaries are not running on time. These copies stay in the log and go out with the next summary once this is fixed.', 'quiet-copy-notice' ),
 			'notifications'
 		);
 	}
@@ -299,7 +300,7 @@ class Site_Health {
 				),
 				'next_digest'  => array(
 					'label' => __( 'Next summary check', 'quiet-copy-notice' ),
-					'value' => $next_digest ? wp_date( 'Y-m-d H:i:s', $next_digest ) : $no,
+					'value' => $next_digest ? wp_date( 'Y-m-d H:i:s', $next_digest ) : __( 'Not scheduled', 'quiet-copy-notice' ),
 				),
 				'post_types'   => array(
 					'label' => __( 'Monitored post types', 'quiet-copy-notice' ),
@@ -345,11 +346,11 @@ class Site_Health {
 	/**
 	 * Builds a test result in the shape Site Health expects.
 	 *
-	 * @param string $id          Test suffix.
-	 * @param string $status      good, recommended or critical.
-	 * @param string $label       Heading.
-	 * @param string $description Plain-text explanation.
-	 * @param string $tab         Settings tab to link to, if any.
+	 * @param string          $id          Test suffix.
+	 * @param string          $status      good, recommended or critical.
+	 * @param string          $label       Heading.
+	 * @param string|string[] $description Plain-text explanation.
+	 * @param string          $tab         Settings tab to link to, if any.
 	 * @return array
 	 */
 	private function result( $id, $status, $label, $description, $tab = '' ) {
@@ -369,7 +370,14 @@ class Site_Health {
 				'label' => __( 'Quiet Copy Notice', 'quiet-copy-notice' ),
 				'color' => 'critical' === $status ? 'red' : 'blue',
 			),
-			'description' => '<p>' . esc_html( $description ) . '</p>',
+			'description' => implode(
+				'',
+				array_map(
+					static function ( $paragraph ) {
+						return '<p>' . esc_html( $paragraph ) . '</p>'; },
+					(array) $description
+				)
+			),
 			'actions'     => $actions,
 			'test'        => QCNOTICE_PREFIX . $id,
 		);

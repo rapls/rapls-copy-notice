@@ -101,18 +101,20 @@ class Settings_Page {
 	private function notifications() {
 		$this->row_start( 'notify_email', __( 'Send notifications to', 'quiet-copy-notice' ) );
 		printf(
-			'<input type="email" class="regular-text" id="qcnotice-notify_email" name="qcnotice[notify_email]" value="%1$s" placeholder="%2$s" aria-describedby="qcnotice-notify_email-description" />',
+			'<input type="email" class="regular-text" id="qcnotice-notify_email" name="qcnotice[notify_email]" value="%1$s" placeholder="%2$s" aria-describedby="%3$s" />',
 			esc_attr( $this->settings['notify_email'] ),
-			esc_attr( (string) get_option( 'admin_email' ) )
+			esc_attr( (string) get_option( 'admin_email' ) ),
+			esc_attr( self::help_id( 'notify_email' ) )
 		);
 		$this->row_end( __( 'Leave empty to use the site administration email address. Example: you@example.com', 'quiet-copy-notice' ), 'notify_email' );
 
 		$this->row_start( 'subject_label', __( 'Email subject', 'quiet-copy-notice' ) );
 		printf(
-			'<input type="text" class="regular-text" id="qcnotice-subject_label" name="qcnotice[subject_label]" value="%1$s" maxlength="%2$d" placeholder="%3$s" aria-describedby="qcnotice-subject_label-description" />',
+			'<input type="text" class="regular-text" id="qcnotice-subject_label" name="qcnotice[subject_label]" value="%1$s" maxlength="%2$d" placeholder="%3$s" aria-describedby="%4$s" />',
 			esc_attr( $this->settings['subject_label'] ),
 			(int) Settings::SUBJECT_MAX,
-			esc_attr__( 'Copy notification', 'quiet-copy-notice' )
+			esc_attr__( 'Copy notification', 'quiet-copy-notice' ),
+			esc_attr( self::help_id( 'subject_label' ) )
 		);
 		$this->row_end( __( 'Emails are titled "[Site name] Copy notification (3 copies)". This field changes only the middle part, so you can filter these emails. Nothing a visitor sent appears in the subject.', 'quiet-copy-notice' ), 'subject_label' );
 
@@ -156,7 +158,7 @@ class Settings_Page {
 						__( 'Sends a short test message to %s, where notifications go now, so you can check that they arrive. If you changed the address above, save first.', 'quiet-copy-notice' ),
 						$to
 					)
-					: __( 'There is no valid address to send notifications to. Enter one under Send notifications to, or correct the Administration Email Address under Settings → General.', 'quiet-copy-notice' )
+					: __( 'There is no valid address to send notifications to. Enter one in "Send notifications to", or correct the Administration Email Address under Settings → General.', 'quiet-copy-notice' )
 			) . '</p>';
 			submit_button( __( 'Send a test email', 'quiet-copy-notice' ), 'secondary', 'qcnotice_send_test', false, '' !== $to ? null : array( 'disabled' => 'disabled' ) );
 			echo '</form>';
@@ -186,10 +188,11 @@ class Settings_Page {
 
 		$this->row_start( 'content_selector', __( 'Content area', 'quiet-copy-notice' ) );
 		printf(
-			'<input type="text" class="large-text code" id="qcnotice-content_selector" name="qcnotice[content_selector]" value="%s" aria-describedby="qcnotice-content_selector-description" />',
-			esc_attr( $this->settings['content_selector'] )
+			'<input type="text" class="large-text code" id="qcnotice-content_selector" name="qcnotice[content_selector]" value="%1$s" aria-describedby="%2$s" />',
+			esc_attr( $this->settings['content_selector'] ),
+			esc_attr( self::help_id( 'content_selector' ) )
 		);
-		$this->row_end( __( 'CSS selectors, separated by commas. The first one found on the page is used, with every element it matches; copies from outside those elements are ignored. Copies from form fields, such as a comment box, are never recorded.', 'quiet-copy-notice' ), 'content_selector' );
+		$this->row_end( __( 'CSS selectors, separated by commas. They are tried in order, and the first one that matches something on the page is used, including every element it matches. Copies from outside those elements, or from form fields such as a comment box, are not recorded.', 'quiet-copy-notice' ), 'content_selector' );
 
 		$roles = array();
 		foreach ( wp_roles()->get_names() as $role => $name ) {
@@ -199,12 +202,12 @@ class Settings_Page {
 		$this->checkboxes( 'exclude_roles', $roles, __( 'Ignore logged-in users with these roles', 'quiet-copy-notice' ) );
 		$this->row_end( __( 'The detection script is not loaded for logged-in users with these roles.', 'quiet-copy-notice' ) );
 
-		$this->textarea_row( 'exclude_ips', __( 'Ignore IP addresses', 'quiet-copy-notice' ), __( 'One per line. Ranges such as 192.0.2.0/24 are allowed. You can paste an address from the log: when Privacy → Shorten IP addresses is on, the log shows 192.0.2.55 as 192.0.2.0, and entering 192.0.2.0 ignores every address from 192.0.2.0 to 192.0.2.255.', 'quiet-copy-notice' ) );
+		$this->textarea_row( 'exclude_ips', __( 'Ignore IP addresses', 'quiet-copy-notice' ), __( 'One per line. Ranges such as 192.0.2.0/24 are allowed. You can paste an address from the log: when "Shorten IP addresses before storing them" on the Privacy tab is on, the log shows 192.0.2.55 as 192.0.2.0, and entering 192.0.2.0 ignores every address from 192.0.2.0 to 192.0.2.255.', 'quiet-copy-notice' ) );
 		$this->textarea_row( 'exclude_posts', __( 'Ignore posts', 'quiet-copy-notice' ), __( 'Post IDs, one per line. The log shows each post\'s ID after its title, for example #123.', 'quiet-copy-notice' ) );
 		$this->textarea_row( 'trusted_proxies', __( 'Trusted proxies', 'quiet-copy-notice' ), __( 'Leave empty unless the site is behind a reverse proxy or CDN. Only when a request arrives from one of these addresses is the X-Forwarded-For header used to find the visitor\'s IP.', 'quiet-copy-notice' ) );
 
-		$this->number_row( 'rate_ip_per_minute', __( 'Limit per IP', 'quiet-copy-notice' ), __( 'Most copy reports accepted from one IP address (IPv6 visitors are counted per network). One address is also held to a fifth of the site limit per hour, so it cannot use up the site limit alone.', 'quiet-copy-notice' ), __( 'per minute', 'quiet-copy-notice' ) );
-		$this->number_row( 'rate_site_per_hour', __( 'Limit for the site', 'quiet-copy-notice' ), __( 'Most copy reports accepted in total. Reports over either limit are neither stored nor emailed.', 'quiet-copy-notice' ), __( 'per hour', 'quiet-copy-notice' ) );
+		$this->number_row( 'rate_ip_per_minute', __( 'Limit per IP', 'quiet-copy-notice' ), __( 'The maximum number of copy reports accepted from one IP address (IPv6 visitors are counted per network). One address is also held to a fifth of the site limit per hour, so it cannot use up the site limit alone.', 'quiet-copy-notice' ), __( 'per minute', 'quiet-copy-notice' ) );
+		$this->number_row( 'rate_site_per_hour', __( 'Limit for the site', 'quiet-copy-notice' ), __( 'The maximum number of copy reports accepted in total. Reports over either limit are neither stored nor emailed.', 'quiet-copy-notice' ), __( 'per hour', 'quiet-copy-notice' ) );
 	}
 
 	/**
