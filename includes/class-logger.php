@@ -202,11 +202,17 @@ class Logger {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom table.
 		$truncated = $wpdb->query( $wpdb->prepare( 'TRUNCATE TABLE %i', $table ) );
 		$wpdb->suppress_errors( $suppress );
-		if ( false !== $truncated ) {
-			return true;
-		}
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Custom table.
-		return false !== $wpdb->query( $wpdb->prepare( 'DELETE FROM %i', $table ) );
+		$emptied = false !== $truncated || false !== $wpdb->query( $wpdb->prepare( 'DELETE FROM %i', $table ) );
+		if ( $emptied ) {
+			/**
+			 * Fires after every log entry was deleted. TRUNCATE numbers new
+			 * entries from 1 again, so an add-on holding entry IDs (to send
+			 * them again later, say) should let go of them here.
+			 */
+			do_action( QCNOTICE_PREFIX . 'log_emptied' );
+		}
+		return $emptied;
 	}
 
 	/**
@@ -253,8 +259,10 @@ class Logger {
 	}
 
 	/**
-	 * Whether the database refused DELETE ... LIMIT itself, as SQLite does,
-	 * rather than failing for a passing reason such as a lock timeout.
+	 * Whether a refused DELETE ... LIMIT means the database does not take
+	 * that statement (SQLite, some clusters, each with its own wording),
+	 * rather than a passing failure such as a lock timeout or deadlock,
+	 * after which a long single DELETE is the last thing to run.
 	 *
 	 * @return bool
 	 */
@@ -263,7 +271,13 @@ class Logger {
 		if ( defined( 'DB_ENGINE' ) && 'sqlite' === DB_ENGINE ) {
 			return true;
 		}
-		return false !== stripos( (string) $wpdb->last_error, 'syntax' );
+		$error = strtolower( (string) $wpdb->last_error );
+		foreach ( array( 'lock wait', 'deadlock', 'gone away', 'lost connection' ) as $passing ) {
+			if ( false !== strpos( $error, $passing ) ) {
+				return false;
+			}
+		}
+		return '' !== $error;
 	}
 
 	/**

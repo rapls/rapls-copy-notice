@@ -316,9 +316,6 @@
 		if ( ! config.message ) {
 			return;
 		}
-		if ( ! announcer ) {
-			makeAnnouncer();
-		}
 		if ( ! toast ) {
 			toast = document.createElement( 'div' );
 			toast.className = 'qcnotice-message';
@@ -403,7 +400,8 @@
 		}, 100 );
 	}
 
-	if ( config.message && document.body ) {
+	// The script is deferred, so the body exists by now.
+	if ( config.message ) {
 		makeAnnouncer();
 	}
 

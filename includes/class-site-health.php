@@ -244,12 +244,16 @@ class Site_Health {
 		$behind_cdn  = ! empty( $_SERVER['HTTP_CF_CONNECTING_IP'] );
 		$looks_proxy = $forwarded && ( $internal || $behind_cdn );
 
-		if ( ! $looks_proxy || ! empty( Settings::get( 'trusted_proxies' ) ) ) {
+		// Behind a proxy, it is good only if this request's proxy is listed:
+		// a list that no longer matches the CDN's addresses is no better
+		// than none.
+		$trusted = (array) Settings::get( 'trusted_proxies' );
+		if ( ! $looks_proxy || ( $trusted && Privacy::ip_matches_any( $remote, $trusted ) ) ) {
 			return $this->result(
 				'proxy',
 				'good',
 				__( 'Visitor IP addresses are read safely', 'quiet-copy-notice' ),
-				empty( Settings::get( 'trusted_proxies' ) )
+				empty( $trusted )
 					? __( 'Visitor IP addresses come from the direct connection. Forwarding headers are used only from proxies you list as trusted.', 'quiet-copy-notice' )
 					: __( 'Forwarding headers are used only for requests from the addresses in "Trusted proxies"; other requests use the address of the direct connection.', 'quiet-copy-notice' )
 			);

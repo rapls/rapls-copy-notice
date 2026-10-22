@@ -119,7 +119,7 @@ class Settings_Page {
 		$this->row_end( __( 'Emails are titled "[Site name] Copy notification (3 copies)". This field changes only the middle part, so you can filter these emails. Nothing a visitor sent appears in the subject.', 'quiet-copy-notice' ), 'subject_label' );
 
 		$this->row_start( '', __( 'When to send', 'quiet-copy-notice' ) );
-		echo '<fieldset><legend class="screen-reader-text">' . esc_html__( 'When to send', 'quiet-copy-notice' ) . '</legend>';
+		echo '<fieldset aria-describedby="' . esc_attr( self::help_id( 'notify_mode' ) ) . '"><legend class="screen-reader-text">' . esc_html__( 'When to send', 'quiet-copy-notice' ) . '</legend>';
 		$modes = array(
 			Settings::MODE_DIGEST  => __( 'One summary email per hour', 'quiet-copy-notice' ),
 			Settings::MODE_INSTANT => __( 'One email per copy, right away', 'quiet-copy-notice' ),
@@ -133,7 +133,7 @@ class Settings_Page {
 			);
 		}
 		echo '</fieldset>';
-		$this->row_end( __( 'WordPress sends summary emails when someone visits the site, so on a quiet site they can arrive more than an hour apart.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'WordPress sends summary emails when someone visits the site, so on a quiet site they can arrive more than an hour apart.', 'quiet-copy-notice' ), 'notify_mode' );
 
 		$this->number_row( 'instant_hourly_cap', __( 'Instant email limit', 'quiet-copy-notice' ), __( 'Used only with "One email per copy, right away". Copies over the limit go into the next hourly summary instead.', 'quiet-copy-notice' ), __( 'emails per hour', 'quiet-copy-notice' ) );
 	}
@@ -180,7 +180,7 @@ class Settings_Page {
 
 		$this->row_start( '', __( 'Post types', 'quiet-copy-notice' ) );
 		$this->checkboxes( 'post_types', Settings::available_post_types(), __( 'Post types', 'quiet-copy-notice' ) );
-		$this->row_end( __( 'Copies are detected on single views of these post types.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Copies are detected on single views of these post types.', 'quiet-copy-notice' ), 'post_types' );
 
 		$this->row_start( '', __( 'Find the post body', 'quiet-copy-notice' ) );
 		$this->checkbox( 'mark_content', __( 'Mark the end of the post body so it is found in any theme', 'quiet-copy-notice' ) );
@@ -192,7 +192,7 @@ class Settings_Page {
 			esc_attr( $this->settings['content_selector'] ),
 			esc_attr( self::help_id( 'content_selector' ) )
 		);
-		$this->row_end( __( 'CSS selectors, separated by commas, tried in order. The first selector that matches anything on the page is used, and every element it matches counts as the post body. Copies from outside those elements, or from form fields such as a comment box, are not recorded.', 'quiet-copy-notice' ), 'content_selector' );
+		$this->row_end( __( 'CSS selectors, separated by commas, tried in order. The first selector that matches anything on the page is used, and every element it matches counts as the content area. Copies from outside those elements, or from form fields such as a comment box, are not recorded.', 'quiet-copy-notice' ), 'content_selector' );
 
 		$roles = array();
 		foreach ( wp_roles()->get_names() as $role => $name ) {
@@ -200,7 +200,7 @@ class Settings_Page {
 		}
 		$this->row_start( '', __( 'Ignore logged-in users with these roles', 'quiet-copy-notice' ) );
 		$this->checkboxes( 'exclude_roles', $roles, __( 'Ignore logged-in users with these roles', 'quiet-copy-notice' ) );
-		$this->row_end( __( 'The detection script is not loaded for logged-in users with these roles.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'The detection script is not loaded for logged-in users with these roles.', 'quiet-copy-notice' ), 'exclude_roles' );
 
 		$this->textarea_row( 'exclude_ips', __( 'Ignore IP addresses', 'quiet-copy-notice' ), __( 'One per line. Ranges such as 192.0.2.0/24 are allowed. You can paste an address from the log: when "Shorten IP addresses before storing them" on the Privacy tab is on, the log shows 192.0.2.55 as 192.0.2.0, and entering 192.0.2.0 ignores every address from 192.0.2.0 to 192.0.2.255.', 'quiet-copy-notice' ) );
 		$this->textarea_row( 'exclude_posts', __( 'Ignore posts', 'quiet-copy-notice' ), __( 'Post IDs, one per line. The log shows each post\'s ID after its title, for example #123.', 'quiet-copy-notice' ) );
@@ -224,11 +224,12 @@ class Settings_Page {
 
 		$this->row_start( '', __( 'Privacy policy', 'quiet-copy-notice' ) );
 		printf(
-			'<a href="%s">%s</a>',
+			'<a href="%1$s" aria-describedby="%3$s">%2$s</a>',
 			esc_url( admin_url( 'options-privacy.php?tab=policyguide' ) ),
-			esc_html__( 'Suggested text for your privacy policy', 'quiet-copy-notice' )
+			esc_html__( 'Suggested text for your privacy policy', 'quiet-copy-notice' ),
+			esc_attr( self::help_id( 'privacy_policy' ) )
 		);
-		$this->row_end( __( 'Quiet Copy Notice itself sets no cookies and sends nothing to outside services. An add-on that sends notifications elsewhere adds that to the suggested text.', 'quiet-copy-notice' ) );
+		$this->row_end( __( 'Quiet Copy Notice itself sets no cookies and sends nothing to outside services. An add-on that sends notifications elsewhere adds that to the suggested text.', 'quiet-copy-notice' ), 'privacy_policy' );
 	}
 
 	/**
@@ -400,7 +401,7 @@ class Settings_Page {
 	 * @return void
 	 */
 	private function checkboxes( $key, array $choices, $legend ) {
-		echo '<fieldset><legend class="screen-reader-text">' . esc_html( $legend ) . '</legend>';
+		echo '<fieldset aria-describedby="' . esc_attr( self::help_id( $key ) ) . '"><legend class="screen-reader-text">' . esc_html( $legend ) . '</legend>';
 		foreach ( $choices as $value => $label ) {
 			printf(
 				'<label><input type="checkbox" name="qcnotice[%1$s][]" value="%2$s"%3$s /> %4$s</label><br />',

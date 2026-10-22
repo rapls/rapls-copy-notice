@@ -75,8 +75,7 @@ class Admin {
 	 */
 	public static function tabs() {
 		$tabs = array(
-			/* translators: tab name; the noun, the list of recorded copies. */
-			'log'           => __( 'Log', 'quiet-copy-notice' ),
+			'log'           => _x( 'Log', 'the list of recorded copies', 'quiet-copy-notice' ),
 			'notifications' => __( 'Notifications', 'quiet-copy-notice' ),
 			'detection'     => __( 'Detection', 'quiet-copy-notice' ),
 			'privacy'       => __( 'Privacy', 'quiet-copy-notice' ),
@@ -165,6 +164,52 @@ class Admin {
 			return;
 		}
 		wp_enqueue_style( QCNOTICE_SLUG . '-admin', QCNOTICE_URL . 'assets/css/admin.css', array(), QCNOTICE_VERSION );
+
+		// Confirmations for the permanent deletes on the Log tab. The text of
+		// each comes from the form's data-confirm attribute.
+		wp_register_script( QCNOTICE_SLUG . '-admin', false, array(), QCNOTICE_VERSION, true );
+		wp_enqueue_script( QCNOTICE_SLUG . '-admin' );
+		wp_add_inline_script( QCNOTICE_SLUG . '-admin', self::confirm_script() );
+	}
+
+	/**
+	 * Script asking before "Delete all" and before deleting selected entries.
+	 * A page number typed into the box only pages: the pending bulk action
+	 * is cleared, so nothing is deleted without the question.
+	 *
+	 * @return string
+	 */
+	private static function confirm_script() {
+		return <<<'JS'
+document.addEventListener( 'submit', function ( event ) {
+	var form = event.target;
+	var ask = form.getAttribute( 'data-confirm' );
+	if ( ! ask ) {
+		return;
+	}
+	if ( form.classList.contains( 'qcnotice-delete-all' ) ) {
+		if ( ! window.confirm( ask ) ) {
+			event.preventDefault();
+		}
+		return;
+	}
+	var page = form.querySelector( '#current-page-selector' );
+	if ( page && page.value !== page.defaultValue ) {
+		form.querySelectorAll( '.bulkactions select' ).forEach( function ( select ) {
+			select.value = '-1';
+		} );
+		return;
+	}
+	var button = event.submitter;
+	if ( ! button || ( 'doaction' !== button.id && 'doaction2' !== button.id ) || ! form.querySelector( 'input[name="entry[]"]:checked' ) ) {
+		return;
+	}
+	var action = form.querySelector( 'doaction' === button.id ? '#bulk-action-selector-top' : '#bulk-action-selector-bottom' );
+	if ( action && 'delete' === action.value && ! window.confirm( ask ) ) {
+		event.preventDefault();
+	}
+} );
+JS;
 	}
 
 	/**
@@ -444,7 +489,7 @@ class Admin {
 		// Deleting selected entries is permanent too, so it asks first, like
 		// "Delete all". Only the bulk action asks; filtering does not.
 		$bulk_confirm = __( 'Delete the selected log entries? This cannot be undone.', 'quiet-copy-notice' );
-		echo '<form method="get" onsubmit="' . esc_attr( 'var s=event.submitter,p=this.querySelector("#current-page-selector");if(p&&p.value!==p.defaultValue){this.querySelectorAll(".bulkactions select").forEach(function(b){b.value="-1";});return true;}if(s&&(s.id==="doaction"||s.id==="doaction2")&&this.querySelector("input[name=\'entry[]\']:checked")){var a=this.querySelector(s.id==="doaction"?"#bulk-action-selector-top":"#bulk-action-selector-bottom");if(a&&a.value==="delete"){return window.confirm(' . wp_json_encode( $bulk_confirm ) . ');}}return true;' ) . '">';
+		echo '<form method="get" class="qcnotice-log-form" data-confirm="' . esc_attr( $bulk_confirm ) . '">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( QCNOTICE_SLUG ) . '" />';
 		// Keeps an ascending sort when filtering or changing page; the only
 		// sortable column is the date.
@@ -460,7 +505,7 @@ class Admin {
 			$confirm  = $filtered
 				? __( 'Delete every log entry, not only the ones shown by this filter? This cannot be undone.', 'quiet-copy-notice' )
 				: __( 'Delete every log entry? This cannot be undone.', 'quiet-copy-notice' );
-			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="qcnotice-delete-all" onsubmit="return window.confirm(' . esc_attr( wp_json_encode( $confirm ) ) . ');">';
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="qcnotice-delete-all" data-confirm="' . esc_attr( $confirm ) . '">';
 			echo '<input type="hidden" name="action" value="' . esc_attr( self::ACTION_DELETE_ALL ) . '" />';
 			wp_nonce_field( self::ACTION_DELETE_ALL );
 			submit_button( $filtered ? __( 'Delete all entries (not only this filter)', 'quiet-copy-notice' ) : __( 'Delete all entries', 'quiet-copy-notice' ), 'delete', 'submit', false );

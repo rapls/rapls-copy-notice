@@ -168,6 +168,15 @@ class Log_Table extends \WP_List_Table {
 		if ( $this->filter_paragraph() ) {
 			$args['qcnotice_para'] = $this->filter_paragraph();
 		}
+		// Back to the same view: an ascending sort and the page are kept (the
+		// table moves to its last page itself if this one is now past it).
+		if ( isset( $_REQUEST['order'] ) && 'asc' === strtolower( sanitize_key( wp_unslash( $_REQUEST['order'] ) ) ) ) {
+			$args['orderby'] = 'created_at';
+			$args['order']   = 'asc';
+		}
+		if ( ! empty( $_REQUEST['paged'] ) && absint( $_REQUEST['paged'] ) > 1 ) {
+			$args['paged'] = absint( $_REQUEST['paged'] );
+		}
 		wp_safe_redirect( Admin::url( 'log', $args ) );
 		exit;
 	}
