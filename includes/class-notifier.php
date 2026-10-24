@@ -62,7 +62,8 @@ class Notifier {
 
 		// Under a lock, so mails sent at the same moment cannot all read the
 		// same count and pass the cap. Busy counts as over the cap: the row
-		// waits for the digest.
+		// waits for the digest. So does a database that takes no locks,
+		// where the cap could not hold.
 		$within_cap = Lock::run(
 			'instant_cap',
 			static function () {
@@ -80,6 +81,7 @@ class Notifier {
 				set_transient( self::INSTANT_COUNTER, $counter, max( 1, HOUR_IN_SECONDS - ( time() - (int) $counter['start'] ) ) );
 				return true;
 			},
+			false,
 			false
 		);
 		if ( ! $within_cap ) {

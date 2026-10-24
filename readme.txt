@@ -1,10 +1,10 @@
 === Quiet Copy Notice ===
 Contributors: rapls
-Tags: copy, notification, analytics, content protection, plagiarism
+Tags: copy, notification, analytics, content protection, copy tracking
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 1.3.14
+Stable tag: 1.3.15
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -31,7 +31,7 @@ right-click as usual; you simply find out which passages are being taken.
   most copied posts.
 * Checks in **Tools → Site Health** for the log table, the scheduled tasks, the
   notification address, notifications that keep failing, the monitored post
-  types and proxy setup.
+  types, proxy setup and database locks.
 * Two optional features for readers, both off by default: a short message after
   they copy (for example, asking them to link to the source), and the post title
   and URL appended to the copied text.
@@ -205,5 +205,5 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
-= 1.3.14 =
+= 1.3.15 =
 * First release.

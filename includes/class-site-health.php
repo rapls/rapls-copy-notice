@@ -63,6 +63,10 @@ class Site_Health {
 			'label' => __( 'Quiet Copy Notice monitored post types', 'quiet-copy-notice' ),
 			'test'  => array( $this, 'test_post_types' ),
 		);
+		$tests['direct'][ QCNOTICE_PREFIX . 'locks' ]        = array(
+			'label' => __( 'Quiet Copy Notice database locks', 'quiet-copy-notice' ),
+			'test'  => array( $this, 'test_locks' ),
+		);
 		return $tests;
 	}
 
@@ -219,6 +223,33 @@ class Site_Health {
 	}
 
 	/**
+	 * The database takes named locks (GET_LOCK), which keep the limits
+	 * exact when requests arrive together.
+	 *
+	 * @return array
+	 */
+	public function test_locks() {
+		if ( Lock::available() ) {
+			return $this->result(
+				'locks',
+				'good',
+				__( 'The database supports the locks the copy limits use', 'quiet-copy-notice' ),
+				__( 'The rate limits and the instant email limit hold even when many copies arrive at the same moment.', 'quiet-copy-notice' )
+			);
+		}
+
+		return $this->result(
+			'locks',
+			'recommended',
+			__( 'The database does not allow the locks the copy limits use', 'quiet-copy-notice' ),
+			array(
+				__( 'This site\'s database does not allow named locks (MySQL\'s GET_LOCK function), as some database clusters do not.', 'quiet-copy-notice' ),
+				__( 'Copies are still recorded and summarized, but when many arrive at the same moment slightly more may be accepted than the rate limits allow. "One email per copy, right away" sends nothing right away: those copies go into the hourly summary instead. Ask your host whether GET_LOCK can be enabled.', 'quiet-copy-notice' ),
+			)
+		);
+	}
+
+	/**
 	 * Warns when the site looks like it sits behind a reverse proxy that is
 	 * not listed as trusted: a forwarding header is present and either the
 	 * direct peer has a private or loopback address, or the header is
@@ -334,6 +365,10 @@ class Site_Health {
 				'retention'    => array(
 					'label' => __( 'Retention (days)', 'quiet-copy-notice' ),
 					'value' => Settings::get( 'retention_days' ),
+				),
+				'locks'        => array(
+					'label' => __( 'Database locks available', 'quiet-copy-notice' ),
+					'value' => Lock::available() ? $yes : $no,
 				),
 				'object_cache' => array(
 					'label' => __( 'Rate-limit counters stored in', 'quiet-copy-notice' ),

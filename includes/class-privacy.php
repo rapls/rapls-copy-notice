@@ -246,7 +246,7 @@ class Privacy {
 		$paragraphs = array(
 			'collected' => __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address.', 'quiet-copy-notice' ),
 			'ip'        => Settings::get( 'anonymize_ip' )
-				? __( 'The IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed) so it no longer identifies a single device.', 'quiet-copy-notice' )
+				? __( 'The IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed), which makes it less precise. Together with the other details recorded it may still tell one visitor from another, so it is handled as personal data.', 'quiet-copy-notice' )
 				: __( 'The full IP address is stored.', 'quiet-copy-notice' ),
 			'use'       => __( 'This information is used to tell the site administrator, by email, which content is being copied. It is not shared with anyone else and is not sent to any outside service. No cookies are set and no identifier is created for you.', 'quiet-copy-notice' ),
 			'retention' => sprintf(
