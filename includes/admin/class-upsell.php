@@ -143,7 +143,7 @@ class Upsell {
 			array( __( 'Notify your team where it works', 'quiet-copy-notice' ), __( 'Send each notification to Slack, Chatwork, Discord or your own system. Visitor text is quoted so it cannot mention anyone or add links.', 'quiet-copy-notice' ) ),
 			array( __( 'Route by post, category and length', 'quiet-copy-notice' ), __( 'Decide which copies go to which channel, including email, and drop the ones you do not need to hear about.', 'quiet-copy-notice' ) ),
 			array( __( 'Hear about bursts at once', 'quiet-copy-notice' ), __( 'Get an alert as soon as one post is copied unusually often, instead of waiting for the hourly summary.', 'quiet-copy-notice' ) ),
-			array( __( 'Find reposts', 'quiet-copy-notice' ), __( 'Once a day, the most copied paragraphs are searched for on the web with your own Brave Search or SerpApi key. Review the pages found and mark them confirmed or ignored.', 'quiet-copy-notice' ) ),
+			array( __( 'Find reposts', 'quiet-copy-notice' ), __( 'Once a day, the most copied paragraphs are searched for on the web with your own Brave Search or SerpApi key. Review the pages found and mark each one as a repost or ignore it.', 'quiet-copy-notice' ) ),
 			array( __( 'Export for reports', 'quiet-copy-notice' ), __( 'Download the log for a date range or one post as CSV, with cells that cannot run as spreadsheet formulas.', 'quiet-copy-notice' ) ),
 		) as $card ) {
 			echo '<div class="qcnotice-pro-card"><h3>' . esc_html( $card[0] ) . '</h3><p>' . esc_html( $card[1] ) . '</p></div>';

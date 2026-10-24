@@ -3,8 +3,8 @@ Contributors: rapls
 Tags: copy, notification, analytics, content protection, plagiarism
 Requires at least: 6.3
 Tested up to: 7.1
-Requires PHP: 7.4
-Stable tag: 1.3.13
+Requires PHP: 8.2
+Stable tag: 1.3.14
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -205,121 +205,5 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
-= 1.3.13 =
-* Fixed: text copied from a form field inside the post (a comment, a contact form) was recorded and emailed. Copies from form fields and editable areas are now ignored, and the reader gets neither the message nor the source line for them.
-* Fixed: an IP address copied from the log, where addresses are shortened, did nothing under "Ignore IP addresses". A shortened address now ignores every visitor shortened to it.
-* Fixed: the suggested privacy policy text described the default IP setting, not the site's own, and said "1 days" with a one-day retention.
-* Fixed: two summary runs at the same moment could send the same copies twice.
-* Fixed: "Delete all" said the log was deleted even when the database refused; it now tries another way and reports a failure.
-* Fixed: special line-break and text-direction characters in copied text or the browser details could change how a line of the email reads.
-* Fixed: on sites where another plugin changes how WordPress makes passwords, the per-IP rate limit did not hold.
-* Fixed: typing a page number on the Log tab went back to page one, and filtering the log lost the chosen sort order.
-* Fixed: deleting selected log entries reported "0 entries deleted" when the database refused; it now says the entries could not be deleted.
-* Added: a "Send a test email" button on the Notifications tab. When there is no valid address, the button is unavailable and the tab explains why.
-* Added: a notice says where notifications go when the address entered is not valid.
-* Changed: deleting selected log entries asks for confirmation first. The confirmations on the Log tab come from an enqueued script instead of inline handlers.
-* Changed: old log entries are removed in batches, so lowering the retention on a large log no longer runs one long statement that locks the table. Databases that cannot delete in batches, such as SQLite, still have them removed in one step.
-* Changed: deactivating the plugin across a large network handles sites 500 at a time.
-* Changed: the suggested privacy policy text has a separate paragraph about IP addresses, so the `qcnotice_privacy_policy_paragraphs` filter now passes an `ip` key as well.
-* Added: the `qcnotice_log_emptied` action, fired after "Delete all", for add-ons that keep log entry IDs.
-* Changed: screen readers announce the message shown after copying every time and read the help texts with their fields; the message's close button is larger; the tab bar has a name; the "See Quiet Copy Notice Pro" link says it opens in a new tab; the full browser details in the log open on click instead of only on hover.
-* Changed: notification emails need fewer database queries.
-* Changed: clearer labels and help texts, Site Health messages, and wording of the notice shown while the plugin this one replaces is still active.
-
-= 1.3.8 =
-* Fixed: if the stored generation ID was invalid, two requests repairing it at the same moment could each use a different ID. It is now made under a database lock and read back, so every request uses the stored one.
-
-= 1.3.7 =
-* Changed: uninstalling no longer clears every transient in a persistent object cache, which dropped other plugins' cached data too. Instead, the per-IP rate limit counters carry an ID made for each install (the site-wide and instant-email hourly counters are deleted by name as before), so after a reinstall the old counters are never read. With a persistent object cache (Redis, Memcached) they stay in the cache until they expire, within an hour; without one they are deleted on uninstall as before.
-
-= 1.3.6 =
-* Fixed: with a persistent object cache (Redis, Memcached), uninstalling left the per-IP rate limit counters in the cache until they expired. Where the cache supports it, its transients are now cleared once at the end.
-
-= 1.3.5 =
-* Changed: uninstalling on a large multisite network is faster. Sites are handled 500 at a time through their own tables, without switching to each one, and the plugin's scheduled events are removed from every site.
-
-= 1.3.4 =
-* Changed: the Privacy tab and the readme say that Quiet Copy Notice itself contacts no outside service, and that an add-on which sends notifications elsewhere says so in the suggested privacy policy text. The previous wording could be read as covering add-ons too.
-* Changed: the readme lists the `qcnotice_privacy_policy_paragraphs` filter with the other hooks.
-
-= 1.3.3 =
-* Fixed: requests arriving at the same moment could all pass the rate limits, and instant emails could go over the hourly cap, because each read the same count. The counters are now updated one request at a time.
-* Fixed: the message shown after copying can be closed with the Escape key or its new Close button, and it stays while the pointer is on it.
-* Added: the `qcnotice_privacy_policy_paragraphs` filter lets an add-on that sends copy records elsewhere describe that in the suggested privacy policy text.
-
-= 1.3.2 =
-* Fixed: copied text is stored as copied. Code such as `a < b` or `<div>` is no longer changed or cut out, and no longer shows up as `&lt;` in emails.
-* Fixed: filtering the log while on a later page no longer shows an empty list with "No copies recorded yet."
-* Fixed: a result notice such as "3 entries deleted." no longer comes back when you move to another page of the log.
-* Fixed: in "one email per copy" mode, a copy could occasionally be emailed twice when the hourly summary ran at the same moment.
-* Fixed: deactivating the plugin network-wide now removes its scheduled tasks on every site.
-* Fixed: IPv4 addresses that the server reports in IPv6 form (`::ffff:192.0.2.1`), and `X-Forwarded-For` entries with a port, are now handled like plain addresses.
-* Fixed: CSS selectors with `^=`, `$=`, `|=`, non-ASCII class names or `:is(a, b)` are now accepted for the content area.
-* Changed: one IP address can no longer use up the whole site limit: it is also held to a fifth of the site limit per hour, and IPv6 addresses are counted per /64 block.
-* Changed: when a setting is not valid and is changed on save, the notice now says which one, instead of only "Settings saved."
-* Added: Site Health warns when notifications keep failing and when no post type is monitored. The Detection tab warns about the latter too.
-* Changed: long copied text can be opened in full in the log, and the log screen needs fewer database queries.
-* Changed: clearer wording on the settings screens; the suggested privacy policy text now mentions the paragraph fingerprint.
-
-= 1.3.1 =
-* Fixed: uninstalling the plugin no longer deletes the settings of the separate Pro add-on.
-* The plugin's Plugin URI now points to its page on raplsworks.com.
-* Clarified that a multisite network needs the 5-site Pro license.
-
-= 1.3.0 =
-* Added: on multisite, a deleted site's copy log is deleted with it.
-* Added: `qcnotice_email_rows` filter, so an add-on can route notifications.
-
-= 1.2.0 =
-* Added: paragraph fingerprints, so copies of the same paragraph can be listed together.
-* Added: hooks for add-ons to add notification channels and admin tabs.
-
-= 1.1.0 =
-* Added: optional message shown to readers after they copy (off by default).
-* Added: optional source line, with the post title and URL, added to copied text (off by default).
-* Added: dashboard widget with copies in the last 7 days and the top 3 posts.
-* Added: Site Health checks and a Site Health info section.
-
-= 1.0.0 =
+= 1.3.14 =
 * First release.
-
-== Upgrade Notice ==
-
-= 1.3.13 =
-Copies from form fields are no longer recorded, summary emails can no longer be sent twice, and the Notifications tab gets a "Send a test email" button.
-
-= 1.3.8 =
-A small fix to the per-install ID used in rate limit counter names.
-
-= 1.3.7 =
-Uninstalling no longer clears other plugins' cached data on sites with a persistent object cache. Per-IP rate limit counters start fresh once after updating; the site-wide and instant-email hourly limits carry over.
-
-= 1.3.6 =
-Uninstalling now also clears cached rate limit counters on sites with a persistent object cache.
-
-= 1.3.5 =
-Faster, more complete uninstall on large multisite networks.
-
-= 1.3.4 =
-Clearer wording about outside services on the Privacy tab.
-
-= 1.3.3 =
-Rate limits now hold when many requests arrive at once, and the message shown after copying can be closed with the keyboard.
-
-= 1.3.2 =
-Stores copied text exactly as copied, fixes an empty log after filtering, and stops one IP address from using up the site-wide limit.
-
-= 1.3.1 =
-Uninstalling the plugin now keeps the Pro add-on's settings.
-
-= 1.3.0 =
-Cleans up a site's log when the site is deleted from a network, and adds a filter for routing notifications.
-
-= 1.2.0 =
-Records which paragraph each copy came from (as a fingerprint, not the text) and adds hooks for add-ons.
-
-= 1.1.0 =
-Adds a dashboard widget, Site Health checks, and two optional reader-side features that are off until you enable them.
-
-= 1.0.0 =
-First release.

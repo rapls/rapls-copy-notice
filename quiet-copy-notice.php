@@ -3,9 +3,9 @@
  * Plugin Name:       Quiet Copy Notice
  * Plugin URI:        https://raplsworks.com/plugins/quiet-copy-notice/
  * Description:       Detects when visitors copy text from your posts and tells you by email. Lightweight copy notification and copy tracking with no external services.
- * Version:           1.3.13
+ * Version:           1.3.14
  * Requires at least: 6.3
- * Requires PHP:      7.4
+ * Requires PHP:      8.2
  * Author:            Rapls Works
  * Author URI:        https://raplsworks.com/
  * License:           GPL-2.0-or-later
@@ -18,7 +18,7 @@
 /*
  * This file must stay parseable by very old PHP so the version gate below can
  * run: nothing newer than PHP 7.0, which is the oldest PHP WordPress 6.3 itself
- * loads on. Everything that needs PHP 7.4 lives in includes/ and is loaded
+ * loads on. Everything that needs PHP 8.2 lives in includes/ and is loaded
  * after the gate.
  */
 
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'QCNOTICE_VERSION', '1.3.13' );
+define( 'QCNOTICE_VERSION', '1.3.14' );
 define( 'QCNOTICE_FILE', __FILE__ );
 define( 'QCNOTICE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QCNOTICE_URL', plugin_dir_url( __FILE__ ) );
@@ -39,7 +39,7 @@ define( 'QCNOTICE_URL', plugin_dir_url( __FILE__ ) );
 define( 'QCNOTICE_SLUG', 'quiet-copy-notice' );
 define( 'QCNOTICE_PREFIX', 'qcnotice_' );
 define( 'QCNOTICE_REST_NAMESPACE', QCNOTICE_SLUG . '/v1' );
-define( 'QCNOTICE_MIN_PHP_ID', 70400 );
+define( 'QCNOTICE_MIN_PHP_ID', 80200 );
 
 if ( PHP_VERSION_ID < QCNOTICE_MIN_PHP_ID ) {
 	add_action( 'admin_notices', 'qcnotice_php_version_notice' );
@@ -61,7 +61,7 @@ function qcnotice_php_version_notice() {
 			sprintf(
 				/* translators: 1: required PHP version, 2: current PHP version. */
 				__( 'Quiet Copy Notice needs PHP %1$s or later and is not running. This site uses PHP %2$s.', 'quiet-copy-notice' ),
-				'7.4',
+				'8.2',
 				PHP_VERSION
 			)
 		)

@@ -137,7 +137,7 @@ class Rate_Limit {
 				}
 				$new = self::new_generation();
 				if ( null === $stored ) {
-					add_option( self::GENERATION_OPTION, $new, '', 'yes' );
+					add_option( self::GENERATION_OPTION, $new, '', true );
 				} else {
 					update_option( self::GENERATION_OPTION, $new, true );
 				}
