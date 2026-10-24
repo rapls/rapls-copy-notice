@@ -33,7 +33,8 @@ class Installer {
 	 * Deactivation hook. Logs and settings stay until uninstall.
 	 *
 	 * On a network deactivation the hook runs once, on the main site, so the
-	 * events of every other site are removed here too.
+	 * events of every other site are removed here too, from each site's
+	 * cron option directly rather than by switching to it.
 	 *
 	 * @param bool $network_wide Whether the plugin is deactivated network-wide.
 	 * @return void
@@ -49,17 +50,20 @@ class Installer {
 		do {
 			$sites = get_sites(
 				array(
-					'fields'            => 'ids',
-					'number'            => 500,
-					'offset'            => $offset,
-					'orderby'           => 'id',
-					'update_site_cache' => false,
+					'fields'                 => 'ids',
+					'number'                 => 500,
+					'offset'                 => $offset,
+					'orderby'                => 'id',
+					'update_site_cache'      => false,
+					'update_site_meta_cache' => false,
 				)
 			);
 			foreach ( $sites as $site_id ) {
-				switch_to_blog( (int) $site_id );
-				Cron::unschedule();
-				restore_current_blog();
+				if ( get_current_blog_id() === (int) $site_id ) {
+					Cron::unschedule();
+				} else {
+					Cron::unschedule_site( (int) $site_id );
+				}
 			}
 			$offset += 500;
 			$full    = 500 === count( $sites );

@@ -4,7 +4,7 @@ Tags: copy, notification, analytics, content protection, copy tracking
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 1.3.15
+Stable tag: 1.3.16
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -120,12 +120,16 @@ plugin treats all of it as untrusted.
 
 = Privacy =
 
-Quiet Copy Notice sets no cookies and creates no visitor identifier. The
-optional reader message and source link use only the post's own title and URL
-and your text; they record nothing extra. This plugin never contacts any
-external service: copy reports go only to your own site, and notifications
-are sent with WordPress's own mail function. Suggested wording for your
-privacy policy is added to **Settings → Privacy**.
+Quiet Copy Notice sets no cookies and stores nothing in the visitor's
+browser. To enforce the rate limits, the site keeps a one-way hash of each
+visitor's IP address (of its /64 block for IPv6) for up to an hour, in a
+counter that then expires. The optional reader message and source link use
+only the post's own title and URL and your text; they record nothing extra.
+This plugin never contacts any external service: copy reports go only to your
+own site, and notifications are sent with WordPress's own mail function,
+through whatever mail system the site uses (an SMTP plugin or email service,
+for example). Suggested wording for your privacy policy is added to
+**Settings → Privacy**.
 
 An add-on can send notifications elsewhere: Quiet Copy Notice Pro, for
 example, sends them to the chat services or webhook you switch on. It then
@@ -205,5 +209,5 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
-= 1.3.15 =
+= 1.3.16 =
 * First release.

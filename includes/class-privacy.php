@@ -248,7 +248,7 @@ class Privacy {
 			'ip'        => Settings::get( 'anonymize_ip' )
 				? __( 'The IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed), which makes it less precise. Together with the other details recorded it may still tell one visitor from another, so it is handled as personal data.', 'quiet-copy-notice' )
 				: __( 'The full IP address is stored.', 'quiet-copy-notice' ),
-			'use'       => __( 'This information is used to tell the site administrator, by email, which content is being copied. It is not shared with anyone else and is not sent to any outside service. No cookies are set and no identifier is created for you.', 'quiet-copy-notice' ),
+			'use'       => __( 'This information is used to tell the site administrator, by email, which content is being copied. The email goes through the mail system this site uses, which may be run by an outside email provider. Otherwise the information is not shared with anyone and is not sent to any outside service. No cookie or identifier is stored in your browser. To limit abusive requests, the site keeps a one-way hash of your IP address for up to an hour.', 'quiet-copy-notice' ),
 			'retention' => sprintf(
 				/* translators: %d: number of days copy records are kept. */
 				_n( 'Copy records are deleted automatically after %d day.', 'Copy records are deleted automatically after %d days.', $retention, 'quiet-copy-notice' ),

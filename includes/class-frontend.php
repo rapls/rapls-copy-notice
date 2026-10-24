@@ -54,6 +54,12 @@ class Frontend {
 
 		$this->load = false;
 
+		// Settings are not autoloaded: home, archive, search and 404 pages
+		// return here without reading them.
+		if ( ! is_singular() ) {
+			return false;
+		}
+
 		$post_types = Settings::get( 'post_types' );
 		if ( empty( $post_types ) || ! is_singular( $post_types ) ) {
 			return false;

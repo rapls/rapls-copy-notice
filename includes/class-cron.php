@@ -56,6 +56,58 @@ class Cron {
 	}
 
 	/**
+	 * Removes both events from another site of a network by editing its
+	 * cron option directly, without switch_to_blog(), so deactivating
+	 * across a large network stays quick. Uninstall does the same.
+	 *
+	 * @param int $site_id Site ID.
+	 * @return void
+	 */
+	public static function unschedule_site( $site_id ) {
+		global $wpdb;
+
+		$options = $wpdb->get_blog_prefix( $site_id ) . 'options';
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Another site's cron option, read past the cache on purpose.
+		$raw  = $wpdb->get_var( $wpdb->prepare( 'SELECT option_value FROM %i WHERE option_name = %s', $options, 'cron' ) );
+		$cron = is_string( $raw ) ? maybe_unserialize( $raw ) : null;
+		if ( ! is_array( $cron ) ) {
+			return;
+		}
+
+		$changed = false;
+		foreach ( $cron as $time => $events ) {
+			// Skips the 'version' entry.
+			if ( ! is_array( $events ) ) {
+				continue;
+			}
+			foreach ( array( self::DIGEST_HOOK, self::PURGE_HOOK ) as $hook ) {
+				if ( isset( $cron[ $time ][ $hook ] ) ) {
+					unset( $cron[ $time ][ $hook ] );
+					$changed = true;
+				}
+			}
+			if ( empty( $cron[ $time ] ) ) {
+				unset( $cron[ $time ] );
+			}
+		}
+		if ( ! $changed ) {
+			return;
+		}
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Another site's cron option; its cache is dropped below.
+		$wpdb->update( $options, array( 'option_value' => maybe_serialize( $cron ) ), array( 'option_name' => 'cron' ) );
+
+		// The cron option is autoloaded, so a persistent object cache holds it
+		// in that site's alloptions too.
+		if ( wp_using_ext_object_cache() && function_exists( 'wp_cache_switch_to_blog' ) ) {
+			$current = get_current_blog_id();
+			wp_cache_switch_to_blog( (int) $site_id );
+			wp_cache_delete( 'alloptions', 'options' );
+			wp_cache_delete( 'cron', 'options' );
+			wp_cache_switch_to_blog( $current );
+		}
+	}
+
+	/**
 	 * Deletes rows past the retention period.
 	 *
 	 * @return void

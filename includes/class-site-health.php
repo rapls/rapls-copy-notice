@@ -244,7 +244,7 @@ class Site_Health {
 			__( 'The database does not allow the locks the copy limits use', 'quiet-copy-notice' ),
 			array(
 				__( 'This site\'s database does not allow named locks (MySQL\'s GET_LOCK function), as some database clusters do not.', 'quiet-copy-notice' ),
-				__( 'Copies are still recorded and summarized, but when many arrive at the same moment slightly more may be accepted than the rate limits allow. "One email per copy, right away" sends nothing right away: those copies go into the hourly summary instead. Ask your host whether GET_LOCK can be enabled.', 'quiet-copy-notice' ),
+				__( 'Copies are still recorded and summarized, but the rate limits may not hold against many reports sent at the same moment, and two summaries running at once may send the same copies twice. "One email per copy, right away" sends nothing right away: those copies go into the hourly summary instead. Ask your host whether GET_LOCK can be enabled.', 'quiet-copy-notice' ),
 			)
 		);
 	}
