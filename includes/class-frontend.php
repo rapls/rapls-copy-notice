@@ -89,8 +89,10 @@ class Frontend {
 	 * @return string
 	 */
 	public function mark_content( $content ) {
-		if ( ! Settings::get( 'mark_content' ) || is_feed() || ! in_the_loop() || ! is_main_query()
-			|| get_the_ID() !== get_queried_object_id() || ! $this->should_load() ) {
+		// The cheap checks first: the setting itself is not autoloaded, so
+		// archives and feeds that print post content never read it.
+		if ( is_feed() || ! in_the_loop() || ! is_main_query()
+			|| get_the_ID() !== get_queried_object_id() || ! $this->should_load() || ! Settings::get( 'mark_content' ) ) {
 			return $content;
 		}
 		return $content . '<span class="' . esc_attr( self::MARKER_CLASS ) . '" hidden></span>';

@@ -4,11 +4,11 @@ Tags: copy, notification, analytics, content protection, copy tracking
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 1.3.16
+Stable tag: 1.3.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Copy notification and copy tracking for posts: logs what visitors copy and emails you a plain-text summary. Contacts no outside service.
+Copy notification and copy tracking for posts: logs what visitors copy and emails you a plain-text summary. Calls no outside service itself.
 
 == Description ==
 
@@ -107,7 +107,9 @@ plugin treats all of it as untrusted.
   and 500 per hour for the whole site are accepted. One address is also held to
   a fifth of the site limit per hour (100 by default), so it cannot use up the
   site limit alone, and IPv6 addresses are counted per /64 block. Reports over a
-  limit are neither stored nor emailed.
+  limit are neither stored nor emailed. The counts stay exact when many reports
+  arrive at once as long as the database allows named locks (MySQL's GET_LOCK),
+  which Site Health checks.
 * **Checked against real posts.** A report is accepted only for a published
   post of a monitored type. Copied text is capped at 500 characters and the
   user agent and referrer host at 255.
@@ -209,5 +211,5 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
-= 1.3.16 =
+= 1.3.17 =
 * First release.
