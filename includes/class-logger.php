@@ -2,10 +2,10 @@
 /**
  * Reads and writes the log table.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -24,7 +24,7 @@ class Logger {
 	const PURGE_BATCHES = 200;
 
 	/**
-	 * Inserts one row and fires qcnotice_logged.
+	 * Inserts one row and fires rapls_cn_logged.
 	 *
 	 * @param array $row Validated values: post_id, copied_text, text_length, ip, user_agent, referrer_host, and optionally paragraph_hash.
 	 * @return int Inserted ID, or 0 on failure.
@@ -63,7 +63,7 @@ class Logger {
 		 * @param int   $log_id Row ID.
 		 * @param array $row    Stored values. Untrusted visitor input; escape on output.
 		 */
-		do_action( QCNOTICE_PREFIX . 'logged', $log_id, $row );
+		do_action( RAPLS_CN_PREFIX . 'logged', $log_id, $row );
 
 		return $log_id;
 	}
@@ -210,7 +210,7 @@ class Logger {
 			 * entries from 1 again, so an add-on holding entry IDs (to send
 			 * them again later, say) should let go of them here.
 			 */
-			do_action( QCNOTICE_PREFIX . 'log_emptied' );
+			do_action( RAPLS_CN_PREFIX . 'log_emptied' );
 		}
 		return $emptied;
 	}

@@ -2,10 +2,10 @@
 /**
  * Table creation, schema migration, activation and deactivation.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Installer {
 
 	const DB_VERSION        = '2';
-	const DB_VERSION_OPTION = QCNOTICE_PREFIX . 'db_version';
+	const DB_VERSION_OPTION = RAPLS_CN_PREFIX . 'db_version';
 
 	/**
 	 * Activation hook.
@@ -93,7 +93,7 @@ class Installer {
 	public static function drop_tables_with_site( $tables, $site_id ) {
 		global $wpdb;
 		$tables   = (array) $tables;
-		$tables[] = $wpdb->get_blog_prefix( $site_id ) . QCNOTICE_PREFIX . 'log';
+		$tables[] = $wpdb->get_blog_prefix( $site_id ) . RAPLS_CN_PREFIX . 'log';
 		return $tables;
 	}
 
@@ -104,7 +104,7 @@ class Installer {
 	 */
 	public static function table() {
 		global $wpdb;
-		return $wpdb->prefix . QCNOTICE_PREFIX . 'log';
+		return $wpdb->prefix . RAPLS_CN_PREFIX . 'log';
 	}
 
 	/**

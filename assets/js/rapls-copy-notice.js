@@ -9,7 +9,7 @@
 ( function () {
 	'use strict';
 
-	var config = window.qcnoticeConfig;
+	var config = window.raplsCnConfig;
 	if ( ! config || ! config.endpoint || ! config.postId ) {
 		return;
 	}
@@ -318,7 +318,7 @@
 		}
 		if ( ! toast ) {
 			toast = document.createElement( 'div' );
-			toast.className = 'qcnotice-message';
+			toast.className = 'rapls-cn-message';
 			var css = {
 				position: 'fixed',
 				left: '50%',
@@ -348,7 +348,7 @@
 
 			var close = document.createElement( 'button' );
 			close.type = 'button';
-			close.className = 'qcnotice-message-close';
+			close.className = 'rapls-cn-message-close';
 			close.textContent = '\u00d7';
 			close.setAttribute( 'aria-label', config.closeLabel || 'Close' );
 			var buttonCss = {
@@ -464,7 +464,7 @@
 			// For site owners who want to forward copies to their own
 			// analytics. The plugin itself contacts no outside service.
 			if ( typeof window.CustomEvent === 'function' ) {
-				document.dispatchEvent( new window.CustomEvent( 'qcnotice:copy', {
+				document.dispatchEvent( new window.CustomEvent( 'rapls-cn:copy', {
 					detail: { postId: config.postId, length: chars.length },
 				} ) );
 			}

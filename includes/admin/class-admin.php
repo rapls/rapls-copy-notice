@@ -2,14 +2,14 @@
 /**
  * Admin menu, tabs and form handlers.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice\Admin;
+namespace Rapls\CopyNotice\Admin;
 
-use QuietCopyNotice\Logger;
-use QuietCopyNotice\Notifier;
-use QuietCopyNotice\Settings;
+use Rapls\CopyNotice\Logger;
+use Rapls\CopyNotice\Notifier;
+use Rapls\CopyNotice\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -22,9 +22,9 @@ class Admin {
 
 	const CAPABILITY = 'manage_options';
 
-	const ACTION_SAVE       = QCNOTICE_PREFIX . 'save_settings';
-	const ACTION_DELETE_ALL = QCNOTICE_PREFIX . 'delete_all';
-	const ACTION_TEST_EMAIL = QCNOTICE_PREFIX . 'test_email';
+	const ACTION_SAVE       = RAPLS_CN_PREFIX . 'save_settings';
+	const ACTION_DELETE_ALL = RAPLS_CN_PREFIX . 'delete_all';
+	const ACTION_TEST_EMAIL = RAPLS_CN_PREFIX . 'test_email';
 
 	/**
 	 * Page hook suffix.
@@ -52,8 +52,8 @@ class Admin {
 		add_action( 'admin_post_' . self::ACTION_TEST_EMAIL, array( $this, 'handle_test_email' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 		// Screen options are saved before load-{page}, so this cannot wait.
-		add_filter( 'set_screen_option_' . QCNOTICE_PREFIX . 'per_page', array( $this, 'save_per_page' ), 10, 3 );
-		add_filter( 'plugin_action_links_' . plugin_basename( QCNOTICE_FILE ), array( $this, 'action_links' ) );
+		add_filter( 'set_screen_option_' . RAPLS_CN_PREFIX . 'per_page', array( $this, 'save_per_page' ), 10, 3 );
+		add_filter( 'plugin_action_links_' . plugin_basename( RAPLS_CN_FILE ), array( $this, 'action_links' ) );
 		add_filter( 'removable_query_args', array( $this, 'removable_query_args' ) );
 	}
 
@@ -65,7 +65,7 @@ class Admin {
 	 * @return array
 	 */
 	public function removable_query_args( $args ) {
-		return array_merge( (array) $args, array( 'qcnotice_msg', 'qcnotice_count', 'qcnotice_fields' ) );
+		return array_merge( (array) $args, array( 'rapls_cn_msg', 'rapls_cn_count', 'rapls_cn_fields' ) );
 	}
 
 	/**
@@ -85,11 +85,11 @@ class Admin {
 		/**
 		 * Lets an add-on append tabs to this page. Built-in tabs cannot be
 		 * replaced or removed. An added tab is rendered by the
-		 * qcnotice_render_tab_{key} action.
+		 * rapls_cn_render_tab_{key} action.
 		 *
 		 * @param array $extra Tab key => label.
 		 */
-		$extra = apply_filters( QCNOTICE_PREFIX . 'admin_tabs', array() );
+		$extra = apply_filters( RAPLS_CN_PREFIX . 'admin_tabs', array() );
 		if ( is_array( $extra ) ) {
 			foreach ( $extra as $key => $label ) {
 				$key = sanitize_key( $key );
@@ -115,7 +115,7 @@ class Admin {
 	 * @return string
 	 */
 	public static function url( $tab = 'log', array $args = array() ) {
-		return add_query_arg( array_merge( array( 'page' => QCNOTICE_SLUG ), 'log' === $tab ? array() : array( 'tab' => $tab ), $args ), admin_url( 'tools.php' ) );
+		return add_query_arg( array_merge( array( 'page' => RAPLS_CN_SLUG ), 'log' === $tab ? array() : array( 'tab' => $tab ), $args ), admin_url( 'tools.php' ) );
 	}
 
 	/**
@@ -128,7 +128,7 @@ class Admin {
 			__( 'Rapls Copy Notice', 'rapls-copy-notice' ),
 			__( 'Rapls Copy Notice', 'rapls-copy-notice' ),
 			self::CAPABILITY,
-			QCNOTICE_SLUG,
+			RAPLS_CN_SLUG,
 			array( $this, 'render' )
 		);
 		add_action( 'load-' . $this->hook, array( $this, 'load_page' ) );
@@ -163,13 +163,13 @@ class Admin {
 		if ( $hook !== $this->hook ) {
 			return;
 		}
-		wp_enqueue_style( QCNOTICE_SLUG . '-admin', QCNOTICE_URL . 'assets/css/admin.css', array(), QCNOTICE_VERSION );
+		wp_enqueue_style( RAPLS_CN_SLUG . '-admin', RAPLS_CN_URL . 'assets/css/admin.css', array(), RAPLS_CN_VERSION );
 
 		// Confirmations for the permanent deletes on the Log tab. The text of
 		// each comes from the form's data-confirm attribute.
-		wp_register_script( QCNOTICE_SLUG . '-admin', false, array(), QCNOTICE_VERSION, true );
-		wp_enqueue_script( QCNOTICE_SLUG . '-admin' );
-		wp_add_inline_script( QCNOTICE_SLUG . '-admin', self::confirm_script() );
+		wp_register_script( RAPLS_CN_SLUG . '-admin', false, array(), RAPLS_CN_VERSION, true );
+		wp_enqueue_script( RAPLS_CN_SLUG . '-admin' );
+		wp_add_inline_script( RAPLS_CN_SLUG . '-admin', self::confirm_script() );
 	}
 
 	/**
@@ -187,7 +187,7 @@ document.addEventListener( 'submit', function ( event ) {
 	if ( ! ask ) {
 		return;
 	}
-	if ( form.classList.contains( 'qcnotice-delete-all' ) ) {
+	if ( form.classList.contains( 'rapls-cn-delete-all' ) ) {
 		if ( ! window.confirm( ask ) ) {
 			event.preventDefault();
 		}
@@ -239,7 +239,7 @@ JS;
 		 *
 		 * @param string $tab Current tab key.
 		 */
-		do_action( QCNOTICE_PREFIX . 'admin_load', $tab );
+		do_action( RAPLS_CN_PREFIX . 'admin_load', $tab );
 
 		if ( 'log' !== $tab ) {
 			return;
@@ -249,7 +249,7 @@ JS;
 			'per_page',
 			array(
 				'default' => 20,
-				'option'  => QCNOTICE_PREFIX . 'per_page',
+				'option'  => RAPLS_CN_PREFIX . 'per_page',
 			)
 		);
 		$table = new Log_Table();
@@ -300,7 +300,7 @@ JS;
 
 		$tab = $this->current_tab();
 
-		echo '<div class="wrap qcnotice-wrap">';
+		echo '<div class="wrap rapls-cn-wrap">';
 		echo '<h1>' . esc_html__( 'Rapls Copy Notice', 'rapls-copy-notice' ) . '</h1>';
 
 		echo '<nav class="nav-tab-wrapper" aria-label="' . esc_attr__( 'Rapls Copy Notice sections', 'rapls-copy-notice' ) . '">';
@@ -327,11 +327,11 @@ JS;
 			Upsell::render_page();
 		} else {
 			/**
-			 * Renders a tab added through qcnotice_admin_tabs. The callback
+			 * Renders a tab added through rapls_cn_admin_tabs. The callback
 			 * must check capabilities for anything it changes and escape all
 			 * output.
 			 */
-			do_action( QCNOTICE_PREFIX . 'render_tab_' . $tab );
+			do_action( RAPLS_CN_PREFIX . 'render_tab_' . $tab );
 		}
 
 		echo '</div>';
@@ -344,8 +344,8 @@ JS;
 	 */
 	private function render_notices() {
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Display only; values are compared against fixed strings.
-		$message = isset( $_GET['qcnotice_msg'] ) ? sanitize_key( wp_unslash( $_GET['qcnotice_msg'] ) ) : '';
-		$count   = isset( $_GET['qcnotice_count'] ) ? absint( $_GET['qcnotice_count'] ) : 0;
+		$message = isset( $_GET['rapls_cn_msg'] ) ? sanitize_key( wp_unslash( $_GET['rapls_cn_msg'] ) ) : '';
+		$count   = isset( $_GET['rapls_cn_count'] ) ? absint( $_GET['rapls_cn_count'] ) : 0;
 		// phpcs:enable
 
 		$text  = '';
@@ -424,7 +424,7 @@ JS;
 	}
 
 	/**
-	 * Labels of the fields named in qcnotice_fields, known fields only.
+	 * Labels of the fields named in rapls_cn_fields, known fields only.
 	 *
 	 * @param string[] $skip Keys reported separately.
 	 * @return string[] Empty when every named field is in $skip.
@@ -445,14 +445,14 @@ JS;
 	}
 
 	/**
-	 * Keys named in qcnotice_fields, unchecked: compare them against fixed
+	 * Keys named in rapls_cn_fields, unchecked: compare them against fixed
 	 * keys only.
 	 *
 	 * @return string[]
 	 */
 	private function adjusted_field_keys() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display only; keys are looked up in a fixed list.
-		return isset( $_GET['qcnotice_fields'] ) ? explode( ',', sanitize_text_field( wp_unslash( $_GET['qcnotice_fields'] ) ) ) : array();
+		return isset( $_GET['rapls_cn_fields'] ) ? explode( ',', sanitize_text_field( wp_unslash( $_GET['rapls_cn_fields'] ) ) ) : array();
 	}
 
 	/**
@@ -489,8 +489,8 @@ JS;
 		// Deleting selected entries is permanent too, so it asks first, like
 		// "Delete all". Only the bulk action asks; filtering does not.
 		$bulk_confirm = __( 'Delete the selected log entries? This cannot be undone.', 'rapls-copy-notice' );
-		echo '<form method="get" class="qcnotice-log-form" data-confirm="' . esc_attr( $bulk_confirm ) . '">';
-		echo '<input type="hidden" name="page" value="' . esc_attr( QCNOTICE_SLUG ) . '" />';
+		echo '<form method="get" class="rapls-cn-log-form" data-confirm="' . esc_attr( $bulk_confirm ) . '">';
+		echo '<input type="hidden" name="page" value="' . esc_attr( RAPLS_CN_SLUG ) . '" />';
 		// Keeps an ascending sort when filtering or changing page; the only
 		// sortable column is the date.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only view parameter, compared with a fixed value.
@@ -505,7 +505,7 @@ JS;
 			$confirm  = $filtered
 				? __( 'Delete every log entry, not only the ones shown by this filter? This cannot be undone.', 'rapls-copy-notice' )
 				: __( 'Delete every log entry? This cannot be undone.', 'rapls-copy-notice' );
-			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="qcnotice-delete-all" data-confirm="' . esc_attr( $confirm ) . '">';
+			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="rapls-cn-delete-all" data-confirm="' . esc_attr( $confirm ) . '">';
 			echo '<input type="hidden" name="action" value="' . esc_attr( self::ACTION_DELETE_ALL ) . '" />';
 			wp_nonce_field( self::ACTION_DELETE_ALL );
 			submit_button( $filtered ? __( 'Delete all entries (not only this filter)', 'rapls-copy-notice' ) : __( 'Delete all entries', 'rapls-copy-notice' ), 'delete', 'submit', false );
@@ -531,9 +531,9 @@ JS;
 		$tab = isset( $_POST['tab'] ) ? sanitize_key( wp_unslash( $_POST['tab'] ) ) : '';
 		check_admin_referer( self::ACTION_SAVE . '_' . $tab );
 
-		$input = isset( $_POST['qcnotice'] ) && is_array( $_POST['qcnotice'] )
+		$input = isset( $_POST['rapls_cn'] ) && is_array( $_POST['rapls_cn'] )
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Each field is validated in Settings::sanitize_field().
-			? wp_unslash( $_POST['qcnotice'] )
+			? wp_unslash( $_POST['rapls_cn'] )
 			: array();
 
 		$adjusted = Settings::save_tab( $tab, $input );
@@ -543,10 +543,10 @@ JS;
 
 		$args = $adjusted
 			? array(
-				'qcnotice_msg'    => 'saved_adjusted',
-				'qcnotice_fields' => implode( ',', $adjusted ),
+				'rapls_cn_msg'    => 'saved_adjusted',
+				'rapls_cn_fields' => implode( ',', $adjusted ),
 			)
-			: array( 'qcnotice_msg' => 'saved' );
+			: array( 'rapls_cn_msg' => 'saved' );
 		wp_safe_redirect( self::url( $tab, $args ) );
 		exit;
 	}
@@ -564,7 +564,7 @@ JS;
 
 		$deleted = Logger::delete_all();
 
-		wp_safe_redirect( self::url( 'log', array( 'qcnotice_msg' => $deleted ? 'deleted_all' : 'delete_failed' ) ) );
+		wp_safe_redirect( self::url( 'log', array( 'rapls_cn_msg' => $deleted ? 'deleted_all' : 'delete_failed' ) ) );
 		exit;
 	}
 
@@ -585,7 +585,7 @@ JS;
 			$result = Notifier::send_test() ? 'test_sent' : 'test_failed';
 		}
 
-		wp_safe_redirect( self::url( 'notifications', array( 'qcnotice_msg' => $result ) ) );
+		wp_safe_redirect( self::url( 'notifications', array( 'rapls_cn_msg' => $result ) ) );
 		exit;
 	}
 }

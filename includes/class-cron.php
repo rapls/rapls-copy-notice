@@ -2,10 +2,10 @@
 /**
  * Scheduled tasks.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Cron {
 
-	const DIGEST_HOOK = QCNOTICE_PREFIX . 'send_digest';
-	const PURGE_HOOK  = QCNOTICE_PREFIX . 'purge_old_logs';
+	const DIGEST_HOOK = RAPLS_CN_PREFIX . 'send_digest';
+	const PURGE_HOOK  = RAPLS_CN_PREFIX . 'purge_old_logs';
 
 	/**
 	 * Registers hooks.

@@ -2,10 +2,10 @@
 /**
  * Short database locks around read-modify-write counters.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -31,7 +31,7 @@ class Lock {
 	/**
 	 * Default for run()'s $no_lock: run the callback without a lock.
 	 */
-	const RUN_UNLOCKED = '__qcnotice_run_unlocked';
+	const RUN_UNLOCKED = '__rapls_cn_run_unlocked';
 
 	/**
 	 * Cached result of available().
@@ -63,7 +63,7 @@ class Lock {
 		// Lock names are server-wide: include the table prefix so sites and
 		// installs sharing a database server do not wait on each other.
 		// MySQL allows 64 characters.
-		$lock = substr( $wpdb->prefix . QCNOTICE_PREFIX . $name, 0, 64 );
+		$lock = substr( $wpdb->prefix . RAPLS_CN_PREFIX . $name, 0, 64 );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- A lock, not data.
 		$got = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK( %s, %d )', $lock, self::WAIT ) );
@@ -93,7 +93,7 @@ class Lock {
 	public static function available() {
 		if ( null === self::$available ) {
 			global $wpdb;
-			$lock = substr( $wpdb->prefix . QCNOTICE_PREFIX . 'probe', 0, 64 );
+			$lock = substr( $wpdb->prefix . RAPLS_CN_PREFIX . 'probe', 0, 64 );
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- A lock, not data.
 			$got = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK( %s, 0 )', $lock ) );
 			if ( '1' === $got ) {

@@ -3,7 +3,7 @@
  * Plugin Name:       Rapls Copy Notice
  * Plugin URI:        https://raplsworks.com/plugins/quiet-copy-notice/
  * Description:       Detects when visitors copy text from your posts and tells you by email. Lightweight copy notification and copy tracking; the plugin itself calls no outside service, and email goes out through your site's mail setup.
- * Version:           1.3.18
+ * Version:           1.3.19
  * Requires at least: 6.3
  * Requires PHP:      8.2
  * Author:            Rapls Works
@@ -12,7 +12,7 @@
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       rapls-copy-notice
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
 /*
@@ -26,23 +26,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'QCNOTICE_VERSION', '1.3.18' );
-define( 'QCNOTICE_FILE', __FILE__ );
-define( 'QCNOTICE_DIR', plugin_dir_path( __FILE__ ) );
-define( 'QCNOTICE_URL', plugin_dir_url( __FILE__ ) );
+define( 'RAPLS_CN_VERSION', '1.3.19' );
+define( 'RAPLS_CN_FILE', __FILE__ );
+define( 'RAPLS_CN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'RAPLS_CN_URL', plugin_dir_url( __FILE__ ) );
 
 /*
  * Naming lives here so a rename touches one place. The text domain still has to
  * be a string literal inside each __() call for the translation tools, so it
  * is not a constant.
  */
-define( 'QCNOTICE_SLUG', 'rapls-copy-notice' );
-define( 'QCNOTICE_PREFIX', 'qcnotice_' );
-define( 'QCNOTICE_REST_NAMESPACE', QCNOTICE_SLUG . '/v1' );
-define( 'QCNOTICE_MIN_PHP_ID', 80200 );
+define( 'RAPLS_CN_SLUG', 'rapls-copy-notice' );
+define( 'RAPLS_CN_PREFIX', 'rapls_cn_' );
+define( 'RAPLS_CN_REST_NAMESPACE', RAPLS_CN_SLUG . '/v1' );
+define( 'RAPLS_CN_MIN_PHP_ID', 80200 );
 
-if ( PHP_VERSION_ID < QCNOTICE_MIN_PHP_ID ) {
-	add_action( 'admin_notices', 'qcnotice_php_version_notice' );
+if ( PHP_VERSION_ID < RAPLS_CN_MIN_PHP_ID ) {
+	add_action( 'admin_notices', 'rapls_cn_php_version_notice' );
 	return;
 }
 
@@ -51,7 +51,7 @@ if ( PHP_VERSION_ID < QCNOTICE_MIN_PHP_ID ) {
  *
  * @return void
  */
-function qcnotice_php_version_notice() {
+function rapls_cn_php_version_notice() {
 	if ( ! current_user_can( 'activate_plugins' ) ) {
 		return;
 	}
@@ -68,14 +68,14 @@ function qcnotice_php_version_notice() {
 	);
 }
 
-require_once QCNOTICE_DIR . 'includes/class-autoloader.php';
-\QuietCopyNotice\Autoloader::register();
+require_once RAPLS_CN_DIR . 'includes/class-autoloader.php';
+\Rapls\CopyNotice\Autoloader::register();
 
-register_activation_hook( __FILE__, array( 'QuietCopyNotice\\Installer', 'activate' ) );
-register_deactivation_hook( __FILE__, array( 'QuietCopyNotice\\Installer', 'deactivate' ) );
+register_activation_hook( __FILE__, array( 'Rapls\\CopyNotice\\Installer', 'activate' ) );
+register_deactivation_hook( __FILE__, array( 'Rapls\\CopyNotice\\Installer', 'deactivate' ) );
 
 if ( defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	return;
 }
 
-\QuietCopyNotice\Plugin::instance()->boot();
+\Rapls\CopyNotice\Plugin::instance()->boot();

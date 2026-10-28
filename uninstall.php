@@ -2,7 +2,7 @@
 /**
  * Removes the log table, every option and every transient the plugin created.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
@@ -18,14 +18,14 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
  * @param int $site_id Site ID.
  * @return void
  */
-function qcnotice_uninstall_site( $site_id ) {
+function rapls_cn_uninstall_site( $site_id ) {
 	global $wpdb;
 
-	$prefix  = 'qcnotice_';
+	$prefix  = 'rapls_cn_';
 	$db      = $wpdb->get_blog_prefix( $site_id );
 	$options = $db . 'options';
 
-	qcnotice_uninstall_cron( $options, array( $prefix . 'send_digest', $prefix . 'purge_old_logs' ) );
+	rapls_cn_uninstall_cron( $options, array( $prefix . 'send_digest', $prefix . 'purge_old_logs' ) );
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Dropping our own table.
 	$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', $db . $prefix . 'log' ) );
@@ -37,7 +37,7 @@ function qcnotice_uninstall_site( $site_id ) {
 		$wpdb->esc_like( '_transient_' . $prefix ) . '%',
 		$wpdb->esc_like( '_transient_timeout_' . $prefix ) . '%',
 	);
-	// The Pro add-on's options share the prefix (qcnotice_pro_*) and belong to
+	// The Pro add-on's options share the prefix (rapls_cn_pro_*) and belong to
 	// the add-on, which removes them itself; keep them, licence included.
 	$keep = array(
 		$wpdb->esc_like( $prefix . 'pro_' ) . '%',
@@ -47,7 +47,7 @@ function qcnotice_uninstall_site( $site_id ) {
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-off cleanup on uninstall.
 	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE ( option_name LIKE %s OR option_name LIKE %s OR option_name LIKE %s ) AND option_name NOT LIKE %s AND option_name NOT LIKE %s AND option_name NOT LIKE %s', $options, $like[0], $like[1], $like[2], $keep[0], $keep[1], $keep[2] ) );
 
-	qcnotice_uninstall_cache( $site_id, array( $prefix . 'settings', $prefix . 'db_version', $prefix . 'cache_gen' ), array( $prefix . 'rl_site', $prefix . 'instant_sent' ) );
+	rapls_cn_uninstall_cache( $site_id, array( $prefix . 'settings', $prefix . 'db_version', $prefix . 'cache_gen' ), array( $prefix . 'rl_site', $prefix . 'instant_sent' ) );
 }
 
 /**
@@ -58,7 +58,7 @@ function qcnotice_uninstall_site( $site_id ) {
  * @param array  $hooks   Hook names.
  * @return void
  */
-function qcnotice_uninstall_cron( $options, array $hooks ) {
+function rapls_cn_uninstall_cron( $options, array $hooks ) {
 	global $wpdb;
 
 	// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-off cleanup on uninstall.
@@ -105,7 +105,7 @@ function qcnotice_uninstall_cron( $options, array $hooks ) {
  * @param array $transients Transient names.
  * @return void
  */
-function qcnotice_uninstall_cache( $site_id, array $options, array $transients ) {
+function rapls_cn_uninstall_cache( $site_id, array $options, array $transients ) {
 	if ( ! wp_using_ext_object_cache() ) {
 		return;
 	}
@@ -129,27 +129,27 @@ function qcnotice_uninstall_cache( $site_id, array $options, array $transients )
 
 if ( is_multisite() ) {
 	// In pages, so a large network is never loaded into memory at once.
-	$qcnotice_offset = 0;
+	$rapls_cn_offset = 0;
 	do {
-		$qcnotice_sites = get_sites(
+		$rapls_cn_sites = get_sites(
 			array(
 				'fields'            => 'ids',
 				'number'            => 500,
-				'offset'            => $qcnotice_offset,
+				'offset'            => $rapls_cn_offset,
 				'orderby'           => 'id',
 				'update_site_cache' => false,
 			)
 		);
-		foreach ( $qcnotice_sites as $qcnotice_site_id ) {
-			qcnotice_uninstall_site( (int) $qcnotice_site_id );
+		foreach ( $rapls_cn_sites as $rapls_cn_site_id ) {
+			rapls_cn_uninstall_site( (int) $rapls_cn_site_id );
 		}
-		$qcnotice_offset += 500;
-		$qcnotice_full    = 500 === count( $qcnotice_sites );
-	} while ( $qcnotice_full );
+		$rapls_cn_offset += 500;
+		$rapls_cn_full    = 500 === count( $rapls_cn_sites );
+	} while ( $rapls_cn_full );
 } else {
-	qcnotice_uninstall_site( get_current_blog_id() );
+	rapls_cn_uninstall_site( get_current_blog_id() );
 }
 
 // Rows-per-page screen option. User meta is shared by the whole network, so
 // this runs once.
-delete_metadata( 'user', 0, 'qcnotice_per_page', '', true );
+delete_metadata( 'user', 0, 'rapls_cn_per_page', '', true );

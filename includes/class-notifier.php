@@ -2,10 +2,10 @@
 /**
  * Email notifications.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -20,7 +20,7 @@ class Notifier {
 	/**
 	 * Counter of instant mails sent in the current hour.
 	 */
-	const INSTANT_COUNTER = QCNOTICE_PREFIX . 'instant_sent';
+	const INSTANT_COUNTER = RAPLS_CN_PREFIX . 'instant_sent';
 
 	/**
 	 * Most rows listed in full in one digest. The rest are counted.
@@ -151,7 +151,7 @@ class Notifier {
 		 * @param array  $rows    Rows covered.
 		 * @param string $context 'instant' or 'digest'.
 		 */
-		$email_rows = apply_filters( QCNOTICE_PREFIX . 'email_rows', $rows, $context );
+		$email_rows = apply_filters( RAPLS_CN_PREFIX . 'email_rows', $rows, $context );
 		$email_rows = is_array( $email_rows ) ? array_values( $email_rows ) : $rows;
 
 		if ( empty( $email_rows ) ) {
@@ -174,7 +174,7 @@ class Notifier {
 		 * @param int    $total     Number of events covered.
 		 * @param string $context   'instant' or 'digest'.
 		 */
-		return (bool) apply_filters( QCNOTICE_PREFIX . 'notification_delivered', $delivered, $rows, (int) $total, $context );
+		return (bool) apply_filters( RAPLS_CN_PREFIX . 'notification_delivered', $delivered, $rows, (int) $total, $context );
 	}
 
 	/**
@@ -214,8 +214,8 @@ class Notifier {
 				$total - count( $rows )
 			);
 		}
-		$body[] = __( 'Log:', 'rapls-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG ) . "\n"
-			. __( 'Settings:', 'rapls-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG . '&tab=notifications' );
+		$body[] = __( 'Log:', 'rapls-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . RAPLS_CN_SLUG ) . "\n"
+			. __( 'Settings:', 'rapls-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . RAPLS_CN_SLUG . '&tab=notifications' );
 
 		return self::mail( $to, $subject, implode( "\n\n", $body ) );
 	}
@@ -236,7 +236,7 @@ class Notifier {
 			__( 'test', 'rapls-copy-notice' )
 		);
 		$body = __( 'This is a test message from Rapls Copy Notice. Copy notifications for this site will arrive at this address.', 'rapls-copy-notice' )
-			. "\n\n" . __( 'Settings:', 'rapls-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG . '&tab=notifications' );
+			. "\n\n" . __( 'Settings:', 'rapls-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . RAPLS_CN_SLUG . '&tab=notifications' );
 		return self::mail( $to, $subject, $body );
 	}
 

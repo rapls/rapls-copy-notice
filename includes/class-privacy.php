@@ -2,10 +2,10 @@
 /**
  * Client IP handling, anonymization and the privacy policy text.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -265,7 +265,7 @@ class Privacy {
 		 *                             'ip', 'use' and 'retention'. Escaped on
 		 *                             output.
 		 */
-		$paragraphs = apply_filters( QCNOTICE_PREFIX . 'privacy_policy_paragraphs', $paragraphs );
+		$paragraphs = apply_filters( RAPLS_CN_PREFIX . 'privacy_policy_paragraphs', $paragraphs );
 		$paragraphs = is_array( $paragraphs ) ? $paragraphs : array();
 
 		$content = '';

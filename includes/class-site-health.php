@@ -2,10 +2,10 @@
 /**
  * Site Health tests and debug information.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -39,31 +39,31 @@ class Site_Health {
 	 * @return array
 	 */
 	public function add_tests( $tests ) {
-		$tests['direct'][ QCNOTICE_PREFIX . 'table' ]        = array(
+		$tests['direct'][ RAPLS_CN_PREFIX . 'table' ]        = array(
 			'label' => __( 'Rapls Copy Notice log table', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_table' ),
 		);
-		$tests['direct'][ QCNOTICE_PREFIX . 'cron' ]         = array(
+		$tests['direct'][ RAPLS_CN_PREFIX . 'cron' ]         = array(
 			'label' => __( 'Rapls Copy Notice scheduled tasks', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_cron' ),
 		);
-		$tests['direct'][ QCNOTICE_PREFIX . 'notify_email' ] = array(
+		$tests['direct'][ RAPLS_CN_PREFIX . 'notify_email' ] = array(
 			'label' => __( 'Rapls Copy Notice notification address', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_notify_email' ),
 		);
-		$tests['direct'][ QCNOTICE_PREFIX . 'proxy' ]        = array(
+		$tests['direct'][ RAPLS_CN_PREFIX . 'proxy' ]        = array(
 			'label' => __( 'Rapls Copy Notice visitor IP addresses', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_proxy' ),
 		);
-		$tests['direct'][ QCNOTICE_PREFIX . 'pending' ]      = array(
+		$tests['direct'][ RAPLS_CN_PREFIX . 'pending' ]      = array(
 			'label' => __( 'Rapls Copy Notice notification delivery', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_pending' ),
 		);
-		$tests['direct'][ QCNOTICE_PREFIX . 'post_types' ]   = array(
+		$tests['direct'][ RAPLS_CN_PREFIX . 'post_types' ]   = array(
 			'label' => __( 'Rapls Copy Notice monitored post types', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_post_types' ),
 		);
-		$tests['direct'][ QCNOTICE_PREFIX . 'locks' ]        = array(
+		$tests['direct'][ RAPLS_CN_PREFIX . 'locks' ]        = array(
 			'label' => __( 'Rapls Copy Notice database locks', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_locks' ),
 		);
@@ -311,12 +311,12 @@ class Site_Health {
 
 		$next_digest = wp_next_scheduled( Cron::DIGEST_HOOK );
 
-		$info[ QCNOTICE_SLUG ] = array(
+		$info[ RAPLS_CN_SLUG ] = array(
 			'label'  => __( 'Rapls Copy Notice', 'rapls-copy-notice' ),
 			'fields' => array(
 				'version'      => array(
 					'label' => __( 'Version', 'rapls-copy-notice' ),
-					'value' => QCNOTICE_VERSION,
+					'value' => RAPLS_CN_VERSION,
 				),
 				'db_version'   => array(
 					'label' => __( 'Database schema', 'rapls-copy-notice' ),
@@ -420,7 +420,7 @@ class Site_Health {
 				)
 			),
 			'actions'     => $actions,
-			'test'        => QCNOTICE_PREFIX . $id,
+			'test'        => RAPLS_CN_PREFIX . $id,
 		);
 	}
 }

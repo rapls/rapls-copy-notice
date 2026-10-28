@@ -4,7 +4,7 @@ Tags: copy, notification, analytics, content protection, copy tracking
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 1.3.18
+Stable tag: 1.3.19
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,8 +12,8 @@ Copy notification and copy tracking for posts: logs what visitors copy and email
 
 == Description ==
 
-When a visitor selects text in one of your posts and copies it, Quiet Copy
-Notice records what was copied and from which post, and tells you by email.
+When a visitor selects text in one of your posts and copies it, Rapls Copy Notice
+records what was copied and from which post, and tells you by email.
 It does not stop anyone from copying. Readers can still select, copy and
 right-click as usual; you simply find out which passages are being taken.
 
@@ -57,7 +57,7 @@ One-time purchase, no subscription. Details: https://raplsworks.com/quiet-copy-n
 The plugin's screen has a **Pro features** tab describing the add-on, and short
 notes about it on the Log and Notifications tabs and in its row on the Plugins
 screen. All of them disappear once the add-on is active, and the
-`qcnotice_show_upsell` filter hides them (return `false`).
+`rapls_cn_show_upsell` filter hides them (return `false`).
 
 = Paragraphs =
 
@@ -69,22 +69,22 @@ pages, so sites served over plain HTTP record copies without it.
 
 = For developers =
 
-* `qcnotice_logged` (action) fires after a copy is stored, with the row ID and
+* `rapls_cn_logged` (action) fires after a copy is stored, with the row ID and
   the stored values.
-* `qcnotice_notification_delivered` (filter) lets an add-on send each
+* `rapls_cn_notification_delivered` (filter) lets an add-on send each
   notification to another channel; return `true` when it was delivered.
-* `qcnotice_email_rows` (filter) lets an add-on choose which rows go into the
+* `rapls_cn_email_rows` (filter) lets an add-on choose which rows go into the
   notification email; an empty array skips the email for that notification.
-* `qcnotice_is_pro` (filter) is set to `true` by the Pro add-on;
-  `qcnotice_show_upsell` and `qcnotice_pro_url` control the Pro features tab.
-* `qcnotice_privacy_policy_paragraphs` (filter) gets the suggested privacy
+* `rapls_cn_is_pro` (filter) is set to `true` by the Pro add-on;
+  `rapls_cn_show_upsell` and `rapls_cn_pro_url` control the Pro features tab.
+* `rapls_cn_privacy_policy_paragraphs` (filter) gets the suggested privacy
   policy paragraphs, keyed `collected`, `ip`, `use` and `retention`, as plain text;
   an add-on that sends copy records out should replace `use`.
-* `qcnotice_log_emptied` (action) fires after "Delete all" has removed every log
+* `rapls_cn_log_emptied` (action) fires after "Delete all" has removed every log
   entry. New entries are numbered from 1 again, so an add-on that keeps entry
   IDs should drop them here.
-* `qcnotice_admin_tabs` (filter), `qcnotice_admin_load` and
-  `qcnotice_render_tab_{key}` (actions) let an add-on add tabs to the plugin's
+* `rapls_cn_admin_tabs` (filter), `rapls_cn_admin_load` and
+  `rapls_cn_render_tab_{key}` (actions) let an add-on add tabs to the plugin's
   screen.
 
 Values that came from a visitor's browser are passed to these hooks as stored.
@@ -179,12 +179,12 @@ site with little traffic, the email goes out with the first visit after it is du
 = Can I count copies in Google Analytics or another tool? =
 
 The plugin does not send anything to analytics services itself. It does fire a
-`qcnotice:copy` event on the page each time it reports a copy to your site, with
+`rapls-cn:copy` event on the page each time it reports a copy to your site, with
 the post ID and the length of the selection, which your own script can forward.
 The event fires in the browser, before the site applies its rate limits and
 ignored IP addresses, so the count can be a little higher than the log's:
 
-`document.addEventListener( 'qcnotice:copy', function ( e ) { /* e.detail.postId, e.detail.length */ } );`
+`document.addEventListener( 'rapls-cn:copy', function ( e ) { /* e.detail.postId, e.detail.length */ } );`
 
 = My site is behind Cloudflare or another proxy and every IP looks the same. =
 
@@ -211,5 +211,5 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
-= 1.3.18 =
+= 1.3.19 =
 * First release.

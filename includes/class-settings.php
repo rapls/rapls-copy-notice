@@ -2,10 +2,10 @@
 /**
  * Settings storage and validation.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Settings {
 
-	const OPTION = QCNOTICE_PREFIX . 'settings';
+	const OPTION = RAPLS_CN_PREFIX . 'settings';
 
 	const MODE_DIGEST  = 'digest';
 	const MODE_INSTANT = 'instant';

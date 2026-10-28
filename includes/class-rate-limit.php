@@ -2,10 +2,10 @@
 /**
  * Fixed-window request counters.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -34,12 +34,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Rate_Limit {
 
-	const KEY_PREFIX = QCNOTICE_PREFIX . 'rl_';
+	const KEY_PREFIX = RAPLS_CN_PREFIX . 'rl_';
 
 	/**
 	 * Option holding the generation ID.
 	 */
-	const GENERATION_OPTION = QCNOTICE_PREFIX . 'cache_gen';
+	const GENERATION_OPTION = RAPLS_CN_PREFIX . 'cache_gen';
 
 	/**
 	 * Counts this request and reports whether it is within both limits.

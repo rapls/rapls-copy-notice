@@ -2,10 +2,10 @@
 /**
  * Loads the copy detection script on monitored pages.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,13 +16,13 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Frontend {
 
-	const HANDLE = QCNOTICE_SLUG;
+	const HANDLE = RAPLS_CN_SLUG;
 
 	/**
 	 * Class of the empty element placed at the end of the post body when
 	 * "mark_content" is on. The script treats its parent as the content area.
 	 */
-	const MARKER_CLASS = 'qcnotice-content-marker';
+	const MARKER_CLASS = 'rapls-cn-content-marker';
 
 	/**
 	 * Cached result of should_load().
@@ -112,9 +112,9 @@ class Frontend {
 
 		wp_enqueue_script(
 			self::HANDLE,
-			QCNOTICE_URL . 'assets/js/rapls-copy-notice.js',
+			RAPLS_CN_URL . 'assets/js/rapls-copy-notice.js',
 			array(),
-			QCNOTICE_VERSION,
+			RAPLS_CN_VERSION,
 			array(
 				'in_footer' => true,
 				'strategy'  => 'defer',
@@ -145,7 +145,7 @@ class Frontend {
 
 		wp_add_inline_script(
 			self::HANDLE,
-			'var qcnoticeConfig = ' . wp_json_encode( $config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES ) . ';',
+			'var raplsCnConfig = ' . wp_json_encode( $config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES ) . ';',
 			'before'
 		);
 	}

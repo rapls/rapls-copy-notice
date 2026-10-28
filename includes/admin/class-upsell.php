@@ -2,10 +2,10 @@
 /**
  * Information about the optional Pro add-on.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice\Admin;
+namespace Rapls\CopyNotice\Admin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * Nothing here is a feature, a setting or a gate: every free feature works
  * fully without the add-on. The add-on is detected only through the
- * qcnotice_is_pro filter, which the add-on itself turns on. Shown only to
+ * rapls_cn_is_pro filter, which the add-on itself turns on. Shown only to
  * administrators, only on this plugin's screen and its row on the Plugins
  * screen, never as a site-wide notice or on the dashboard. External links are
  * limited to the two buttons on the Pro features tab; every other mention
@@ -35,7 +35,7 @@ class Upsell {
 		 *
 		 * @param bool $active Default false.
 		 */
-		return (bool) apply_filters( QCNOTICE_PREFIX . 'is_pro', false );
+		return (bool) apply_filters( RAPLS_CN_PREFIX . 'is_pro', false );
 	}
 
 	/**
@@ -52,7 +52,7 @@ class Upsell {
 		 *
 		 * @param bool $show Default true.
 		 */
-		return (bool) apply_filters( QCNOTICE_PREFIX . 'show_upsell', true );
+		return (bool) apply_filters( RAPLS_CN_PREFIX . 'show_upsell', true );
 	}
 
 	/**
@@ -70,7 +70,7 @@ class Upsell {
 		 *
 		 * @param string $url URL.
 		 */
-		return (string) apply_filters( QCNOTICE_PREFIX . 'pro_url', $url );
+		return (string) apply_filters( RAPLS_CN_PREFIX . 'pro_url', $url );
 	}
 
 	/**
@@ -86,7 +86,7 @@ class Upsell {
 			return;
 		}
 		printf(
-			'<div class="qcnotice-pro-row" role="note"><div class="qcnotice-pro-row__main"><p class="qcnotice-pro-row__title">%1$s <span class="qcnotice-pro-badge">PRO</span></p><p class="qcnotice-pro-row__body">%2$s</p></div><a class="button button-secondary" href="%3$s">%4$s</a></div>',
+			'<div class="rapls-cn-pro-row" role="note"><div class="rapls-cn-pro-row__main"><p class="rapls-cn-pro-row__title">%1$s <span class="rapls-cn-pro-badge">PRO</span></p><p class="rapls-cn-pro-row__body">%2$s</p></div><a class="button button-secondary" href="%3$s">%4$s</a></div>',
 			esc_html( $title ),
 			esc_html( $body ),
 			esc_url( Admin::url( 'pro' ) ),
@@ -106,25 +106,25 @@ class Upsell {
 
 		$url = self::url();
 		$cta = sprintf(
-			'<a class="qcnotice-pro-cta" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s<span class="screen-reader-text"> %3$s</span></a>',
+			'<a class="rapls-cn-pro-cta" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s<span class="screen-reader-text"> %3$s</span></a>',
 			esc_url( $url ),
 			esc_html__( 'See Rapls Copy Notice Pro', 'rapls-copy-notice' ),
 			/* translators: Hidden accessibility text. */
 			esc_html__( '(opens in a new tab)', 'rapls-copy-notice' )
 		);
 
-		echo '<div class="qcnotice-pro-page">';
+		echo '<div class="rapls-cn-pro-page">';
 
-		echo '<section class="qcnotice-pro-hero">';
-		echo '<span class="qcnotice-pro-eyebrow">' . esc_html__( 'Rapls Copy Notice Pro — optional add-on', 'rapls-copy-notice' ) . '</span>';
+		echo '<section class="rapls-cn-pro-hero">';
+		echo '<span class="rapls-cn-pro-eyebrow">' . esc_html__( 'Rapls Copy Notice Pro — optional add-on', 'rapls-copy-notice' ) . '</span>';
 		echo '<h2>' . esc_html__( 'See which passages are taken, and where they end up.', 'rapls-copy-notice' ) . '</h2>';
 		echo '<p>' . esc_html__( 'Everything on the other tabs is free, and stays free: copy detection, the log, email notifications, the reader message and source link, the dashboard widget and Site Health checks. There is no trial and no limit tied to Pro.', 'rapls-copy-notice' ) . '</p>';
 		echo '<p>' . esc_html__( 'Pro is a separate plugin for sites that want to act on copies, not only hear about them: understand what is copied, tell the right people, and find where it was reposted.', 'rapls-copy-notice' ) . '</p>';
 		echo '<p>' . $cta . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped parts above.
 		echo '</section>';
 
-		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'Free covers detection. Pro covers what you do next.', 'rapls-copy-notice' ) . '</h2>';
-		echo '<table class="qcnotice-pro-steps"><thead><tr><th scope="col">' . esc_html_x( 'Free', 'the free plugin, compared with Pro', 'rapls-copy-notice' ) . '</th><th scope="col">' . esc_html__( 'Pro adds', 'rapls-copy-notice' ) . '</th></tr></thead><tbody>';
+		echo '<section class="rapls-cn-pro-section"><h2>' . esc_html__( 'Free covers detection. Pro covers what you do next.', 'rapls-copy-notice' ) . '</h2>';
+		echo '<table class="rapls-cn-pro-steps"><thead><tr><th scope="col">' . esc_html_x( 'Free', 'the free plugin, compared with Pro', 'rapls-copy-notice' ) . '</th><th scope="col">' . esc_html__( 'Pro adds', 'rapls-copy-notice' ) . '</th></tr></thead><tbody>';
 		foreach ( array(
 			array( __( 'Log of every copy', 'rapls-copy-notice' ), __( 'Statistics by post and by paragraph, against the previous period', 'rapls-copy-notice' ) ),
 			array( __( 'Email: hourly summary or instant', 'rapls-copy-notice' ), __( 'Slack, Chatwork, Discord and your own webhook', 'rapls-copy-notice' ) ),
@@ -137,7 +137,7 @@ class Upsell {
 		}
 		echo '</tbody></table></section>';
 
-		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'What Pro adds', 'rapls-copy-notice' ) . '</h2><div class="qcnotice-pro-grid">';
+		echo '<section class="rapls-cn-pro-section"><h2>' . esc_html__( 'What Pro adds', 'rapls-copy-notice' ) . '</h2><div class="rapls-cn-pro-grid">';
 		foreach ( array(
 			array( __( 'Know which paragraphs are copied', 'rapls-copy-notice' ), __( 'Copies per day for 7, 30 or 90 days drawn against the period before, the most copied posts, and the paragraphs inside each post that readers copy most.', 'rapls-copy-notice' ) ),
 			array( __( 'Notify your team where it works', 'rapls-copy-notice' ), __( 'Send each notification to Slack, Chatwork, Discord or your own system. Visitor text is quoted so it cannot mention anyone or add links.', 'rapls-copy-notice' ) ),
@@ -146,11 +146,11 @@ class Upsell {
 			array( __( 'Find reposts', 'rapls-copy-notice' ), __( 'Once a day, the most copied paragraphs are searched for on the web with your own Brave Search or SerpApi key. Review the pages found and mark each one as a repost or ignore it.', 'rapls-copy-notice' ) ),
 			array( __( 'Export for reports', 'rapls-copy-notice' ), __( 'Download the log for a date range or one post as CSV, with cells that cannot run as spreadsheet formulas.', 'rapls-copy-notice' ) ),
 		) as $card ) {
-			echo '<div class="qcnotice-pro-card"><h3>' . esc_html( $card[0] ) . '</h3><p>' . esc_html( $card[1] ) . '</p></div>';
+			echo '<div class="rapls-cn-pro-card"><h3>' . esc_html( $card[0] ) . '</h3><p>' . esc_html( $card[1] ) . '</p></div>';
 		}
 		echo '</div></section>';
 
-		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'Recommended for', 'rapls-copy-notice' ) . '</h2><ul class="qcnotice-pro-list">';
+		echo '<section class="rapls-cn-pro-section"><h2>' . esc_html__( 'Recommended for', 'rapls-copy-notice' ) . '</h2><ul class="rapls-cn-pro-list">';
 		foreach ( array(
 			__( 'Media sites and blogs whose articles are often quoted or reposted', 'rapls-copy-notice' ),
 			__( 'Teams that work in Slack, Chatwork or Discord rather than email', 'rapls-copy-notice' ),
@@ -161,7 +161,7 @@ class Upsell {
 		}
 		echo '</ul></section>';
 
-		echo '<section class="qcnotice-pro-footer"><h2>' . esc_html__( 'Want to act on copies, not just count them?', 'rapls-copy-notice' ) . '</h2>';
+		echo '<section class="rapls-cn-pro-footer"><h2>' . esc_html__( 'Want to act on copies, not just count them?', 'rapls-copy-notice' ) . '</h2>';
 		echo '<p>' . $cta . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped parts above.
 		echo '<p class="description">' . esc_html__( 'One-time purchase, no subscription. Pro is installed next to this plugin and adds its tabs to this screen; your log and settings stay as they are.', 'rapls-copy-notice' ) . '</p>';
 		echo '</section>';

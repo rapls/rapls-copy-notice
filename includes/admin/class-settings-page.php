@@ -2,12 +2,12 @@
 /**
  * Settings tabs.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice\Admin;
+namespace Rapls\CopyNotice\Admin;
 
-use QuietCopyNotice\Settings;
+use Rapls\CopyNotice\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -101,7 +101,7 @@ class Settings_Page {
 	private function notifications() {
 		$this->row_start( 'notify_email', __( 'Send notifications to', 'rapls-copy-notice' ) );
 		printf(
-			'<input type="email" class="regular-text" id="qcnotice-notify_email" name="qcnotice[notify_email]" value="%1$s" placeholder="%2$s" aria-describedby="%3$s" />',
+			'<input type="email" class="regular-text" id="rapls-cn-notify_email" name="rapls_cn[notify_email]" value="%1$s" placeholder="%2$s" aria-describedby="%3$s" />',
 			esc_attr( $this->settings['notify_email'] ),
 			esc_attr( (string) get_option( 'admin_email' ) ),
 			esc_attr( self::help_id( 'notify_email' ) )
@@ -110,7 +110,7 @@ class Settings_Page {
 
 		$this->row_start( 'subject_label', __( 'Email subject', 'rapls-copy-notice' ) );
 		printf(
-			'<input type="text" class="regular-text" id="qcnotice-subject_label" name="qcnotice[subject_label]" value="%1$s" maxlength="%2$d" placeholder="%3$s" aria-describedby="%4$s" />',
+			'<input type="text" class="regular-text" id="rapls-cn-subject_label" name="rapls_cn[subject_label]" value="%1$s" maxlength="%2$d" placeholder="%3$s" aria-describedby="%4$s" />',
 			esc_attr( $this->settings['subject_label'] ),
 			(int) Settings::SUBJECT_MAX,
 			esc_attr__( 'Copy notification', 'rapls-copy-notice' ),
@@ -126,7 +126,7 @@ class Settings_Page {
 		);
 		foreach ( $modes as $value => $label ) {
 			printf(
-				'<label><input type="radio" name="qcnotice[notify_mode]" value="%1$s"%2$s /> %3$s</label><br />',
+				'<label><input type="radio" name="rapls_cn[notify_mode]" value="%1$s"%2$s /> %3$s</label><br />',
 				esc_attr( $value ),
 				checked( $this->settings['notify_mode'], $value, false ),
 				esc_html( $label )
@@ -160,7 +160,7 @@ class Settings_Page {
 					)
 					: __( 'There is no valid address to send notifications to. Enter one in "Send notifications to", or correct the Administration Email Address under Settings → General.', 'rapls-copy-notice' )
 			) . '</p>';
-			submit_button( __( 'Send a test email', 'rapls-copy-notice' ), 'secondary', 'qcnotice_send_test', false, '' !== $to ? null : array( 'disabled' => 'disabled' ) );
+			submit_button( __( 'Send a test email', 'rapls-copy-notice' ), 'secondary', 'rapls_cn_send_test', false, '' !== $to ? null : array( 'disabled' => 'disabled' ) );
 			echo '</form>';
 
 			Upsell::row(
@@ -188,7 +188,7 @@ class Settings_Page {
 
 		$this->row_start( 'content_selector', __( 'Content area', 'rapls-copy-notice' ) );
 		printf(
-			'<input type="text" class="large-text code" id="qcnotice-content_selector" name="qcnotice[content_selector]" value="%1$s" aria-describedby="%2$s" />',
+			'<input type="text" class="large-text code" id="rapls-cn-content_selector" name="rapls_cn[content_selector]" value="%1$s" aria-describedby="%2$s" />',
 			esc_attr( $this->settings['content_selector'] ),
 			esc_attr( self::help_id( 'content_selector' ) )
 		);
@@ -272,7 +272,7 @@ class Settings_Page {
 	 */
 	private function checkbox( $key, $label ) {
 		printf(
-			'<input type="hidden" name="qcnotice[%1$s]" value="0" /><label><input type="checkbox" name="qcnotice[%1$s]" value="1"%2$s aria-describedby="%4$s" /> %3$s</label>',
+			'<input type="hidden" name="rapls_cn[%1$s]" value="0" /><label><input type="checkbox" name="rapls_cn[%1$s]" value="1"%2$s aria-describedby="%4$s" /> %3$s</label>',
 			esc_attr( $key ),
 			checked( $this->settings[ $key ], true, false ),
 			esc_html( $label ),
@@ -293,8 +293,8 @@ class Settings_Page {
 	private function text_row( $key, $label, $max, $placeholder, $help ) {
 		$this->row_start( $key, $label );
 		printf(
-			'<input type="text" class="large-text" id="%1$s" name="qcnotice[%2$s]" value="%3$s" maxlength="%4$d" placeholder="%5$s" aria-describedby="%6$s" />',
-			esc_attr( 'qcnotice-' . $key ),
+			'<input type="text" class="large-text" id="%1$s" name="rapls_cn[%2$s]" value="%3$s" maxlength="%4$d" placeholder="%5$s" aria-describedby="%6$s" />',
+			esc_attr( 'rapls-cn-' . $key ),
 			esc_attr( $key ),
 			esc_attr( $this->settings[ $key ] ),
 			(int) $max,
@@ -314,7 +314,7 @@ class Settings_Page {
 	private function row_start( $key, $label ) {
 		echo '<tr><th scope="row">';
 		if ( '' !== $key ) {
-			echo '<label for="' . esc_attr( 'qcnotice-' . $key ) . '">' . esc_html( $label ) . '</label>';
+			echo '<label for="' . esc_attr( 'rapls-cn-' . $key ) . '">' . esc_html( $label ) . '</label>';
 		} else {
 			echo esc_html( $label );
 		}
@@ -343,7 +343,7 @@ class Settings_Page {
 	 * @return string
 	 */
 	private static function help_id( $key ) {
-		return 'qcnotice-' . $key . '-description';
+		return 'rapls-cn-' . $key . '-description';
 	}
 
 	/**
@@ -359,14 +359,14 @@ class Settings_Page {
 		$bounds = Settings::bounds()[ $key ];
 		$this->row_start( $key, $label );
 		printf(
-			'<input type="number" class="small-text" id="%1$s" name="qcnotice[%2$s]" value="%3$d" min="%4$d" max="%5$d" step="1" aria-describedby="%7$s %8$s" /> <span id="%7$s">%6$s</span>',
-			esc_attr( 'qcnotice-' . $key ),
+			'<input type="number" class="small-text" id="%1$s" name="rapls_cn[%2$s]" value="%3$d" min="%4$d" max="%5$d" step="1" aria-describedby="%7$s %8$s" /> <span id="%7$s">%6$s</span>',
+			esc_attr( 'rapls-cn-' . $key ),
 			esc_attr( $key ),
 			(int) $this->settings[ $key ],
 			(int) $bounds[0],
 			(int) $bounds[1],
 			esc_html( $unit ),
-			esc_attr( 'qcnotice-' . $key . '-unit' ),
+			esc_attr( 'rapls-cn-' . $key . '-unit' ),
 			esc_attr( self::help_id( $key ) )
 		);
 		$this->row_end( $help, $key );
@@ -383,8 +383,8 @@ class Settings_Page {
 	private function textarea_row( $key, $label, $help ) {
 		$this->row_start( $key, $label );
 		printf(
-			'<textarea class="large-text code" rows="4" id="%1$s" name="qcnotice[%2$s]" aria-describedby="%4$s">%3$s</textarea>',
-			esc_attr( 'qcnotice-' . $key ),
+			'<textarea class="large-text code" rows="4" id="%1$s" name="rapls_cn[%2$s]" aria-describedby="%4$s">%3$s</textarea>',
+			esc_attr( 'rapls-cn-' . $key ),
 			esc_attr( $key ),
 			esc_textarea( implode( "\n", (array) $this->settings[ $key ] ) ),
 			esc_attr( self::help_id( $key ) )
@@ -404,7 +404,7 @@ class Settings_Page {
 		echo '<fieldset aria-describedby="' . esc_attr( self::help_id( $key ) ) . '"><legend class="screen-reader-text">' . esc_html( $legend ) . '</legend>';
 		foreach ( $choices as $value => $label ) {
 			printf(
-				'<label><input type="checkbox" name="qcnotice[%1$s][]" value="%2$s"%3$s /> %4$s</label><br />',
+				'<label><input type="checkbox" name="rapls_cn[%1$s][]" value="%2$s"%3$s /> %4$s</label><br />',
 				esc_attr( $key ),
 				esc_attr( $value ),
 				checked( in_array( (string) $value, (array) $this->settings[ $key ], true ), true, false ),

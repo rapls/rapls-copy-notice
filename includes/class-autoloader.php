@@ -2,18 +2,18 @@
 /**
  * Class autoloader.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Maps QuietCopyNotice\Foo_Bar to includes/class-foo-bar.php and
- * QuietCopyNotice\Admin\Foo_Bar to includes/admin/class-foo-bar.php.
+ * Maps Rapls\CopyNotice\Foo_Bar to includes/class-foo-bar.php and
+ * Rapls\CopyNotice\Admin\Foo_Bar to includes/admin/class-foo-bar.php.
  */
 class Autoloader {
 
@@ -45,7 +45,7 @@ class Autoloader {
 			$dir .= strtolower( $part ) . '/';
 		}
 
-		$path = QCNOTICE_DIR . 'includes/' . $dir . 'class-' . str_replace( '_', '-', strtolower( $class ) ) . '.php';
+		$path = RAPLS_CN_DIR . 'includes/' . $dir . 'class-' . str_replace( '_', '-', strtolower( $class ) ) . '.php';
 		if ( is_readable( $path ) ) {
 			require_once $path;
 		}

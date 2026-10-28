@@ -2,12 +2,12 @@
 /**
  * Dashboard widget.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice\Admin;
+namespace Rapls\CopyNotice\Admin;
 
-use QuietCopyNotice\Logger;
+use Rapls\CopyNotice\Logger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class Dashboard {
 
-	const WIDGET_ID = QCNOTICE_PREFIX . 'dashboard';
+	const WIDGET_ID = RAPLS_CN_PREFIX . 'dashboard';
 
 	const DAYS = 7;
 
@@ -58,7 +58,7 @@ class Dashboard {
 		$since = gmdate( 'Y-m-d H:i:s', time() - self::DAYS * DAY_IN_SECONDS );
 		$total = Logger::count_since( $since );
 
-		echo '<p class="qcnotice-dashboard-total">';
+		echo '<p class="rapls-cn-dashboard-total">';
 		echo esc_html(
 			sprintf(
 				/* translators: 1: number of copies, 2: number of days. */
@@ -72,14 +72,14 @@ class Dashboard {
 		$top = $total > 0 ? Logger::top_posts_since( $since, self::TOP ) : array();
 		if ( $top ) {
 			echo '<h3>' . esc_html__( 'Most copied posts', 'rapls-copy-notice' ) . '</h3>';
-			echo '<ol class="qcnotice-dashboard-top">';
+			echo '<ol class="rapls-cn-dashboard-top">';
 			foreach ( $top as $row ) {
 				$post_id = (int) $row['post_id'];
 				$title   = get_the_title( $post_id );
 				$title   = '' === $title ? __( '(no title)', 'rapls-copy-notice' ) : wp_strip_all_tags( html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ) );
 				printf(
 					'<li><a href="%1$s">%2$s</a> <span class="count">%3$s</span></li>',
-					esc_url( Admin::url( 'log', array( 'qcnotice_post' => $post_id ) ) ),
+					esc_url( Admin::url( 'log', array( 'rapls_cn_post' => $post_id ) ) ),
 					esc_html( $title ),
 					esc_html(
 						sprintf(

@@ -2,10 +2,10 @@
 /**
  * The public endpoint that receives copy events.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice;
+namespace Rapls\CopyNotice;
 
 use WP_REST_Request;
 use WP_REST_Response;
@@ -51,7 +51,7 @@ class Rest {
 	 * @return string
 	 */
 	public static function url() {
-		return rest_url( QCNOTICE_REST_NAMESPACE . self::ROUTE );
+		return rest_url( RAPLS_CN_REST_NAMESPACE . self::ROUTE );
 	}
 
 	/**
@@ -61,7 +61,7 @@ class Rest {
 	 */
 	public function register_route() {
 		register_rest_route(
-			QCNOTICE_REST_NAMESPACE,
+			RAPLS_CN_REST_NAMESPACE,
 			self::ROUTE,
 			array(
 				'methods'             => 'POST',

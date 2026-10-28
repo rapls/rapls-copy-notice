@@ -2,12 +2,12 @@
 /**
  * The log list table.
  *
- * @package QuietCopyNotice
+ * @package Rapls\CopyNotice
  */
 
-namespace QuietCopyNotice\Admin;
+namespace Rapls\CopyNotice\Admin;
 
-use QuietCopyNotice\Logger;
+use Rapls\CopyNotice\Logger;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -34,8 +34,8 @@ class Log_Table extends \WP_List_Table {
 	public function __construct() {
 		parent::__construct(
 			array(
-				'singular' => 'qcnotice-entry',
-				'plural'   => 'qcnotice-entries',
+				'singular' => 'rapls-cn-entry',
+				'plural'   => 'rapls-cn-entries',
 				'ajax'     => false,
 				'screen'   => get_current_screen(),
 			)
@@ -83,7 +83,7 @@ class Log_Table extends \WP_List_Table {
 	 */
 	private function filter_post_id() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter.
-		return isset( $_REQUEST['qcnotice_post'] ) ? absint( $_REQUEST['qcnotice_post'] ) : 0;
+		return isset( $_REQUEST['rapls_cn_post'] ) ? absint( $_REQUEST['rapls_cn_post'] ) : 0;
 	}
 
 	/**
@@ -93,7 +93,7 @@ class Log_Table extends \WP_List_Table {
 	 */
 	private function filter_paragraph() {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter, format-checked.
-		$value = isset( $_REQUEST['qcnotice_para'] ) ? strtolower( sanitize_key( wp_unslash( $_REQUEST['qcnotice_para'] ) ) ) : '';
+		$value = isset( $_REQUEST['rapls_cn_para'] ) ? strtolower( sanitize_key( wp_unslash( $_REQUEST['rapls_cn_para'] ) ) ) : '';
 		return preg_match( '/^[0-9a-f]{40}$/', $value ) ? $value : '';
 	}
 
@@ -103,7 +103,7 @@ class Log_Table extends \WP_List_Table {
 	 * @return void
 	 */
 	public function prepare_items() {
-		$per_page = $this->get_items_per_page( QCNOTICE_PREFIX . 'per_page', 20 );
+		$per_page = $this->get_items_per_page( RAPLS_CN_PREFIX . 'per_page', 20 );
 		$post_id  = $this->filter_post_id();
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only sort order, whitelisted.
 		$order = isset( $_GET['order'] ) && 'asc' === strtolower( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ? 'ASC' : 'DESC';
@@ -152,21 +152,21 @@ class Log_Table extends \WP_List_Table {
 		check_admin_referer( 'bulk-' . $this->_args['plural'] );
 
 		$ids  = isset( $_REQUEST['entry'] ) ? array_filter( array_map( 'absint', (array) wp_unslash( $_REQUEST['entry'] ) ) ) : array();
-		$args = array( 'qcnotice_msg' => 'none_selected' );
+		$args = array( 'rapls_cn_msg' => 'none_selected' );
 		if ( $ids ) {
 			$deleted = Logger::delete( $ids );
 			$args    = $deleted < 0
-				? array( 'qcnotice_msg' => 'delete_selected_failed' )
+				? array( 'rapls_cn_msg' => 'delete_selected_failed' )
 				: array(
-					'qcnotice_msg'   => 'deleted',
-					'qcnotice_count' => $deleted,
+					'rapls_cn_msg'   => 'deleted',
+					'rapls_cn_count' => $deleted,
 				);
 		}
 		if ( $this->filter_post_id() ) {
-			$args['qcnotice_post'] = $this->filter_post_id();
+			$args['rapls_cn_post'] = $this->filter_post_id();
 		}
 		if ( $this->filter_paragraph() ) {
-			$args['qcnotice_para'] = $this->filter_paragraph();
+			$args['rapls_cn_para'] = $this->filter_paragraph();
 		}
 		// Back to the same view: an ascending sort and the page are kept (the
 		// table moves to its last page itself if this one is now past it).
@@ -217,8 +217,8 @@ class Log_Table extends \WP_List_Table {
 		_prime_post_caches( $ids, false, false );
 
 		echo '<div class="alignleft actions">';
-		echo '<label class="screen-reader-text" for="qcnotice-post-filter">' . esc_html__( 'Filter by post', 'rapls-copy-notice' ) . '</label>';
-		echo '<select name="qcnotice_post" id="qcnotice-post-filter">';
+		echo '<label class="screen-reader-text" for="rapls-cn-post-filter">' . esc_html__( 'Filter by post', 'rapls-copy-notice' ) . '</label>';
+		echo '<select name="rapls_cn_post" id="rapls-cn-post-filter">';
 		echo '<option value="0">' . esc_html__( 'All posts', 'rapls-copy-notice' ) . '</option>';
 		foreach ( $ids as $id ) {
 			printf(
@@ -234,11 +234,11 @@ class Log_Table extends \WP_List_Table {
 		$para = $this->filter_paragraph();
 		if ( $para ) {
 			// Keep the paragraph filter across paging and bulk actions, and offer a way out.
-			echo '<input type="hidden" name="qcnotice_para" value="' . esc_attr( $para ) . '" />';
+			echo '<input type="hidden" name="rapls_cn_para" value="' . esc_attr( $para ) . '" />';
 			printf(
-				' <span class="qcnotice-para-filter">%1$s <a href="%2$s">%3$s</a></span>',
+				' <span class="rapls-cn-para-filter">%1$s <a href="%2$s">%3$s</a></span>',
 				esc_html__( 'Showing one paragraph only.', 'rapls-copy-notice' ),
-				esc_url( Admin::url( 'log', $current ? array( 'qcnotice_post' => $current ) : array() ) ),
+				esc_url( Admin::url( 'log', $current ? array( 'rapls_cn_post' => $current ) : array() ) ),
 				esc_html__( 'Show all paragraphs', 'rapls-copy-notice' )
 			);
 		}
@@ -253,7 +253,7 @@ class Log_Table extends \WP_List_Table {
 	 */
 	protected function column_cb( $item ) {
 		return sprintf(
-			'<input type="checkbox" name="entry[]" value="%1$d" id="qcnotice-entry-%1$d" /><label for="qcnotice-entry-%1$d" class="screen-reader-text">%2$s</label>',
+			'<input type="checkbox" name="entry[]" value="%1$d" id="rapls-cn-entry-%1$d" /><label for="rapls-cn-entry-%1$d" class="screen-reader-text">%2$s</label>',
 			(int) $item['id'],
 			esc_html(
 				sprintf(
@@ -289,7 +289,7 @@ class Log_Table extends \WP_List_Table {
 		$link    = get_permalink( $post_id );
 		$out     = $link ? '<a href="' . esc_url( $link ) . '">' . $label . '</a>' : $label;
 
-		$out .= '<div class="row-actions"><a href="' . esc_url( Admin::url( 'log', array( 'qcnotice_post' => $post_id ) ) ) . '">' . esc_html__( 'Show only this post', 'rapls-copy-notice' ) . '</a></div>';
+		$out .= '<div class="row-actions"><a href="' . esc_url( Admin::url( 'log', array( 'rapls_cn_post' => $post_id ) ) ) . '">' . esc_html__( 'Show only this post', 'rapls-copy-notice' ) . '</a></div>';
 		return $out;
 	}
 
@@ -308,8 +308,8 @@ class Log_Table extends \WP_List_Table {
 		}
 
 		$shown = mb_strlen( $text ) > self::TEXT_EXCERPT
-			? sprintf( '<details class="qcnotice-text"><summary>%1$s</summary><div class="qcnotice-text-full">%2$s</div></details>', esc_html( $excerpt ), esc_html( $text ) )
-			: '<span class="qcnotice-text">' . esc_html( $excerpt ) . '</span><br />';
+			? sprintf( '<details class="rapls-cn-text"><summary>%1$s</summary><div class="rapls-cn-text-full">%2$s</div></details>', esc_html( $excerpt ), esc_html( $text ) )
+			: '<span class="rapls-cn-text">' . esc_html( $excerpt ) . '</span><br />';
 
 		$out = sprintf(
 			'%1$s<span class="description">%2$s</span>',
@@ -331,8 +331,8 @@ class Log_Table extends \WP_List_Table {
 					Admin::url(
 						'log',
 						array(
-							'qcnotice_post' => (int) $item['post_id'],
-							'qcnotice_para' => $para,
+							'rapls_cn_post' => (int) $item['post_id'],
+							'rapls_cn_para' => $para,
 						)
 					)
 				),
@@ -364,9 +364,9 @@ class Log_Table extends \WP_List_Table {
 		$summary = self::summarize_user_agent( $ua );
 		$out     = '' === $ua || $summary === $ua
 			? esc_html( $summary )
-			: '<details class="qcnotice-text"><summary>' . esc_html( $summary ) . '</summary><code>' . esc_html( $ua ) . '</code></details>';
+			: '<details class="rapls-cn-text"><summary>' . esc_html( $summary ) . '</summary><code>' . esc_html( $ua ) . '</code></details>';
 		if ( '' !== $item['referrer_host'] ) {
-			$out .= '<span class="description qcnotice-from">' . esc_html(
+			$out .= '<span class="description rapls-cn-from">' . esc_html(
 				sprintf(
 					/* translators: %s: host name of the referring page. */
 					__( 'Came from: %s', 'rapls-copy-notice' ),
