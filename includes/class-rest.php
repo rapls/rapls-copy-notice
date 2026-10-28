@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * POST /wp-json/quiet-copy-notice/v1/log.
+ * POST /wp-json/rapls-copy-notice/v1/log.
  *
  * The endpoint is public and takes no nonce, because cached pages would serve
  * an expired one. It is protected by rate limits, a check that the post is

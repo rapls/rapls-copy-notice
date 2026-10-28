@@ -1,10 +1,10 @@
-=== Quiet Copy Notice ===
+=== Rapls Copy Notice ===
 Contributors: rapls
 Tags: copy, notification, analytics, content protection, copy tracking
 Requires at least: 6.3
 Tested up to: 7.1
 Requires PHP: 8.2
-Stable tag: 1.3.17
+Stable tag: 1.3.18
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,7 +17,7 @@ Notice records what was copied and from which post, and tells you by email.
 It does not stop anyone from copying. Readers can still select, copy and
 right-click as usual; you simply find out which passages are being taken.
 
-* A log under **Tools → Quiet Copy Notice**: date, post, copied text, shortened IP
+* A log under **Tools → Rapls Copy Notice**: date, post, copied text, shortened IP
   address and browser. Filter by post, delete selected entries or everything.
 * Email notifications, either one summary per hour (the default) or one email
   per copy with an hourly cap, after which copies roll into the summary.
@@ -38,10 +38,10 @@ right-click as usual; you simply find out which passages are being taken.
 * Log entries are deleted automatically after 90 days (adjustable).
 * Works with page caching: the detection script needs no per-visitor token.
 
-= Quiet Copy Notice Pro (optional add-on) =
+= Rapls Copy Notice Pro (optional add-on) =
 
 Everything described above is free, with no trial and no limits tied to an
-upgrade, and this plugin does not need anything else to work. Quiet Copy Notice
+upgrade, and this plugin does not need anything else to work. Rapls Copy Notice
 Pro is a separate plugin, sold on the author's website, for sites that want to
 act on copies:
 
@@ -122,7 +122,7 @@ plugin treats all of it as untrusted.
 
 = Privacy =
 
-Quiet Copy Notice sets no cookies and stores nothing in the visitor's
+Rapls Copy Notice sets no cookies and stores nothing in the visitor's
 browser. To enforce the rate limits, the site keeps a one-way hash of each
 visitor's IP address (of its /64 block for IPv6) for up to an hour, in a
 counter that then expires. The optional reader message and source link use
@@ -133,7 +133,7 @@ through whatever mail system the site uses (an SMTP plugin or email service,
 for example). Suggested wording for your privacy policy is added to
 **Settings → Privacy**.
 
-An add-on can send notifications elsewhere: Quiet Copy Notice Pro, for
+An add-on can send notifications elsewhere: Rapls Copy Notice Pro, for
 example, sends them to the chat services or webhook you switch on. It then
 changes the suggested privacy policy wording to name those services and what
 they receive.
@@ -144,7 +144,7 @@ they receive.
 2. That's it. With the default settings, copies of 20 or more characters from
    posts and pages are logged and summarized to the site administration email
    once an hour.
-3. Optional: adjust the settings under **Tools → Quiet Copy Notice**.
+3. Optional: adjust the settings under **Tools → Rapls Copy Notice**.
 
 == Frequently Asked Questions ==
 
@@ -194,7 +194,7 @@ that really come from those proxies.
 
 = I used Check Copy Contents. Can I switch to this plugin? =
 
-Yes. Quiet Copy Notice covers the same need, logging copied text and emailing
+Yes. Rapls Copy Notice covers the same need, logging copied text and emailing
 you about it, and it is a separate plugin written from scratch. If that plugin's
 settings are still in your database when you first activate this one, the
 notification address, minimum length and a custom subject are carried over.
@@ -202,7 +202,7 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Screenshots ==
 
-1. The log under Tools → Quiet Copy Notice: date, post, copied text, shortened IP address and browser, with a filter by post.
+1. The log under Tools → Rapls Copy Notice: date, post, copied text, shortened IP address and browser, with a filter by post.
 2. A summary email: plain text, with the copied text quoted, the post and its address, and the length of each copy.
 3. The Notifications tab: where emails go, the subject label, hourly summaries or one email per copy, and a test email button.
 4. The Detection tab: minimum length, post types, the content area, and who and what to ignore.
@@ -211,5 +211,5 @@ Deactivate the old plugin afterwards, or you will get two emails per copy.
 
 == Changelog ==
 
-= 1.3.17 =
+= 1.3.18 =
 * First release.

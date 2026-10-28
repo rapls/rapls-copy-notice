@@ -40,31 +40,31 @@ class Site_Health {
 	 */
 	public function add_tests( $tests ) {
 		$tests['direct'][ QCNOTICE_PREFIX . 'table' ]        = array(
-			'label' => __( 'Quiet Copy Notice log table', 'quiet-copy-notice' ),
+			'label' => __( 'Rapls Copy Notice log table', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_table' ),
 		);
 		$tests['direct'][ QCNOTICE_PREFIX . 'cron' ]         = array(
-			'label' => __( 'Quiet Copy Notice scheduled tasks', 'quiet-copy-notice' ),
+			'label' => __( 'Rapls Copy Notice scheduled tasks', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_cron' ),
 		);
 		$tests['direct'][ QCNOTICE_PREFIX . 'notify_email' ] = array(
-			'label' => __( 'Quiet Copy Notice notification address', 'quiet-copy-notice' ),
+			'label' => __( 'Rapls Copy Notice notification address', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_notify_email' ),
 		);
 		$tests['direct'][ QCNOTICE_PREFIX . 'proxy' ]        = array(
-			'label' => __( 'Quiet Copy Notice visitor IP addresses', 'quiet-copy-notice' ),
+			'label' => __( 'Rapls Copy Notice visitor IP addresses', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_proxy' ),
 		);
 		$tests['direct'][ QCNOTICE_PREFIX . 'pending' ]      = array(
-			'label' => __( 'Quiet Copy Notice notification delivery', 'quiet-copy-notice' ),
+			'label' => __( 'Rapls Copy Notice notification delivery', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_pending' ),
 		);
 		$tests['direct'][ QCNOTICE_PREFIX . 'post_types' ]   = array(
-			'label' => __( 'Quiet Copy Notice monitored post types', 'quiet-copy-notice' ),
+			'label' => __( 'Rapls Copy Notice monitored post types', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_post_types' ),
 		);
 		$tests['direct'][ QCNOTICE_PREFIX . 'locks' ]        = array(
-			'label' => __( 'Quiet Copy Notice database locks', 'quiet-copy-notice' ),
+			'label' => __( 'Rapls Copy Notice database locks', 'rapls-copy-notice' ),
 			'test'  => array( $this, 'test_locks' ),
 		);
 		return $tests;
@@ -86,16 +86,16 @@ class Site_Health {
 			return $this->result(
 				'table',
 				'good',
-				__( 'The copy log table is in place', 'quiet-copy-notice' ),
-				__( 'Copies can be stored.', 'quiet-copy-notice' )
+				__( 'The copy log table is in place', 'rapls-copy-notice' ),
+				__( 'Copies can be stored.', 'rapls-copy-notice' )
 			);
 		}
 
 		return $this->result(
 			'table',
 			'critical',
-			__( 'The copy log table is missing or out of date', 'quiet-copy-notice' ),
-			__( 'Copies cannot be stored until the table is created. Deactivate and reactivate Quiet Copy Notice to create it. If this message stays, the database user may not be allowed to create tables.', 'quiet-copy-notice' )
+			__( 'The copy log table is missing or out of date', 'rapls-copy-notice' ),
+			__( 'Copies cannot be stored until the table is created. Deactivate and reactivate Rapls Copy Notice to create it. If this message stays, the database user may not be allowed to create tables.', 'rapls-copy-notice' )
 		);
 	}
 
@@ -108,12 +108,12 @@ class Site_Health {
 		$problems = array();
 		$messages = array(
 			Cron::DIGEST_HOOK => array(
-				__( 'The hourly summary email is not scheduled.', 'quiet-copy-notice' ),
-				__( 'The hourly summary email is more than an hour late.', 'quiet-copy-notice' ),
+				__( 'The hourly summary email is not scheduled.', 'rapls-copy-notice' ),
+				__( 'The hourly summary email is more than an hour late.', 'rapls-copy-notice' ),
 			),
 			Cron::PURGE_HOOK  => array(
-				__( 'The daily removal of old log entries is not scheduled.', 'quiet-copy-notice' ),
-				__( 'The daily removal of old log entries is more than an hour late.', 'quiet-copy-notice' ),
+				__( 'The daily removal of old log entries is not scheduled.', 'rapls-copy-notice' ),
+				__( 'The daily removal of old log entries is more than an hour late.', 'rapls-copy-notice' ),
 			),
 		);
 
@@ -130,17 +130,17 @@ class Site_Health {
 			return $this->result(
 				'cron',
 				'good',
-				__( 'Copy summaries and log cleanup are scheduled', 'quiet-copy-notice' ),
-				__( 'The hourly summary email and the daily removal of old log entries are scheduled with WP-Cron.', 'quiet-copy-notice' )
+				__( 'Copy summaries and log cleanup are scheduled', 'rapls-copy-notice' ),
+				__( 'The hourly summary email and the daily removal of old log entries are scheduled with WP-Cron.', 'rapls-copy-notice' )
 			);
 		}
 
 		return $this->result(
 			'cron',
 			'recommended',
-			__( 'Copy summaries or log cleanup are not running on time', 'quiet-copy-notice' ),
+			__( 'Copy summaries or log cleanup are not running on time', 'rapls-copy-notice' ),
 			// Separate paragraphs, so no language has to join sentences with a space.
-			array_merge( $problems, array( __( 'WP-Cron runs when the site gets visits, so a very quiet site, or one with WP-Cron disabled and no server cron job, delays these tasks.', 'quiet-copy-notice' ) ) )
+			array_merge( $problems, array( __( 'WP-Cron runs when the site gets visits, so a very quiet site, or one with WP-Cron disabled and no server cron job, delays these tasks.', 'rapls-copy-notice' ) ) )
 		);
 	}
 
@@ -154,16 +154,16 @@ class Site_Health {
 			return $this->result(
 				'notify_email',
 				'good',
-				__( 'Copy notifications have a valid address', 'quiet-copy-notice' ),
-				__( 'Copy notifications are sent to a valid email address.', 'quiet-copy-notice' )
+				__( 'Copy notifications have a valid address', 'rapls-copy-notice' ),
+				__( 'Copy notifications are sent to a valid email address.', 'rapls-copy-notice' )
 			);
 		}
 
 		return $this->result(
 			'notify_email',
 			'recommended',
-			__( 'Copy notifications have no valid address', 'quiet-copy-notice' ),
-			__( 'Copies are still recorded in the log, but no email can be sent. Enter an address in "Send notifications to" on the Notifications tab (Tools → Quiet Copy Notice), or correct the Administration Email Address under Settings → General.', 'quiet-copy-notice' ),
+			__( 'Copy notifications have no valid address', 'rapls-copy-notice' ),
+			__( 'Copies are still recorded in the log, but no email can be sent. Enter an address in "Send notifications to" on the Notifications tab (Tools → Rapls Copy Notice), or correct the Administration Email Address under Settings → General.', 'rapls-copy-notice' ),
 			'notifications'
 		);
 	}
@@ -180,8 +180,8 @@ class Site_Health {
 			return $this->result(
 				'pending',
 				'good',
-				__( 'Copy notifications are being delivered', 'quiet-copy-notice' ),
-				__( 'No copy recorded more than two hours ago is still waiting to be notified.', 'quiet-copy-notice' )
+				__( 'Copy notifications are being delivered', 'rapls-copy-notice' ),
+				__( 'No copy recorded more than two hours ago is still waiting to be notified.', 'rapls-copy-notice' )
 			);
 		}
 
@@ -190,10 +190,10 @@ class Site_Health {
 			'recommended',
 			sprintf(
 				/* translators: %s: number of log entries. */
-				_n( 'Notification for %s copy has not been sent', 'Notifications for %s copies have not been sent', $pending, 'quiet-copy-notice' ),
+				_n( 'Notification for %s copy has not been sent', 'Notifications for %s copies have not been sent', $pending, 'rapls-copy-notice' ),
 				number_format_i18n( $pending )
 			),
-			__( 'Copies recorded more than two hours ago are still waiting to be sent to you. Sending may be failing, there may be no valid notification address, or the hourly summary may not be running. Use "Send a test email" on the Notifications tab to check that this site can send email (an SMTP plugin may be needed), and look on this screen for "Copy summaries or log cleanup are not running on time". These copies stay in the log and go out with the next summary once this is fixed.', 'quiet-copy-notice' ),
+			__( 'Copies recorded more than two hours ago are still waiting to be sent to you. Sending may be failing, there may be no valid notification address, or the hourly summary may not be running. Use "Send a test email" on the Notifications tab to check that this site can send email (an SMTP plugin may be needed), and look on this screen for "Copy summaries or log cleanup are not running on time". These copies stay in the log and go out with the next summary once this is fixed.', 'rapls-copy-notice' ),
 			'notifications'
 		);
 	}
@@ -208,16 +208,16 @@ class Site_Health {
 			return $this->result(
 				'post_types',
 				'good',
-				__( 'Copies are detected on at least one post type', 'quiet-copy-notice' ),
-				__( 'At least one post type is selected on the Detection tab (Tools → Quiet Copy Notice).', 'quiet-copy-notice' )
+				__( 'Copies are detected on at least one post type', 'rapls-copy-notice' ),
+				__( 'At least one post type is selected on the Detection tab (Tools → Rapls Copy Notice).', 'rapls-copy-notice' )
 			);
 		}
 
 		return $this->result(
 			'post_types',
 			'recommended',
-			__( 'No post type is monitored for copies', 'quiet-copy-notice' ),
-			__( 'No post type is selected on the Detection tab (Tools → Quiet Copy Notice), so no copies are detected anywhere on the site.', 'quiet-copy-notice' ),
+			__( 'No post type is monitored for copies', 'rapls-copy-notice' ),
+			__( 'No post type is selected on the Detection tab (Tools → Rapls Copy Notice), so no copies are detected anywhere on the site.', 'rapls-copy-notice' ),
 			'detection'
 		);
 	}
@@ -233,18 +233,18 @@ class Site_Health {
 			return $this->result(
 				'locks',
 				'good',
-				__( 'The database supports the locks the copy limits use', 'quiet-copy-notice' ),
-				__( 'The rate limits and the instant email limit hold even when many copies arrive at the same moment.', 'quiet-copy-notice' )
+				__( 'The database supports the locks the copy limits use', 'rapls-copy-notice' ),
+				__( 'The rate limits and the instant email limit hold even when many copies arrive at the same moment.', 'rapls-copy-notice' )
 			);
 		}
 
 		return $this->result(
 			'locks',
 			'recommended',
-			__( 'The database does not allow the locks the copy limits use', 'quiet-copy-notice' ),
+			__( 'The database does not allow the locks the copy limits use', 'rapls-copy-notice' ),
 			array(
-				__( 'This site\'s database does not allow named locks (MySQL\'s GET_LOCK function), as some database clusters do not.', 'quiet-copy-notice' ),
-				__( 'Copies are still recorded and summarized, but the rate limits may not hold against many reports sent at the same moment, and two summaries running at once may send the same copies twice. "One email per copy, right away" sends nothing right away: those copies go into the hourly summary instead. Ask your host whether GET_LOCK can be enabled.', 'quiet-copy-notice' ),
+				__( 'This site\'s database does not allow named locks (MySQL\'s GET_LOCK function), as some database clusters do not.', 'rapls-copy-notice' ),
+				__( 'Copies are still recorded and summarized, but the rate limits may not hold against many reports sent at the same moment, and two summaries running at once may send the same copies twice. "One email per copy, right away" sends nothing right away: those copies go into the hourly summary instead. Ask your host whether GET_LOCK can be enabled.', 'rapls-copy-notice' ),
 			)
 		);
 	}
@@ -283,18 +283,18 @@ class Site_Health {
 			return $this->result(
 				'proxy',
 				'good',
-				__( 'Visitor IP addresses are read safely', 'quiet-copy-notice' ),
+				__( 'Visitor IP addresses are read safely', 'rapls-copy-notice' ),
 				empty( $trusted )
-					? __( 'Visitor IP addresses come from the direct connection. Forwarding headers are used only from proxies you list as trusted.', 'quiet-copy-notice' )
-					: __( 'Forwarding headers are used only for requests from the addresses in "Trusted proxies"; other requests use the address of the direct connection.', 'quiet-copy-notice' )
+					? __( 'Visitor IP addresses come from the direct connection. Forwarding headers are used only from proxies you list as trusted.', 'rapls-copy-notice' )
+					: __( 'Forwarding headers are used only for requests from the addresses in "Trusted proxies"; other requests use the address of the direct connection.', 'rapls-copy-notice' )
 			);
 		}
 
 		return $this->result(
 			'proxy',
 			'recommended',
-			__( 'This site may be behind a proxy that is not listed as trusted', 'quiet-copy-notice' ),
-			__( 'This request arrived with a forwarding header, so the site may sit behind a reverse proxy or CDN. If it does, every visitor appears with the proxy\'s IP address, and the per-IP rate limit applies to all of them together. Add the proxy\'s addresses in "Trusted proxies" on the Detection tab (Tools → Quiet Copy Notice). If you do not use a proxy, nothing needs to change.', 'quiet-copy-notice' ),
+			__( 'This site may be behind a proxy that is not listed as trusted', 'rapls-copy-notice' ),
+			__( 'This request arrived with a forwarding header, so the site may sit behind a reverse proxy or CDN. If it does, every visitor appears with the proxy\'s IP address, and the per-IP rate limit applies to all of them together. Add the proxy\'s addresses in "Trusted proxies" on the Detection tab (Tools → Rapls Copy Notice). If you do not use a proxy, nothing needs to change.', 'rapls-copy-notice' ),
 			'detection'
 		);
 	}
@@ -306,48 +306,48 @@ class Site_Health {
 	 * @return array
 	 */
 	public function add_debug_info( $info ) {
-		$yes = __( 'Yes', 'quiet-copy-notice' );
-		$no  = __( 'No', 'quiet-copy-notice' );
+		$yes = __( 'Yes', 'rapls-copy-notice' );
+		$no  = __( 'No', 'rapls-copy-notice' );
 
 		$next_digest = wp_next_scheduled( Cron::DIGEST_HOOK );
 
 		$info[ QCNOTICE_SLUG ] = array(
-			'label'  => __( 'Quiet Copy Notice', 'quiet-copy-notice' ),
+			'label'  => __( 'Rapls Copy Notice', 'rapls-copy-notice' ),
 			'fields' => array(
 				'version'      => array(
-					'label' => __( 'Version', 'quiet-copy-notice' ),
+					'label' => __( 'Version', 'rapls-copy-notice' ),
 					'value' => QCNOTICE_VERSION,
 				),
 				'db_version'   => array(
-					'label' => __( 'Database schema', 'quiet-copy-notice' ),
+					'label' => __( 'Database schema', 'rapls-copy-notice' ),
 					'value' => (string) get_option( Installer::DB_VERSION_OPTION, '' ),
 				),
 				'records'      => array(
-					'label' => __( 'Log entries stored', 'quiet-copy-notice' ),
+					'label' => __( 'Log entries stored', 'rapls-copy-notice' ),
 					'value' => Logger::count(),
 				),
 				'records_7d'   => array(
-					'label' => __( 'Log entries in the last 7 days', 'quiet-copy-notice' ),
+					'label' => __( 'Log entries in the last 7 days', 'rapls-copy-notice' ),
 					'value' => Logger::count_since( gmdate( 'Y-m-d H:i:s', time() - 7 * DAY_IN_SECONDS ) ),
 				),
 				'notify_mode'  => array(
-					'label' => __( 'Notification mode', 'quiet-copy-notice' ),
-					'value' => Settings::MODE_INSTANT === Settings::get( 'notify_mode' ) ? __( 'One email per copy, right away', 'quiet-copy-notice' ) : __( 'One summary email per hour', 'quiet-copy-notice' ),
+					'label' => __( 'Notification mode', 'rapls-copy-notice' ),
+					'value' => Settings::MODE_INSTANT === Settings::get( 'notify_mode' ) ? __( 'One email per copy, right away', 'rapls-copy-notice' ) : __( 'One summary email per hour', 'rapls-copy-notice' ),
 					'debug' => Settings::get( 'notify_mode' ),
 				),
 				'next_digest'  => array(
-					'label' => __( 'Next summary check', 'quiet-copy-notice' ),
-					'value' => $next_digest ? wp_date( 'Y-m-d H:i:s', $next_digest ) : __( 'Not scheduled', 'quiet-copy-notice' ),
+					'label' => __( 'Next summary check', 'rapls-copy-notice' ),
+					'value' => $next_digest ? wp_date( 'Y-m-d H:i:s', $next_digest ) : __( 'Not scheduled', 'rapls-copy-notice' ),
 				),
 				'post_types'   => array(
-					'label' => __( 'Monitored post types', 'quiet-copy-notice' ),
+					'label' => __( 'Monitored post types', 'rapls-copy-notice' ),
 					'value' => implode( ', ', Settings::get( 'post_types' ) ),
 				),
 				'rate_limits'  => array(
-					'label' => __( 'Rate limits', 'quiet-copy-notice' ),
+					'label' => __( 'Rate limits', 'rapls-copy-notice' ),
 					'value' => sprintf(
 						/* translators: 1: copies per minute per IP address, 2: copies per hour per IP address, 3: copies per hour for the whole site. */
-						__( '%1$d a minute and %2$d an hour per IP address, %3$d an hour for the site', 'quiet-copy-notice' ),
+						__( '%1$d a minute and %2$d an hour per IP address, %3$d an hour for the site', 'rapls-copy-notice' ),
 						Settings::get( 'rate_ip_per_minute' ),
 						Rate_Limit::ip_hourly_limit( Settings::get( 'rate_ip_per_minute' ), Settings::get( 'rate_site_per_hour' ) ),
 						Settings::get( 'rate_site_per_hour' )
@@ -355,27 +355,27 @@ class Site_Health {
 					'debug' => sprintf( '%d/min per IP, %d/h per IP, %d/h site', Settings::get( 'rate_ip_per_minute' ), Rate_Limit::ip_hourly_limit( Settings::get( 'rate_ip_per_minute' ), Settings::get( 'rate_site_per_hour' ) ), Settings::get( 'rate_site_per_hour' ) ),
 				),
 				'proxies'      => array(
-					'label' => __( 'Trusted proxies', 'quiet-copy-notice' ),
+					'label' => __( 'Trusted proxies', 'rapls-copy-notice' ),
 					'value' => count( Settings::get( 'trusted_proxies' ) ),
 				),
 				'anonymize_ip' => array(
-					'label' => __( 'IP addresses shortened', 'quiet-copy-notice' ),
+					'label' => __( 'IP addresses shortened', 'rapls-copy-notice' ),
 					'value' => Settings::get( 'anonymize_ip' ) ? $yes : $no,
 				),
 				'retention'    => array(
-					'label' => __( 'Retention (days)', 'quiet-copy-notice' ),
+					'label' => __( 'Retention (days)', 'rapls-copy-notice' ),
 					'value' => Settings::get( 'retention_days' ),
 				),
 				'locks'        => array(
-					'label' => __( 'Database locks available', 'quiet-copy-notice' ),
+					'label' => __( 'Database locks available', 'rapls-copy-notice' ),
 					'value' => Lock::available() ? $yes : $no,
 				),
 				'object_cache' => array(
-					'label' => __( 'Rate-limit counters stored in', 'quiet-copy-notice' ),
-					'value' => wp_using_ext_object_cache() ? __( 'Object cache', 'quiet-copy-notice' ) : __( 'Database (short-lived transients)', 'quiet-copy-notice' ),
+					'label' => __( 'Rate-limit counters stored in', 'rapls-copy-notice' ),
+					'value' => wp_using_ext_object_cache() ? __( 'Object cache', 'rapls-copy-notice' ) : __( 'Database (short-lived transients)', 'rapls-copy-notice' ),
 				),
 				'visitor_side' => array(
-					'label' => __( 'Message / source link for readers', 'quiet-copy-notice' ),
+					'label' => __( 'Message / source link for readers', 'rapls-copy-notice' ),
 					'value' => ( Settings::get( 'show_message' ) ? $yes : $no ) . ' / ' . ( Settings::get( 'add_attribution' ) ? $yes : $no ),
 				),
 			),
@@ -400,7 +400,7 @@ class Site_Health {
 			$actions = sprintf(
 				'<p><a href="%1$s">%2$s</a></p>',
 				esc_url( Admin\Admin::url( $tab ) ),
-				esc_html__( 'Open Quiet Copy Notice settings', 'quiet-copy-notice' )
+				esc_html__( 'Open Rapls Copy Notice settings', 'rapls-copy-notice' )
 			);
 		}
 
@@ -408,7 +408,7 @@ class Site_Health {
 			'label'       => $label,
 			'status'      => $status,
 			'badge'       => array(
-				'label' => __( 'Quiet Copy Notice', 'quiet-copy-notice' ),
+				'label' => __( 'Rapls Copy Notice', 'rapls-copy-notice' ),
 				'color' => 'critical' === $status ? 'red' : 'blue',
 			),
 			'description' => implode(

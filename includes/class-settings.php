@@ -184,7 +184,7 @@ class Settings {
 	 */
 	public static function message_text() {
 		$text = self::get( 'message_text' );
-		return '' === $text ? __( 'Thank you for reading. If you quote this article, please link to it.', 'quiet-copy-notice' ) : $text;
+		return '' === $text ? __( 'Thank you for reading. If you quote this article, please link to it.', 'rapls-copy-notice' ) : $text;
 	}
 
 	/**
@@ -194,7 +194,7 @@ class Settings {
 	 */
 	public static function attribution_label() {
 		$label = self::get( 'attribution_label' );
-		return '' === $label ? __( 'Source:', 'quiet-copy-notice' ) : $label;
+		return '' === $label ? __( 'Source:', 'rapls-copy-notice' ) : $label;
 	}
 
 	/**

@@ -44,7 +44,7 @@ class Dashboard {
 		}
 		wp_add_dashboard_widget(
 			self::WIDGET_ID,
-			__( 'Quiet Copy Notice', 'quiet-copy-notice' ),
+			__( 'Rapls Copy Notice', 'rapls-copy-notice' ),
 			array( $this, 'render' )
 		);
 	}
@@ -62,7 +62,7 @@ class Dashboard {
 		echo esc_html(
 			sprintf(
 				/* translators: 1: number of copies, 2: number of days. */
-				_n( '%1$s copy in the last %2$d days', '%1$s copies in the last %2$d days', $total, 'quiet-copy-notice' ),
+				_n( '%1$s copy in the last %2$d days', '%1$s copies in the last %2$d days', $total, 'rapls-copy-notice' ),
 				number_format_i18n( $total ),
 				self::DAYS
 			)
@@ -71,12 +71,12 @@ class Dashboard {
 
 		$top = $total > 0 ? Logger::top_posts_since( $since, self::TOP ) : array();
 		if ( $top ) {
-			echo '<h3>' . esc_html__( 'Most copied posts', 'quiet-copy-notice' ) . '</h3>';
+			echo '<h3>' . esc_html__( 'Most copied posts', 'rapls-copy-notice' ) . '</h3>';
 			echo '<ol class="qcnotice-dashboard-top">';
 			foreach ( $top as $row ) {
 				$post_id = (int) $row['post_id'];
 				$title   = get_the_title( $post_id );
-				$title   = '' === $title ? __( '(no title)', 'quiet-copy-notice' ) : wp_strip_all_tags( html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ) );
+				$title   = '' === $title ? __( '(no title)', 'rapls-copy-notice' ) : wp_strip_all_tags( html_entity_decode( $title, ENT_QUOTES, 'UTF-8' ) );
 				printf(
 					'<li><a href="%1$s">%2$s</a> <span class="count">%3$s</span></li>',
 					esc_url( Admin::url( 'log', array( 'qcnotice_post' => $post_id ) ) ),
@@ -84,7 +84,7 @@ class Dashboard {
 					esc_html(
 						sprintf(
 							/* translators: %s: number of copies. */
-							_n( '(%s copy)', '(%s copies)', (int) $row['copies'], 'quiet-copy-notice' ),
+							_n( '(%s copy)', '(%s copies)', (int) $row['copies'], 'rapls-copy-notice' ),
 							number_format_i18n( (int) $row['copies'] )
 						)
 					)
@@ -96,7 +96,7 @@ class Dashboard {
 		printf(
 			'<p><a href="%1$s">%2$s</a></p>',
 			esc_url( Admin::url() ),
-			esc_html__( 'View the log', 'quiet-copy-notice' )
+			esc_html__( 'View the log', 'rapls-copy-notice' )
 		);
 	}
 }

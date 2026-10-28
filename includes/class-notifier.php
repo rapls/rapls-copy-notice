@@ -194,7 +194,7 @@ class Notifier {
 		$subject = self::subject(
 			sprintf(
 				/* translators: %d: number of copy events. */
-				_n( '%d copy', '%d copies', $total, 'quiet-copy-notice' ),
+				_n( '%d copy', '%d copies', $total, 'rapls-copy-notice' ),
 				$total
 			)
 		);
@@ -203,19 +203,19 @@ class Notifier {
 		_prime_post_caches( array_unique( array_map( 'intval', wp_list_pluck( $rows, 'post_id' ) ) ), false, false );
 
 		$body   = array();
-		$body[] = self::RULE . "\n" . __( 'It appears that the following text was copied.', 'quiet-copy-notice' ) . "\n" . self::RULE;
+		$body[] = self::RULE . "\n" . __( 'It appears that the following text was copied.', 'rapls-copy-notice' ) . "\n" . self::RULE;
 		foreach ( $rows as $row ) {
 			$body[] = self::format_row( $row ) . "\n" . self::RULE;
 		}
 		if ( $total > count( $rows ) ) {
 			$body[] = sprintf(
 				/* translators: %d: number of events not listed in the email. */
-				_n( '…and %d more copy, listed in the log.', '…and %d more copies, listed in the log.', $total - count( $rows ), 'quiet-copy-notice' ),
+				_n( '…and %d more copy, listed in the log.', '…and %d more copies, listed in the log.', $total - count( $rows ), 'rapls-copy-notice' ),
 				$total - count( $rows )
 			);
 		}
-		$body[] = __( 'Log:', 'quiet-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG ) . "\n"
-			. __( 'Settings:', 'quiet-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG . '&tab=notifications' );
+		$body[] = __( 'Log:', 'rapls-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG ) . "\n"
+			. __( 'Settings:', 'rapls-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG . '&tab=notifications' );
 
 		return self::mail( $to, $subject, implode( "\n\n", $body ) );
 	}
@@ -233,10 +233,10 @@ class Notifier {
 		}
 		$subject = self::subject(
 			/* translators: shown in brackets at the end of the test email's subject, where notifications show the number of copies. */
-			__( 'test', 'quiet-copy-notice' )
+			__( 'test', 'rapls-copy-notice' )
 		);
-		$body = __( 'This is a test message from Quiet Copy Notice. Copy notifications for this site will arrive at this address.', 'quiet-copy-notice' )
-			. "\n\n" . __( 'Settings:', 'quiet-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG . '&tab=notifications' );
+		$body = __( 'This is a test message from Rapls Copy Notice. Copy notifications for this site will arrive at this address.', 'rapls-copy-notice' )
+			. "\n\n" . __( 'Settings:', 'rapls-copy-notice' ) . ' ' . admin_url( 'tools.php?page=' . QCNOTICE_SLUG . '&tab=notifications' );
 		return self::mail( $to, $subject, $body );
 	}
 
@@ -250,7 +250,7 @@ class Notifier {
 	private static function subject( $suffix ) {
 		$label = Settings::get( 'subject_label' );
 		if ( '' === $label ) {
-			$label = __( 'Copy notification', 'quiet-copy-notice' );
+			$label = __( 'Copy notification', 'rapls-copy-notice' );
 		}
 		return sprintf( '[%1$s] %2$s (%3$s)', self::plain( get_bloginfo( 'name' ) ), self::one_line( $label ), $suffix );
 	}
@@ -292,20 +292,20 @@ class Notifier {
 		$text    = (string) $row['copied_text'];
 		$lines[] = self::quote( mb_strlen( $text ) > self::TEXT_EXCERPT ? mb_substr( $text, 0, self::TEXT_EXCERPT ) . '…' : $text );
 		$lines[] = '';
-		$lines[] = __( 'Date:', 'quiet-copy-notice' ) . ' ' . wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $time );
-		$lines[] = __( 'Post:', 'quiet-copy-notice' ) . ' ' . ( $post ? self::plain( get_the_title( $post ) ) : '#' . (int) $row['post_id'] );
+		$lines[] = __( 'Date:', 'rapls-copy-notice' ) . ' ' . wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $time );
+		$lines[] = __( 'Post:', 'rapls-copy-notice' ) . ' ' . ( $post ? self::plain( get_the_title( $post ) ) : '#' . (int) $row['post_id'] );
 		if ( $post ) {
-			$lines[] = __( 'URL:', 'quiet-copy-notice' ) . ' ' . get_permalink( $post );
+			$lines[] = __( 'URL:', 'rapls-copy-notice' ) . ' ' . get_permalink( $post );
 		}
 		$lines[] = sprintf(
 			/* translators: %d: length of the original selection in characters. */
-			_n( 'Length: %d character', 'Length: %d characters', (int) $row['text_length'], 'quiet-copy-notice' ),
+			_n( 'Length: %d character', 'Length: %d characters', (int) $row['text_length'], 'rapls-copy-notice' ),
 			(int) $row['text_length']
 		);
-		$lines[] = __( 'IP:', 'quiet-copy-notice' ) . ' ' . self::one_line( $row['ip'] );
-		$lines[] = __( 'Browser:', 'quiet-copy-notice' ) . ' ' . self::one_line( $row['user_agent'] );
+		$lines[] = __( 'IP:', 'rapls-copy-notice' ) . ' ' . self::one_line( $row['ip'] );
+		$lines[] = __( 'Browser:', 'rapls-copy-notice' ) . ' ' . self::one_line( $row['user_agent'] );
 		if ( '' !== $row['referrer_host'] ) {
-			$lines[] = __( 'Referrer:', 'quiet-copy-notice' ) . ' ' . self::one_line( $row['referrer_host'] );
+			$lines[] = __( 'Referrer:', 'rapls-copy-notice' ) . ' ' . self::one_line( $row['referrer_host'] );
 		}
 
 		return implode( "\n", $lines );

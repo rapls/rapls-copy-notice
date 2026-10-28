@@ -75,11 +75,11 @@ class Admin {
 	 */
 	public static function tabs() {
 		$tabs = array(
-			'log'           => _x( 'Log', 'the list of recorded copies', 'quiet-copy-notice' ),
-			'notifications' => __( 'Notifications', 'quiet-copy-notice' ),
-			'detection'     => __( 'Detection', 'quiet-copy-notice' ),
-			'privacy'       => __( 'Privacy', 'quiet-copy-notice' ),
-			'visitors'      => __( 'Visitors', 'quiet-copy-notice' ),
+			'log'           => _x( 'Log', 'the list of recorded copies', 'rapls-copy-notice' ),
+			'notifications' => __( 'Notifications', 'rapls-copy-notice' ),
+			'detection'     => __( 'Detection', 'rapls-copy-notice' ),
+			'privacy'       => __( 'Privacy', 'rapls-copy-notice' ),
+			'visitors'      => __( 'Visitors', 'rapls-copy-notice' ),
 		);
 
 		/**
@@ -101,7 +101,7 @@ class Admin {
 
 		// Description of the optional add-on; gone once the add-on is active.
 		if ( Upsell::visible() ) {
-			$tabs['pro'] = __( 'Pro features', 'quiet-copy-notice' );
+			$tabs['pro'] = __( 'Pro features', 'rapls-copy-notice' );
 		}
 
 		return $tabs;
@@ -125,8 +125,8 @@ class Admin {
 	 */
 	public function add_menu() {
 		$this->hook = (string) add_management_page(
-			__( 'Quiet Copy Notice', 'quiet-copy-notice' ),
-			__( 'Quiet Copy Notice', 'quiet-copy-notice' ),
+			__( 'Rapls Copy Notice', 'rapls-copy-notice' ),
+			__( 'Rapls Copy Notice', 'rapls-copy-notice' ),
 			self::CAPABILITY,
 			QCNOTICE_SLUG,
 			array( $this, 'render' )
@@ -143,12 +143,12 @@ class Admin {
 	public function action_links( $links ) {
 		array_unshift(
 			$links,
-			'<a href="' . esc_url( self::url() ) . '">' . esc_html_x( 'Log', 'the list of recorded copies', 'quiet-copy-notice' ) . '</a>',
-			'<a href="' . esc_url( self::url( 'notifications' ) ) . '">' . esc_html__( 'Settings', 'quiet-copy-notice' ) . '</a>'
+			'<a href="' . esc_url( self::url() ) . '">' . esc_html_x( 'Log', 'the list of recorded copies', 'rapls-copy-notice' ) . '</a>',
+			'<a href="' . esc_url( self::url( 'notifications' ) ) . '">' . esc_html__( 'Settings', 'rapls-copy-notice' ) . '</a>'
 		);
 		if ( Upsell::visible() ) {
 			// Links to the description tab on this plugin's own screen, not to a shop.
-			$links[] = '<a href="' . esc_url( self::url( 'pro' ) ) . '">' . esc_html__( 'Pro features', 'quiet-copy-notice' ) . '</a>';
+			$links[] = '<a href="' . esc_url( self::url( 'pro' ) ) . '">' . esc_html__( 'Pro features', 'rapls-copy-notice' ) . '</a>';
 		}
 		return $links;
 	}
@@ -301,9 +301,9 @@ JS;
 		$tab = $this->current_tab();
 
 		echo '<div class="wrap qcnotice-wrap">';
-		echo '<h1>' . esc_html__( 'Quiet Copy Notice', 'quiet-copy-notice' ) . '</h1>';
+		echo '<h1>' . esc_html__( 'Rapls Copy Notice', 'rapls-copy-notice' ) . '</h1>';
 
-		echo '<nav class="nav-tab-wrapper" aria-label="' . esc_attr__( 'Quiet Copy Notice sections', 'quiet-copy-notice' ) . '">';
+		echo '<nav class="nav-tab-wrapper" aria-label="' . esc_attr__( 'Rapls Copy Notice sections', 'rapls-copy-notice' ) . '">';
 		foreach ( self::tabs() as $key => $label ) {
 			$active = $key === $tab;
 			printf(
@@ -353,7 +353,7 @@ JS;
 		$type  = 'success';
 		switch ( $message ) {
 			case 'saved':
-				$text = __( 'Settings saved.', 'quiet-copy-notice' );
+				$text = __( 'Settings saved.', 'rapls-copy-notice' );
 				break;
 			case 'saved_adjusted':
 				$type  = 'warning';
@@ -364,51 +364,51 @@ JS;
 				if ( $labels ) {
 					$text = sprintf(
 						/* translators: %s: list of field names. */
-						__( 'Settings saved, but some values were not valid and were changed or left out: %s. Check them below.', 'quiet-copy-notice' ),
+						__( 'Settings saved, but some values were not valid and were changed or left out: %s. Check them below.', 'rapls-copy-notice' ),
 						implode( wp_get_list_item_separator(), $labels )
 					);
 				}
 				if ( $email ) {
 					$extra = sprintf(
 						/* translators: %s: the site administration email address. */
-						__( 'The address entered in "Send notifications to" was not valid and was not saved. Notifications go to the site administration email address, %s, until you enter a valid one.', 'quiet-copy-notice' ),
+						__( 'The address entered in "Send notifications to" was not valid and was not saved. Notifications go to the site administration email address, %s, until you enter a valid one.', 'rapls-copy-notice' ),
 						(string) get_option( 'admin_email' )
 					);
 				}
 				break;
 			case 'none_selected':
 				$type = 'warning';
-				$text = __( 'No entries were selected.', 'quiet-copy-notice' );
+				$text = __( 'No entries were selected.', 'rapls-copy-notice' );
 				break;
 			case 'delete_selected_failed':
 				$type = 'error';
-				$text = __( 'The selected log entries could not be deleted. Try again; if it keeps failing, ask your host to check the database.', 'quiet-copy-notice' );
+				$text = __( 'The selected log entries could not be deleted. Try again; if it keeps failing, ask your host to check the database.', 'rapls-copy-notice' );
 				break;
 			case 'deleted':
 				/* translators: %s: number of log entries deleted. */
-				$text = sprintf( _n( '%s entry deleted.', '%s entries deleted.', $count, 'quiet-copy-notice' ), number_format_i18n( $count ) );
+				$text = sprintf( _n( '%s entry deleted.', '%s entries deleted.', $count, 'rapls-copy-notice' ), number_format_i18n( $count ) );
 				break;
 			case 'deleted_all':
-				$text = __( 'All log entries deleted.', 'quiet-copy-notice' );
+				$text = __( 'All log entries deleted.', 'rapls-copy-notice' );
 				break;
 			case 'delete_failed':
 				$type = 'error';
-				$text = __( 'The log entries could not be deleted. The database refused the request; try again, or ask your host about the database user\'s permissions.', 'quiet-copy-notice' );
+				$text = __( 'The log entries could not be deleted. The database refused the request; try again, or ask your host about the database user\'s permissions.', 'rapls-copy-notice' );
 				break;
 			case 'test_sent':
 				$text = sprintf(
 					/* translators: %s: email address. */
-					__( 'Test email sent to %s. If it does not arrive within a few minutes, check the spam folder and the site\'s email settings.', 'quiet-copy-notice' ),
+					__( 'Test email sent to %s. If it does not arrive within a few minutes, check the spam folder and the site\'s email settings.', 'rapls-copy-notice' ),
 					Settings::notify_email()
 				);
 				break;
 			case 'test_no_address':
 				$type = 'error';
-				$text = __( 'There is no valid address to send the test email to. Enter one in "Send notifications to", or correct the Administration Email Address under Settings → General.', 'quiet-copy-notice' );
+				$text = __( 'There is no valid address to send the test email to. Enter one in "Send notifications to", or correct the Administration Email Address under Settings → General.', 'rapls-copy-notice' );
 				break;
 			case 'test_failed':
 				$type = 'error';
-				$text = __( 'The test email could not be sent: WordPress reported an error while sending. Check the site\'s email settings, for example an SMTP plugin.', 'quiet-copy-notice' );
+				$text = __( 'The test email could not be sent: WordPress reported an error while sending. Check the site\'s email settings, for example an SMTP plugin.', 'rapls-copy-notice' );
 				break;
 		}
 
@@ -439,7 +439,7 @@ JS;
 			}
 		}
 		if ( ! $out && $keys ) {
-			$out[] = __( 'unknown field', 'quiet-copy-notice' );
+			$out[] = __( 'unknown field', 'rapls-copy-notice' );
 		}
 		return $out;
 	}
@@ -468,9 +468,9 @@ JS;
 		}
 		printf(
 			'<div class="notice notice-warning"><p>%1$s <a href="%2$s">%3$s</a></p></div>',
-			esc_html__( 'Check Copy Contents is still active. It is no longer maintained, and while both plugins are active you may get two emails for the same copy. Settings it had when Quiet Copy Notice was first activated were carried over where possible, so you can deactivate it now.', 'quiet-copy-notice' ),
+			esc_html__( 'Check Copy Contents is still active. It is no longer maintained, and while both plugins are active you may get two emails for the same copy. Settings it had when Rapls Copy Notice was first activated were carried over where possible, so you can deactivate it now.', 'rapls-copy-notice' ),
 			esc_url( admin_url( 'plugins.php' ) ),
-			esc_html__( 'Go to Plugins', 'quiet-copy-notice' )
+			esc_html__( 'Go to Plugins', 'rapls-copy-notice' )
 		);
 	}
 
@@ -488,7 +488,7 @@ JS;
 
 		// Deleting selected entries is permanent too, so it asks first, like
 		// "Delete all". Only the bulk action asks; filtering does not.
-		$bulk_confirm = __( 'Delete the selected log entries? This cannot be undone.', 'quiet-copy-notice' );
+		$bulk_confirm = __( 'Delete the selected log entries? This cannot be undone.', 'rapls-copy-notice' );
 		echo '<form method="get" class="qcnotice-log-form" data-confirm="' . esc_attr( $bulk_confirm ) . '">';
 		echo '<input type="hidden" name="page" value="' . esc_attr( QCNOTICE_SLUG ) . '" />';
 		// Keeps an ascending sort when filtering or changing page; the only
@@ -503,18 +503,18 @@ JS;
 		if ( Logger::has_rows() ) {
 			$filtered = $table->is_filtered();
 			$confirm  = $filtered
-				? __( 'Delete every log entry, not only the ones shown by this filter? This cannot be undone.', 'quiet-copy-notice' )
-				: __( 'Delete every log entry? This cannot be undone.', 'quiet-copy-notice' );
+				? __( 'Delete every log entry, not only the ones shown by this filter? This cannot be undone.', 'rapls-copy-notice' )
+				: __( 'Delete every log entry? This cannot be undone.', 'rapls-copy-notice' );
 			echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="qcnotice-delete-all" data-confirm="' . esc_attr( $confirm ) . '">';
 			echo '<input type="hidden" name="action" value="' . esc_attr( self::ACTION_DELETE_ALL ) . '" />';
 			wp_nonce_field( self::ACTION_DELETE_ALL );
-			submit_button( $filtered ? __( 'Delete all entries (not only this filter)', 'quiet-copy-notice' ) : __( 'Delete all entries', 'quiet-copy-notice' ), 'delete', 'submit', false );
+			submit_button( $filtered ? __( 'Delete all entries (not only this filter)', 'rapls-copy-notice' ) : __( 'Delete all entries', 'rapls-copy-notice' ), 'delete', 'submit', false );
 			echo '</form>';
 		}
 
 		Upsell::row(
-			__( 'Statistics and CSV export', 'quiet-copy-notice' ),
-			__( 'Quiet Copy Notice Pro adds statistics by post and by paragraph, a comparison with the previous period, and CSV export of this log.', 'quiet-copy-notice' )
+			__( 'Statistics and CSV export', 'rapls-copy-notice' ),
+			__( 'Rapls Copy Notice Pro adds statistics by post and by paragraph, a comparison with the previous period, and CSV export of this log.', 'rapls-copy-notice' )
 		);
 	}
 
@@ -525,7 +525,7 @@ JS;
 	 */
 	public function handle_save() {
 		if ( ! current_user_can( self::CAPABILITY ) ) {
-			wp_die( esc_html__( 'You are not allowed to change these settings.', 'quiet-copy-notice' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to change these settings.', 'rapls-copy-notice' ), 403 );
 		}
 
 		$tab = isset( $_POST['tab'] ) ? sanitize_key( wp_unslash( $_POST['tab'] ) ) : '';
@@ -538,7 +538,7 @@ JS;
 
 		$adjusted = Settings::save_tab( $tab, $input );
 		if ( false === $adjusted ) {
-			wp_die( esc_html__( 'Unknown settings section.', 'quiet-copy-notice' ), 400 );
+			wp_die( esc_html__( 'Unknown settings section.', 'rapls-copy-notice' ), 400 );
 		}
 
 		$args = $adjusted
@@ -558,7 +558,7 @@ JS;
 	 */
 	public function handle_delete_all() {
 		if ( ! current_user_can( self::CAPABILITY ) ) {
-			wp_die( esc_html__( 'You are not allowed to delete log entries.', 'quiet-copy-notice' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to delete log entries.', 'rapls-copy-notice' ), 403 );
 		}
 		check_admin_referer( self::ACTION_DELETE_ALL );
 
@@ -575,7 +575,7 @@ JS;
 	 */
 	public function handle_test_email() {
 		if ( ! current_user_can( self::CAPABILITY ) ) {
-			wp_die( esc_html__( 'You are not allowed to change these settings.', 'quiet-copy-notice' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to change these settings.', 'rapls-copy-notice' ), 403 );
 		}
 		check_admin_referer( self::ACTION_TEST_EMAIL );
 

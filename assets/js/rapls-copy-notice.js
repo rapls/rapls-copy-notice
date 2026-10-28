@@ -1,5 +1,5 @@
 /**
- * Quiet Copy Notice: reports copies of post text to the site.
+ * Rapls Copy Notice: reports copies of post text to the site.
  *
  * Reads only the selection, never the clipboard, and never blocks a copy.
  * By default it does nothing visible. Two options the site owner can turn on

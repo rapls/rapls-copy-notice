@@ -112,7 +112,7 @@ class Frontend {
 
 		wp_enqueue_script(
 			self::HANDLE,
-			QCNOTICE_URL . 'assets/js/quiet-copy-notice.js',
+			QCNOTICE_URL . 'assets/js/rapls-copy-notice.js',
 			array(),
 			QCNOTICE_VERSION,
 			array(
@@ -133,7 +133,7 @@ class Frontend {
 		// only when switched on.
 		if ( Settings::get( 'show_message' ) ) {
 			$config['message']    = Settings::message_text();
-			$config['closeLabel'] = __( 'Close message', 'quiet-copy-notice' );
+			$config['closeLabel'] = __( 'Close message', 'rapls-copy-notice' );
 		}
 		if ( Settings::get( 'add_attribution' ) ) {
 			$config['attribution'] = array(

@@ -50,11 +50,11 @@ class Log_Table extends \WP_List_Table {
 	public function get_columns() {
 		return array(
 			'cb'          => '<input type="checkbox" />',
-			'created_at'  => __( 'Date', 'quiet-copy-notice' ),
-			'post'        => __( 'Post', 'quiet-copy-notice' ),
-			'copied_text' => __( 'Copied text', 'quiet-copy-notice' ),
-			'ip'          => __( 'IP', 'quiet-copy-notice' ),
-			'browser'     => __( 'Browser', 'quiet-copy-notice' ),
+			'created_at'  => __( 'Date', 'rapls-copy-notice' ),
+			'post'        => __( 'Post', 'rapls-copy-notice' ),
+			'copied_text' => __( 'Copied text', 'rapls-copy-notice' ),
+			'ip'          => __( 'IP', 'rapls-copy-notice' ),
+			'browser'     => __( 'Browser', 'rapls-copy-notice' ),
 		);
 	}
 
@@ -73,7 +73,7 @@ class Log_Table extends \WP_List_Table {
 	 * @return array
 	 */
 	protected function get_bulk_actions() {
-		return array( 'delete' => __( 'Delete', 'quiet-copy-notice' ) );
+		return array( 'delete' => __( 'Delete', 'rapls-copy-notice' ) );
 	}
 
 	/**
@@ -147,7 +147,7 @@ class Log_Table extends \WP_List_Table {
 		}
 
 		if ( ! current_user_can( Admin::CAPABILITY ) ) {
-			wp_die( esc_html__( 'You are not allowed to delete log entries.', 'quiet-copy-notice' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to delete log entries.', 'rapls-copy-notice' ), 403 );
 		}
 		check_admin_referer( 'bulk-' . $this->_args['plural'] );
 
@@ -188,10 +188,10 @@ class Log_Table extends \WP_List_Table {
 	 */
 	public function no_items() {
 		if ( $this->is_filtered() ) {
-			esc_html_e( 'No log entries match this filter.', 'quiet-copy-notice' );
+			esc_html_e( 'No log entries match this filter.', 'rapls-copy-notice' );
 			return;
 		}
-		esc_html_e( 'No copies recorded yet.', 'quiet-copy-notice' );
+		esc_html_e( 'No copies recorded yet.', 'rapls-copy-notice' );
 	}
 
 	/**
@@ -217,9 +217,9 @@ class Log_Table extends \WP_List_Table {
 		_prime_post_caches( $ids, false, false );
 
 		echo '<div class="alignleft actions">';
-		echo '<label class="screen-reader-text" for="qcnotice-post-filter">' . esc_html__( 'Filter by post', 'quiet-copy-notice' ) . '</label>';
+		echo '<label class="screen-reader-text" for="qcnotice-post-filter">' . esc_html__( 'Filter by post', 'rapls-copy-notice' ) . '</label>';
 		echo '<select name="qcnotice_post" id="qcnotice-post-filter">';
-		echo '<option value="0">' . esc_html__( 'All posts', 'quiet-copy-notice' ) . '</option>';
+		echo '<option value="0">' . esc_html__( 'All posts', 'rapls-copy-notice' ) . '</option>';
 		foreach ( $ids as $id ) {
 			printf(
 				'<option value="%1$d"%2$s>%3$s</option>',
@@ -229,7 +229,7 @@ class Log_Table extends \WP_List_Table {
 			);
 		}
 		echo '</select>';
-		submit_button( __( 'Filter', 'quiet-copy-notice' ), '', 'filter_action', false );
+		submit_button( __( 'Filter', 'rapls-copy-notice' ), '', 'filter_action', false );
 
 		$para = $this->filter_paragraph();
 		if ( $para ) {
@@ -237,9 +237,9 @@ class Log_Table extends \WP_List_Table {
 			echo '<input type="hidden" name="qcnotice_para" value="' . esc_attr( $para ) . '" />';
 			printf(
 				' <span class="qcnotice-para-filter">%1$s <a href="%2$s">%3$s</a></span>',
-				esc_html__( 'Showing one paragraph only.', 'quiet-copy-notice' ),
+				esc_html__( 'Showing one paragraph only.', 'rapls-copy-notice' ),
 				esc_url( Admin::url( 'log', $current ? array( 'qcnotice_post' => $current ) : array() ) ),
-				esc_html__( 'Show all paragraphs', 'quiet-copy-notice' )
+				esc_html__( 'Show all paragraphs', 'rapls-copy-notice' )
 			);
 		}
 		echo '</div>';
@@ -258,7 +258,7 @@ class Log_Table extends \WP_List_Table {
 			esc_html(
 				sprintf(
 					/* translators: 1: post title and ID, 2: date and time of the copy. */
-					__( 'Select the copy from %1$s on %2$s', 'quiet-copy-notice' ),
+					__( 'Select the copy from %1$s on %2$s', 'rapls-copy-notice' ),
 					$this->post_label( (int) $item['post_id'] ),
 					wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $item['created_at'] . ' UTC' ) )
 				)
@@ -289,7 +289,7 @@ class Log_Table extends \WP_List_Table {
 		$link    = get_permalink( $post_id );
 		$out     = $link ? '<a href="' . esc_url( $link ) . '">' . $label . '</a>' : $label;
 
-		$out .= '<div class="row-actions"><a href="' . esc_url( Admin::url( 'log', array( 'qcnotice_post' => $post_id ) ) ) . '">' . esc_html__( 'Show only this post', 'quiet-copy-notice' ) . '</a></div>';
+		$out .= '<div class="row-actions"><a href="' . esc_url( Admin::url( 'log', array( 'qcnotice_post' => $post_id ) ) ) . '">' . esc_html__( 'Show only this post', 'rapls-copy-notice' ) . '</a></div>';
 		return $out;
 	}
 
@@ -317,7 +317,7 @@ class Log_Table extends \WP_List_Table {
 			esc_html(
 				sprintf(
 					/* translators: %s: number of characters in the original selection. */
-					_n( '%s character', '%s characters', (int) $item['text_length'], 'quiet-copy-notice' ),
+					_n( '%s character', '%s characters', (int) $item['text_length'], 'rapls-copy-notice' ),
 					number_format_i18n( (int) $item['text_length'] )
 				)
 			)
@@ -336,7 +336,7 @@ class Log_Table extends \WP_List_Table {
 						)
 					)
 				),
-				esc_html__( 'Copies of this paragraph', 'quiet-copy-notice' )
+				esc_html__( 'Copies of this paragraph', 'rapls-copy-notice' )
 			);
 		}
 		return $out;
@@ -369,7 +369,7 @@ class Log_Table extends \WP_List_Table {
 			$out .= '<span class="description qcnotice-from">' . esc_html(
 				sprintf(
 					/* translators: %s: host name of the referring page. */
-					__( 'Came from: %s', 'quiet-copy-notice' ),
+					__( 'Came from: %s', 'rapls-copy-notice' ),
 					$item['referrer_host']
 				)
 			) . '</span>';
@@ -396,7 +396,7 @@ class Log_Table extends \WP_List_Table {
 	 */
 	private function post_label( $post_id ) {
 		$title = get_the_title( $post_id );
-		$title = '' === $title ? __( '(no title)', 'quiet-copy-notice' ) : html_entity_decode( wp_strip_all_tags( $title ), ENT_QUOTES, 'UTF-8' );
+		$title = '' === $title ? __( '(no title)', 'rapls-copy-notice' ) : html_entity_decode( wp_strip_all_tags( $title ), ENT_QUOTES, 'UTF-8' );
 		return sprintf( '%s (#%d)', $title, $post_id );
 	}
 
@@ -409,12 +409,12 @@ class Log_Table extends \WP_List_Table {
 	public static function summarize_user_agent( $ua ) {
 		if ( '' === $ua ) {
 			/* translators: shown in place of a browser name. */
-			return __( 'Unknown', 'quiet-copy-notice' );
+			return __( 'Unknown', 'rapls-copy-notice' );
 		}
 
 		$browsers = array(
 			/* translators: shown in place of a browser name, for search engine crawlers. */
-			'bot|crawl|spider|slurp' => __( 'Bot', 'quiet-copy-notice' ),
+			'bot|crawl|spider|slurp' => __( 'Bot', 'rapls-copy-notice' ),
 			'Edg/'                   => 'Edge',
 			'OPR/|Opera'             => 'Opera',
 			'SamsungBrowser'         => 'Samsung Internet',
@@ -432,7 +432,7 @@ class Log_Table extends \WP_List_Table {
 		);
 
 		/* translators: shown in place of a browser name. */
-		$browser = __( 'Other', 'quiet-copy-notice' );
+		$browser = __( 'Other', 'rapls-copy-notice' );
 		foreach ( $browsers as $pattern => $name ) {
 			if ( preg_match( '#' . $pattern . '#i', $ua ) ) {
 				$browser = $name;
@@ -443,7 +443,7 @@ class Log_Table extends \WP_List_Table {
 		foreach ( $systems as $pattern => $name ) {
 			if ( preg_match( '#' . $pattern . '#', $ua ) ) {
 				/* translators: 1: browser name, 2: operating system name. */
-				return sprintf( __( '%1$s on %2$s', 'quiet-copy-notice' ), $browser, $name );
+				return sprintf( __( '%1$s on %2$s', 'rapls-copy-notice' ), $browser, $name );
 			}
 		}
 		return $browser;

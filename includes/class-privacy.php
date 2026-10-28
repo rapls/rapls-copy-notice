@@ -244,14 +244,14 @@ class Privacy {
 
 		$retention  = (int) Settings::get( 'retention_days' );
 		$paragraphs = array(
-			'collected' => __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address.', 'quiet-copy-notice' ),
+			'collected' => __( 'When you copy text from a post on this site, the site records what you copied (up to 500 characters), the length of the selection, which post it came from, the date and time, your browser\'s user agent string, the host name of the page that referred you here, a fingerprint (hash) of the paragraph the selection started in, which does not contain the paragraph\'s text, and your IP address.', 'rapls-copy-notice' ),
 			'ip'        => Settings::get( 'anonymize_ip' )
-				? __( 'The IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed), which makes it less precise. Together with the other details recorded it may still tell one visitor from another, so it is handled as personal data.', 'quiet-copy-notice' )
-				: __( 'The full IP address is stored.', 'quiet-copy-notice' ),
-			'use'       => __( 'This information is used to tell the site administrator, by email, which content is being copied. The email goes through the mail system this site uses, which may be run by an outside email provider. Otherwise the information is not shared with anyone and is not sent to any outside service. No cookie or identifier is stored in your browser. To limit abusive requests, the site keeps a one-way hash of your IP address for up to an hour.', 'quiet-copy-notice' ),
+				? __( 'The IP address is shortened before it is stored (the last part of an IPv4 address, or the last 80 bits of an IPv6 address, are removed), which makes it less precise. Together with the other details recorded it may still tell one visitor from another, so it is handled as personal data.', 'rapls-copy-notice' )
+				: __( 'The full IP address is stored.', 'rapls-copy-notice' ),
+			'use'       => __( 'This information is used to tell the site administrator, by email, which content is being copied. The email goes through the mail system this site uses, which may be run by an outside email provider. Otherwise the information is not shared with anyone and is not sent to any outside service. No cookie or identifier is stored in your browser. To limit abusive requests, the site keeps a one-way hash of your IP address for up to an hour.', 'rapls-copy-notice' ),
 			'retention' => sprintf(
 				/* translators: %d: number of days copy records are kept. */
-				_n( 'Copy records are deleted automatically after %d day.', 'Copy records are deleted automatically after %d days.', $retention, 'quiet-copy-notice' ),
+				_n( 'Copy records are deleted automatically after %d day.', 'Copy records are deleted automatically after %d days.', $retention, 'rapls-copy-notice' ),
 				$retention
 			),
 		);
@@ -275,6 +275,6 @@ class Privacy {
 			}
 		}
 
-		wp_add_privacy_policy_content( __( 'Quiet Copy Notice', 'quiet-copy-notice' ), wp_kses_post( $content ) );
+		wp_add_privacy_policy_content( __( 'Rapls Copy Notice', 'rapls-copy-notice' ), wp_kses_post( $content ) );
 	}
 }

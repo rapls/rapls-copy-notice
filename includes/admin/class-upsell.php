@@ -90,7 +90,7 @@ class Upsell {
 			esc_html( $title ),
 			esc_html( $body ),
 			esc_url( Admin::url( 'pro' ) ),
-			esc_html__( 'View Pro features', 'quiet-copy-notice' )
+			esc_html__( 'View Pro features', 'rapls-copy-notice' )
 		);
 	}
 
@@ -108,62 +108,62 @@ class Upsell {
 		$cta = sprintf(
 			'<a class="qcnotice-pro-cta" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s<span class="screen-reader-text"> %3$s</span></a>',
 			esc_url( $url ),
-			esc_html__( 'See Quiet Copy Notice Pro', 'quiet-copy-notice' ),
+			esc_html__( 'See Rapls Copy Notice Pro', 'rapls-copy-notice' ),
 			/* translators: Hidden accessibility text. */
-			esc_html__( '(opens in a new tab)', 'quiet-copy-notice' )
+			esc_html__( '(opens in a new tab)', 'rapls-copy-notice' )
 		);
 
 		echo '<div class="qcnotice-pro-page">';
 
 		echo '<section class="qcnotice-pro-hero">';
-		echo '<span class="qcnotice-pro-eyebrow">' . esc_html__( 'Quiet Copy Notice Pro — optional add-on', 'quiet-copy-notice' ) . '</span>';
-		echo '<h2>' . esc_html__( 'See which passages are taken, and where they end up.', 'quiet-copy-notice' ) . '</h2>';
-		echo '<p>' . esc_html__( 'Everything on the other tabs is free, and stays free: copy detection, the log, email notifications, the reader message and source link, the dashboard widget and Site Health checks. There is no trial and no limit tied to Pro.', 'quiet-copy-notice' ) . '</p>';
-		echo '<p>' . esc_html__( 'Pro is a separate plugin for sites that want to act on copies, not only hear about them: understand what is copied, tell the right people, and find where it was reposted.', 'quiet-copy-notice' ) . '</p>';
+		echo '<span class="qcnotice-pro-eyebrow">' . esc_html__( 'Rapls Copy Notice Pro — optional add-on', 'rapls-copy-notice' ) . '</span>';
+		echo '<h2>' . esc_html__( 'See which passages are taken, and where they end up.', 'rapls-copy-notice' ) . '</h2>';
+		echo '<p>' . esc_html__( 'Everything on the other tabs is free, and stays free: copy detection, the log, email notifications, the reader message and source link, the dashboard widget and Site Health checks. There is no trial and no limit tied to Pro.', 'rapls-copy-notice' ) . '</p>';
+		echo '<p>' . esc_html__( 'Pro is a separate plugin for sites that want to act on copies, not only hear about them: understand what is copied, tell the right people, and find where it was reposted.', 'rapls-copy-notice' ) . '</p>';
 		echo '<p>' . $cta . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped parts above.
 		echo '</section>';
 
-		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'Free covers detection. Pro covers what you do next.', 'quiet-copy-notice' ) . '</h2>';
-		echo '<table class="qcnotice-pro-steps"><thead><tr><th scope="col">' . esc_html_x( 'Free', 'the free plugin, compared with Pro', 'quiet-copy-notice' ) . '</th><th scope="col">' . esc_html__( 'Pro adds', 'quiet-copy-notice' ) . '</th></tr></thead><tbody>';
+		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'Free covers detection. Pro covers what you do next.', 'rapls-copy-notice' ) . '</h2>';
+		echo '<table class="qcnotice-pro-steps"><thead><tr><th scope="col">' . esc_html_x( 'Free', 'the free plugin, compared with Pro', 'rapls-copy-notice' ) . '</th><th scope="col">' . esc_html__( 'Pro adds', 'rapls-copy-notice' ) . '</th></tr></thead><tbody>';
 		foreach ( array(
-			array( __( 'Log of every copy', 'quiet-copy-notice' ), __( 'Statistics by post and by paragraph, against the previous period', 'quiet-copy-notice' ) ),
-			array( __( 'Email: hourly summary or instant', 'quiet-copy-notice' ), __( 'Slack, Chatwork, Discord and your own webhook', 'quiet-copy-notice' ) ),
-			array( __( 'One address for every copy', 'quiet-copy-notice' ), __( 'Rules that send each copy to the right place, and burst alerts', 'quiet-copy-notice' ) ),
-			array( __( 'Copies of the same paragraph, listed together', 'quiet-copy-notice' ), __( 'Daily web search for those paragraphs, with your own search API key', 'quiet-copy-notice' ) ),
-			array( __( 'Log on screen', 'quiet-copy-notice' ), __( 'CSV export, safe to open in a spreadsheet', 'quiet-copy-notice' ) ),
-			array( __( 'Works on each site of a network', 'quiet-copy-notice' ), __( 'The 5-site license covers a whole network, with an overview of every site', 'quiet-copy-notice' ) ),
+			array( __( 'Log of every copy', 'rapls-copy-notice' ), __( 'Statistics by post and by paragraph, against the previous period', 'rapls-copy-notice' ) ),
+			array( __( 'Email: hourly summary or instant', 'rapls-copy-notice' ), __( 'Slack, Chatwork, Discord and your own webhook', 'rapls-copy-notice' ) ),
+			array( __( 'One address for every copy', 'rapls-copy-notice' ), __( 'Rules that send each copy to the right place, and burst alerts', 'rapls-copy-notice' ) ),
+			array( __( 'Copies of the same paragraph, listed together', 'rapls-copy-notice' ), __( 'Daily web search for those paragraphs, with your own search API key', 'rapls-copy-notice' ) ),
+			array( __( 'Log on screen', 'rapls-copy-notice' ), __( 'CSV export, safe to open in a spreadsheet', 'rapls-copy-notice' ) ),
+			array( __( 'Works on each site of a network', 'rapls-copy-notice' ), __( 'The 5-site license covers a whole network, with an overview of every site', 'rapls-copy-notice' ) ),
 		) as $row ) {
 			echo '<tr><td>' . esc_html( $row[0] ) . '</td><td>' . esc_html( $row[1] ) . '</td></tr>';
 		}
 		echo '</tbody></table></section>';
 
-		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'What Pro adds', 'quiet-copy-notice' ) . '</h2><div class="qcnotice-pro-grid">';
+		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'What Pro adds', 'rapls-copy-notice' ) . '</h2><div class="qcnotice-pro-grid">';
 		foreach ( array(
-			array( __( 'Know which paragraphs are copied', 'quiet-copy-notice' ), __( 'Copies per day for 7, 30 or 90 days drawn against the period before, the most copied posts, and the paragraphs inside each post that readers copy most.', 'quiet-copy-notice' ) ),
-			array( __( 'Notify your team where it works', 'quiet-copy-notice' ), __( 'Send each notification to Slack, Chatwork, Discord or your own system. Visitor text is quoted so it cannot mention anyone or add links.', 'quiet-copy-notice' ) ),
-			array( __( 'Route by post, category and length', 'quiet-copy-notice' ), __( 'Decide which copies go to which channel, including email, and drop the ones you do not need to hear about.', 'quiet-copy-notice' ) ),
-			array( __( 'Hear about bursts at once', 'quiet-copy-notice' ), __( 'Get an alert as soon as one post is copied unusually often, instead of waiting for the hourly summary.', 'quiet-copy-notice' ) ),
-			array( __( 'Find reposts', 'quiet-copy-notice' ), __( 'Once a day, the most copied paragraphs are searched for on the web with your own Brave Search or SerpApi key. Review the pages found and mark each one as a repost or ignore it.', 'quiet-copy-notice' ) ),
-			array( __( 'Export for reports', 'quiet-copy-notice' ), __( 'Download the log for a date range or one post as CSV, with cells that cannot run as spreadsheet formulas.', 'quiet-copy-notice' ) ),
+			array( __( 'Know which paragraphs are copied', 'rapls-copy-notice' ), __( 'Copies per day for 7, 30 or 90 days drawn against the period before, the most copied posts, and the paragraphs inside each post that readers copy most.', 'rapls-copy-notice' ) ),
+			array( __( 'Notify your team where it works', 'rapls-copy-notice' ), __( 'Send each notification to Slack, Chatwork, Discord or your own system. Visitor text is quoted so it cannot mention anyone or add links.', 'rapls-copy-notice' ) ),
+			array( __( 'Route by post, category and length', 'rapls-copy-notice' ), __( 'Decide which copies go to which channel, including email, and drop the ones you do not need to hear about.', 'rapls-copy-notice' ) ),
+			array( __( 'Hear about bursts at once', 'rapls-copy-notice' ), __( 'Get an alert as soon as one post is copied unusually often, instead of waiting for the hourly summary.', 'rapls-copy-notice' ) ),
+			array( __( 'Find reposts', 'rapls-copy-notice' ), __( 'Once a day, the most copied paragraphs are searched for on the web with your own Brave Search or SerpApi key. Review the pages found and mark each one as a repost or ignore it.', 'rapls-copy-notice' ) ),
+			array( __( 'Export for reports', 'rapls-copy-notice' ), __( 'Download the log for a date range or one post as CSV, with cells that cannot run as spreadsheet formulas.', 'rapls-copy-notice' ) ),
 		) as $card ) {
 			echo '<div class="qcnotice-pro-card"><h3>' . esc_html( $card[0] ) . '</h3><p>' . esc_html( $card[1] ) . '</p></div>';
 		}
 		echo '</div></section>';
 
-		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'Recommended for', 'quiet-copy-notice' ) . '</h2><ul class="qcnotice-pro-list">';
+		echo '<section class="qcnotice-pro-section"><h2>' . esc_html__( 'Recommended for', 'rapls-copy-notice' ) . '</h2><ul class="qcnotice-pro-list">';
 		foreach ( array(
-			__( 'Media sites and blogs whose articles are often quoted or reposted', 'quiet-copy-notice' ),
-			__( 'Teams that work in Slack, Chatwork or Discord rather than email', 'quiet-copy-notice' ),
-			__( 'Editors who want to know which passages readers value most', 'quiet-copy-notice' ),
-			__( 'Networks of sites managed from one place', 'quiet-copy-notice' ),
+			__( 'Media sites and blogs whose articles are often quoted or reposted', 'rapls-copy-notice' ),
+			__( 'Teams that work in Slack, Chatwork or Discord rather than email', 'rapls-copy-notice' ),
+			__( 'Editors who want to know which passages readers value most', 'rapls-copy-notice' ),
+			__( 'Networks of sites managed from one place', 'rapls-copy-notice' ),
 		) as $item ) {
 			echo '<li>' . esc_html( $item ) . '</li>';
 		}
 		echo '</ul></section>';
 
-		echo '<section class="qcnotice-pro-footer"><h2>' . esc_html__( 'Want to act on copies, not just count them?', 'quiet-copy-notice' ) . '</h2>';
+		echo '<section class="qcnotice-pro-footer"><h2>' . esc_html__( 'Want to act on copies, not just count them?', 'rapls-copy-notice' ) . '</h2>';
 		echo '<p>' . $cta . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from escaped parts above.
-		echo '<p class="description">' . esc_html__( 'One-time purchase, no subscription. Pro is installed next to this plugin and adds its tabs to this screen; your log and settings stay as they are.', 'quiet-copy-notice' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'One-time purchase, no subscription. Pro is installed next to this plugin and adds its tabs to this screen; your log and settings stay as they are.', 'rapls-copy-notice' ) . '</p>';
 		echo '</section>';
 
 		echo '</div>';

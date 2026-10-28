@@ -1,16 +1,16 @@
 <?php
 /**
- * Plugin Name:       Quiet Copy Notice
+ * Plugin Name:       Rapls Copy Notice
  * Plugin URI:        https://raplsworks.com/plugins/quiet-copy-notice/
  * Description:       Detects when visitors copy text from your posts and tells you by email. Lightweight copy notification and copy tracking; the plugin itself calls no outside service, and email goes out through your site's mail setup.
- * Version:           1.3.17
+ * Version:           1.3.18
  * Requires at least: 6.3
  * Requires PHP:      8.2
  * Author:            Rapls Works
  * Author URI:        https://raplsworks.com/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       quiet-copy-notice
+ * Text Domain:       rapls-copy-notice
  *
  * @package QuietCopyNotice
  */
@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'QCNOTICE_VERSION', '1.3.17' );
+define( 'QCNOTICE_VERSION', '1.3.18' );
 define( 'QCNOTICE_FILE', __FILE__ );
 define( 'QCNOTICE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'QCNOTICE_URL', plugin_dir_url( __FILE__ ) );
@@ -36,7 +36,7 @@ define( 'QCNOTICE_URL', plugin_dir_url( __FILE__ ) );
  * be a string literal inside each __() call for the translation tools, so it
  * is not a constant.
  */
-define( 'QCNOTICE_SLUG', 'quiet-copy-notice' );
+define( 'QCNOTICE_SLUG', 'rapls-copy-notice' );
 define( 'QCNOTICE_PREFIX', 'qcnotice_' );
 define( 'QCNOTICE_REST_NAMESPACE', QCNOTICE_SLUG . '/v1' );
 define( 'QCNOTICE_MIN_PHP_ID', 80200 );
@@ -60,7 +60,7 @@ function qcnotice_php_version_notice() {
 		esc_html(
 			sprintf(
 				/* translators: 1: required PHP version, 2: current PHP version. */
-				__( 'Quiet Copy Notice needs PHP %1$s or later and is not running. This site uses PHP %2$s.', 'quiet-copy-notice' ),
+				__( 'Rapls Copy Notice needs PHP %1$s or later and is not running. This site uses PHP %2$s.', 'rapls-copy-notice' ),
 				'8.2',
 				PHP_VERSION
 			)
