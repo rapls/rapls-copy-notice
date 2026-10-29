@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Rapls Copy Notice
- * Plugin URI:        https://raplsworks.com/plugins/quiet-copy-notice/
+ * Plugin URI:        https://raplsworks.com/plugins/rapls-copy-notice/
  * Description:       Detects when visitors copy text from your posts and tells you by email. Lightweight copy notification and copy tracking; the plugin itself calls no outside service, and email goes out through your site's mail setup.
  * Version:           1.3.19
  * Requires at least: 6.3

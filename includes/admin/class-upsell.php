@@ -62,8 +62,8 @@ class Upsell {
 	 */
 	public static function url() {
 		$url = 0 === strpos( (string) get_user_locale(), 'ja' )
-			? 'https://raplsworks.com/quiet-copy-notice-pro-ja/'
-			: 'https://raplsworks.com/quiet-copy-notice-pro-en/';
+			? 'https://raplsworks.com/rapls-copy-notice-pro-ja/'
+			: 'https://raplsworks.com/rapls-copy-notice-pro-en/';
 
 		/**
 		 * Filters the link to the Pro add-on's page.

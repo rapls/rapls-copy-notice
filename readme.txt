@@ -52,7 +52,7 @@ act on copies:
 * CSV export of the log.
 * Multisite: the 5-site license covers a whole network, with an overview of every site.
 
-One-time purchase, no subscription. Details: https://raplsworks.com/quiet-copy-notice-pro-en/
+One-time purchase, no subscription. Details: https://raplsworks.com/rapls-copy-notice-pro-en/
 
 The plugin's screen has a **Pro features** tab describing the add-on, and short
 notes about it on the Log and Notifications tabs and in its row on the Plugins
