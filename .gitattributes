@@ -1,0 +1,5 @@
+# Keep GitHub-only files out of `git archive` (the distribution ZIP and the
+# WordPress.org trunk are built from it). WordPress reads readme.txt; README.md
+# is the GitHub page.
+/README.md export-ignore
+.gitattributes export-ignore
